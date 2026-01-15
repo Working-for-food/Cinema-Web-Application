@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Infrastructure.Entities
+namespace Infrastructure.Entities;
+
+public class Cinema
 {
-    class Cinema
-    {
-    }
+    public int Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string Address { get; set; } = null!;
+
+    public ICollection<Hall> Halls { get; set; } = new List<Hall>();
 }

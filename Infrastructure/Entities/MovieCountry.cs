@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Infrastructure.Entities;
 
-namespace Infrastructure.Entities
+public class MovieCountry
 {
-    class MovieCountry
-    {
-    }
+    public int MovieId { get; set; }
+    public string CountryCode { get; set; } = null!; // char(2)
+
+    public Movie Movie { get; set; } = null!;
+    public Country Country { get; set; } = null!;
 }

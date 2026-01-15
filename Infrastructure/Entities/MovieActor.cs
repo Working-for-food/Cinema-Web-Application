@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Infrastructure.Entities;
 
-namespace Infrastructure.Entities
+public class MovieActor
 {
-    class MovieActor
-    {
-    }
+    public int MovieId { get; set; }
+    public int ActorId { get; set; }
+
+    public short CustOrder { get; set; }
+    public string? CharacterName { get; set; }
+
+    public Movie Movie { get; set; } = null!;
+    public Person Actor { get; set; } = null!;
 }
