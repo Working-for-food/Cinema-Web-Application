@@ -4,5 +4,4 @@ namespace Infrastructure.Entities;
 
 public class ApplicationUser : IdentityUser
 {
-    // можно добавить поля профиля позже
 }

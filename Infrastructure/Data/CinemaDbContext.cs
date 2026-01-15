@@ -141,7 +141,6 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(x => x.SessionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // (id, sessionId) unique (в схеме есть, хоть Id и так PK)
             e.HasIndex(x => new { x.Id, x.SessionId }).IsUnique();
         });
 

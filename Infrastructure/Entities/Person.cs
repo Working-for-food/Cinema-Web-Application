@@ -21,6 +21,6 @@ public class Person
     public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     public ICollection<MovieDirector> MovieDirectors { get; set; } = new List<MovieDirector>();
 
-    // Movies.directorId (если используешь “главного” режиссера)
+    // Movies.directorId
     public ICollection<Movie> DirectedMoviesMain { get; set; } = new List<Movie>();
 }
