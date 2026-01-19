@@ -35,17 +35,22 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         {
             e.HasKey(x => x.Code);
             e.Property(x => x.Code).HasMaxLength(2).IsFixedLength();
-            e.Property(x => x.Name).IsRequired();
+            e.Property(x => x.Name).IsRequired().HasMaxLength(90);
             e.HasIndex(x => x.Name).IsUnique();
         });
 
         // People
         modelBuilder.Entity<Person>(e =>
         {
-            e.Property(x => x.FirstName).IsRequired();
-            e.Property(x => x.LastName).IsRequired();
+            e.Property(x => x.FirstName)
+                .IsRequired()
+                .HasMaxLength(60);
+            e.Property(x => x.MiddleName).HasMaxLength(60);
+            e.Property(x => x.LastName)
+                .IsRequired()
+                .HasMaxLength(60);
             e.Property(x => x.CountryCode).HasMaxLength(2).IsFixedLength();
-
+            e.Property(x => x.PhotoUrl).HasMaxLength(700);
             e.HasOne(x => x.Country)
                 .WithMany(c => c.People)
                 .HasForeignKey(x => x.CountryCode)
@@ -57,8 +62,10 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         {
             e.Property(x => x.Title).IsRequired();
             e.Property(x => x.Rating).HasPrecision(4, 1);
+            e.Property(x => x.Description).HasMaxLength(4000);
             e.Property(x => x.ProductionCountryCode).HasMaxLength(2).IsFixedLength();
-
+            e.Property(x => x.TrailerUrl).HasMaxLength(700);
+            e.Property(x => x.Language).HasMaxLength(50);
             e.HasOne(x => x.Director)
                 .WithMany(p => p.DirectedMoviesMain)
                 .HasForeignKey(x => x.DirectorId)
@@ -81,7 +88,8 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Cinema>(e =>
         {
             e.Property(x => x.Name).IsRequired();
-            e.Property(x => x.Address).IsRequired();
+            e.Property(x => x.Address).IsRequired().HasMaxLength(150);
+            e.Property(x => x.City).IsRequired().HasMaxLength(50);
         });
 
         // Halls
@@ -98,6 +106,9 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         // Seats
         modelBuilder.Entity<Seat>(e =>
         {
+            e.Property(x => x.RowNumber).HasColumnType("smallint");
+            e.Property(x => x.SeatNumber).HasColumnType("smallint");
+            e.Property(x => x.Category).HasColumnType("smallint");
             e.HasOne(x => x.Hall)
                 .WithMany(h => h.Seats)
                 .HasForeignKey(x => x.HallId)
@@ -111,7 +122,13 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         {
             e.Property(x => x.StartTime).IsRequired();
             e.Property(x => x.EndTime).IsRequired();
-
+            e.Property(x => x.PresentationType).HasColumnType("smallint");
+            e.Property(x => x.CreatedAt)
+              .IsRequired()
+              .HasDefaultValueSql("SYSUTCDATETIME()");
+            e.Property(x => x.IsCancelled)
+                .IsRequired()
+                .HasDefaultValue(false);
             e.HasOne(x => x.Movie)
                 .WithMany(m => m.Sessions)
                 .HasForeignKey(x => x.MovieId)
@@ -128,7 +145,7 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         {
             e.Property(x => x.UserId).IsRequired();
             e.Property(x => x.TotalAmount).HasPrecision(10, 2);
-            e.Property(x => x.IsDeleted).IsRequired();
+            e.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
             e.Property(x => x.BookedAt).IsRequired();
 
             e.HasOne(x => x.User)
@@ -152,7 +169,7 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(x => x.Session)
                 .WithMany(s => s.SessionSeats)
                 .HasForeignKey(x => x.SessionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(x => x.Seat)
                 .WithMany(seat => seat.SessionSeats)

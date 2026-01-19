@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Entities;
+﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+namespace Infrastructure.Entities;
 
 public class Movie
 {

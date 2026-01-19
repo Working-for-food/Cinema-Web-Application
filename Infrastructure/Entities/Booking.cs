@@ -8,7 +8,7 @@ public class Booking
     public int SessionId { get; set; }
 
     public decimal TotalAmount { get; set; } // decimal(10,2)
-    public bool IsDeleted { get; set; }
+    public bool IsDeleted { get; set; } = false;
     public DateTime BookedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
 
