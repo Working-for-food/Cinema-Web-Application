@@ -1,0 +1,32 @@
+﻿@model List<Application.DTOs.CinemaListVm>
+
+<h2>Cinemas</h2>
+
+<p>
+    <a asp-action="Create">Create new cinema</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>City</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.Name</td>
+                <td>@c.Address</td>
+                <td>@c.City</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@c.Id">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@c.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

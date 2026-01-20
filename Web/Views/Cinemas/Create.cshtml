@@ -1,0 +1,24 @@
+﻿@model Application.DTOs.CinemaEditVm
+
+<h2>Create Cinema</h2>
+
+<form asp-action="Create" method="post">
+    <div>
+        <label>Name</label>
+        <input asp-for="Name" />
+    </div>
+
+    <div>
+        <label>Address</label>
+        <input asp-for="Address" />
+    </div>
+
+    <div>
+        <label>City</label>
+        <input asp-for="City" />
+    </div>
+
+    <button type="submit">Create</button>
+</form>
+
+<a asp-action="Index">Back</a>

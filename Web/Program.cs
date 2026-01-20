@@ -2,6 +2,10 @@ using Infrastructure.Data;
 using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Application.Interfaces;
+using Application.Services;
+using Infrastructure.Interfaces;
+using Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +16,8 @@ builder.Services.AddDbContext<CinemaDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
+builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
+builder.Services.AddScoped<ICinemaService, CinemaService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
