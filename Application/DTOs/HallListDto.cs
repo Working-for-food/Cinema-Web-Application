@@ -1,6 +1,6 @@
-﻿namespace Web.ViewModels.Halls;
+﻿namespace Application.DTOs;
 
-public class HallListVm
+public class HallListDto
 {
     public int HallId { get; set; }
     public string CinemaName { get; set; } = "";
