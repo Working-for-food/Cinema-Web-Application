@@ -1,0 +1,45 @@
+﻿@model Web.ViewModels.SessionEditVm
+@using Infrastructure.Entities
+
+<h2>Create session</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div>
+        <label asp-for="MovieId"></label>
+        <input asp-for="MovieId" type="number" />
+        <span asp-validation-for="MovieId"></span>
+    </div>
+
+    <div>
+        <label asp-for="HallId"></label>
+        <input asp-for="HallId" type="number" />
+        <span asp-validation-for="HallId"></span>
+    </div>
+
+    <div>
+        <label asp-for="StartTime"></label>
+        <input asp-for="StartTime" type="datetime-local" />
+        <span asp-validation-for="StartTime"></span>
+    </div>
+
+    <div>
+        <label asp-for="EndTime"></label>
+        <input asp-for="EndTime" type="datetime-local" />
+        <span asp-validation-for="EndTime"></span>
+    </div>
+
+    <div>
+        <label asp-for="PresentationType"></label>
+        <select asp-for="PresentationType" asp-items="Html.GetEnumSelectList<PresentationType>()"></select>
+        <span asp-validation-for="PresentationType"></span>
+    </div>
+
+    <button type="submit">Save</button>
+    <a asp-action="Index">Back</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
