@@ -11,21 +11,25 @@ public class HallRepository : IHallRepository
 
     public HallRepository(CinemaDbContext db) => _db = db;
 
-    public Task<List<Hall>> GetAllAsync()
+    public Task<List<Hall>> GetAllWithCinemaAsync()
         => _db.Halls
             .Include(h => h.Cinema)
             .AsNoTracking()
             .OrderBy(h => h.Cinema.Name).ThenBy(h => h.Name)
             .ToListAsync();
 
-    public Task<List<Hall>> GetByCinemaAsync(int cinemaId)
+    public Task<List<Hall>> GetByCinemaWithCinemaAsync(int cinemaId)
         => _db.Halls
             .Where(h => h.CinemaId == cinemaId)
+            .Include(h => h.Cinema)
             .AsNoTracking()
             .OrderBy(h => h.Name)
             .ToListAsync();
 
     public Task<Hall?> GetByIdAsync(int id)
+        => _db.Halls.FirstOrDefaultAsync(h => h.Id == id);
+
+    public Task<Hall?> GetByIdWithCinemaAsync(int id)
         => _db.Halls
             .Include(h => h.Cinema)
             .FirstOrDefaultAsync(h => h.Id == id);
@@ -50,4 +54,12 @@ public class HallRepository : IHallRepository
 
     public Task<bool> ExistsAsync(int hallId)
         => _db.Halls.AnyAsync(h => h.Id == hallId);
+
+    // ===== Етап 2: заборони =====
+
+    public Task<bool> HasAnySessionsAsync(int hallId)
+        => _db.Sessions.AnyAsync(s => s.HallId == hallId);
+
+    public Task<bool> HasAnyBookingsAsync(int hallId)
+        => _db.Bookings.AnyAsync(b => b.Session.HallId == hallId);
 }
