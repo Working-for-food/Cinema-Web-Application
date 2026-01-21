@@ -1,0 +1,110 @@
+﻿@model List<Application.DTOs.SeatDto>
+
+@{
+    var hallId = (int)ViewBag.HallId;
+    var alreadyGenerated = (bool)ViewBag.AlreadyGenerated;
+    var error = TempData["SeatsError"] as string;
+}
+
+<h2>Seats</h2>
+
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <div style="color:red;">@error</div>
+}
+
+<form method="post" asp-action="GenerateSeats" onsubmit="return confirmGenerate();">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="hallId" value="@hallId" />
+
+    <div>
+        <label>Rows</label>
+        <input type="number" name="rows" min="1" value="10" />
+    </div>
+
+    <div>
+        <label>Seats per row</label>
+        <input type="number" name="seatsPerRow" min="1" value="12" />
+    </div>
+
+    <div>
+        <label>
+            <input type="checkbox" name="allowRegenerate" value="true" @(alreadyGenerated ? "" : "disabled") />
+            Allow regenerate (only if already generated)
+        </label>
+    </div>
+
+    <button type="submit">Generate seats</button>
+    <a asp-action="Index">Back to halls</a>
+</form>
+
+<hr />
+
+@if (!alreadyGenerated)
+{
+    <p>No seats yet. Generate them above.</p>
+}
+else
+{
+    <h3>Seat grid</h3>
+
+    @{
+        var grouped = Model
+            .GroupBy(s => s.RowNumber)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        var maxSeats = grouped.Count == 0 ? 0 : grouped.Max(g => g.Count());
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Row</th>
+                @for (int i = 1; i <= maxSeats; i++)
+                {
+                    <th>@i</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in grouped)
+        {
+            <tr>
+                <td>@row.Key</td>
+                @{
+                    var seatsInRow = row.OrderBy(x => x.SeatNumber).ToList();
+                    var lastSeat = seatsInRow.Count == 0 ? 0 : seatsInRow.Max(x => x.SeatNumber);
+                }
+
+                @for (int s = 1; s <= maxSeats; s++)
+                {
+                    var exists = seatsInRow.Any(x => x.SeatNumber == s);
+                    <td style="text-align:center;">
+                        @if (exists)
+                        {
+                            <span style="display:inline-block; width:22px; height:22px; border:1px solid #999; border-radius:4px; line-height:22px;">
+                                @s
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="color:#bbb;">-</span>
+                        }
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+<script>
+function confirmGenerate() {
+    const allow = document.querySelector('input[name="allowRegenerate"]');
+    if (allow && allow.checked) {
+        return confirm("Regenerate will delete existing seats. Continue?");
+    }
+    return true;
+}
+</script>

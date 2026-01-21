@@ -1,10 +1,11 @@
+using Application.Interfaces;
+using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,15 +19,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
 
-// ===== DI для твоєї частини (Halls + Seats) =====
-
-// Repositories (DAL)
+// ===== DI (DAL) =====
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
-builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
 
-// Services (BLL)
+// ===== DI (BLL) =====
 builder.Services.AddScoped<IHallService, HallService>();
+
 
 var app = builder.Build();
 
@@ -38,23 +37,21 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
-// (Опційно, але рекомендовано) окремий маршрут для Admin контролерів
-// щоб /Admin/Halls/Index працював стабільно.
+// ===== Area route (Admin) =====
 app.MapControllerRoute(
-    name: "admin",
-    pattern: "Admin/{controller=Halls}/{action=Index}/{id?}");
+    name: "areas",
+    pattern: "{area:exists}/{controller=Halls}/{action=Index}/{id?}");
 
-// Default
+// Default route
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
