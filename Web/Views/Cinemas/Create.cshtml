@@ -1,24 +1,38 @@
-﻿@model Application.DTOs.CinemaEditVm
+﻿@model Application.DTOs.CinemaEditDto
+
+@{
+    ViewData["Title"] = "Create Cinema";
+}
 
 <h2>Create Cinema</h2>
 
 <form asp-action="Create" method="post">
-    <div>
-        <label>Name</label>
-        <input asp-for="Name" />
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
-    <div>
-        <label>Address</label>
-        <input asp-for="Address" />
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
     </div>
 
-    <div>
-        <label>City</label>
-        <input asp-for="City" />
+    <div class="mb-3">
+        <label asp-for="City" class="form-label"></label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger"></span>
     </div>
 
-    <button type="submit">Create</button>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
 </form>
 
-<a asp-action="Index">Back</a>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

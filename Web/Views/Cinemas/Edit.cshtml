@@ -1,26 +1,42 @@
-﻿@model Application.DTOs.CinemaEditVm
+﻿@model Application.DTOs.CinemaEditDto
+
+@{
+    ViewData["Title"] = "Edit Cinema";
+}
 
 <h2>Edit Cinema</h2>
 
 <form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
     <input type="hidden" asp-for="Id" />
 
-    <div>
-        <label>Name</label>
-        <input asp-for="Name" />
+    @* Загальні помилки *@
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
-    <div>
-        <label>Address</label>
-        <input asp-for="Address" />
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
     </div>
 
-    <div>
-        <label>City</label>
-        <input asp-for="City" />
+    <div class="mb-3">
+        <label asp-for="City" class="form-label"></label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger"></span>
     </div>
 
-    <button type="submit">Save</button>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
 </form>
 
-<a asp-action="Index">Back</a>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

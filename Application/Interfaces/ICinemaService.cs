@@ -4,9 +4,13 @@ namespace Application.Interfaces;
 
 public interface ICinemaService
 {
-    Task<List<CinemaListVm>> GetAllAsync();
-    Task<CinemaEditVm?> GetForEditAsync(int id);
-    Task<int> CreateAsync(CinemaEditVm vm);
-    Task<bool> UpdateAsync(CinemaEditVm vm);
-    Task<bool> DeleteAsync(int id);
+    Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null);
+    Task<List<string>> GetCitiesAsync();
+
+    Task<CinemaEditDto?> GetForEditAsync(int id);
+    Task<CinemaDetailsDto?> GetDetailsAsync(int id);
+
+    Task<int> CreateAsync(CinemaEditDto dto);
+    Task UpdateAsync(CinemaEditDto dto);
+    Task DeleteAsync(int id);
 }

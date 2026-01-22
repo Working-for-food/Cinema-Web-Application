@@ -1,18 +1,63 @@
-﻿@model List<Application.DTOs.CinemaListVm>
+﻿@model List<Application.DTOs.CinemaListDto>
+
+@{
+    ViewData["Title"] = "Cinemas";
+
+    var cities = ViewBag.Cities as List<string> ?? new List<string>();
+    string city = ViewBag.City as string ?? "";
+    string search = ViewBag.Search as string ?? "";
+    string sort = ViewBag.Sort as string ?? "";
+}
 
 <h2>Cinemas</h2>
 
-<p>
-    <a asp-action="Create">Create new cinema</a>
-</p>
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
 
-<table class="table">
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <input name="search" value="@search" class="form-control" placeholder="Search by name/address/city" />
+    </div>
+
+    <div class="col-md-3">
+        <select name="city" class="form-select">
+            <option value="">All cities</option>
+            @foreach (var c in cities)
+            {
+                <option value="@c" selected="@(c == city)">@c</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <select name="sort" class="form-select">
+            <option value="" selected="@(sort == "")">Name ↑</option>
+            <option value="name_desc" selected="@(sort == "name_desc")">Name ↓</option>
+            <option value="city" selected="@(sort == "city")">City ↑</option>
+            <option value="city_desc" selected="@(sort == "city_desc")">City ↓</option>
+        </select>
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Apply</button>
+        <a asp-action="Index" class="btn btn-secondary">Reset</a>
+        <a asp-action="Create" class="btn btn-success">Create</a>
+    </div>
+</form>
+
+<table class="table table-striped">
     <thead>
         <tr>
             <th>Name</th>
             <th>Address</th>
             <th>City</th>
-            <th></th>
+            <th style="width: 280px;"></th>
         </tr>
     </thead>
     <tbody>
@@ -22,9 +67,10 @@
                 <td>@c.Name</td>
                 <td>@c.Address</td>
                 <td>@c.City</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@c.Id">Edit</a> |
-                    <a asp-action="Delete" asp-route-id="@c.Id">Delete</a>
+                <td class="d-flex gap-2">
+                    <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-info">Details</a>
+                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger">Delete</a>
                 </td>
             </tr>
         }

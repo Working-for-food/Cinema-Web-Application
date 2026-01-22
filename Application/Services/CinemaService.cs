@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Application.Exceptions;
 using Application.Interfaces;
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
@@ -14,10 +15,11 @@ public class CinemaService : ICinemaService
         _repo = repo;
     }
 
-    public async Task<List<CinemaListVm>> GetAllAsync()
+    public async Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null)
     {
-        var cinemas = await _repo.GetAllAsync();
-        return cinemas.Select(c => new CinemaListVm
+        var cinemas = await _repo.GetAllAsync(city, search, sort);
+
+        return cinemas.Select(c => new CinemaListDto
         {
             Id = c.Id,
             Name = c.Name,
@@ -26,12 +28,15 @@ public class CinemaService : ICinemaService
         }).ToList();
     }
 
-    public async Task<CinemaEditVm?> GetForEditAsync(int id)
+    public Task<List<string>> GetCitiesAsync()
+        => _repo.GetCitiesAsync();
+
+    public async Task<CinemaEditDto?> GetForEditAsync(int id)
     {
         var cinema = await _repo.GetByIdAsync(id);
         if (cinema == null) return null;
 
-        return new CinemaEditVm
+        return new CinemaEditDto
         {
             Id = cinema.Id,
             Name = cinema.Name,
@@ -40,56 +45,61 @@ public class CinemaService : ICinemaService
         };
     }
 
-    public async Task<int> CreateAsync(CinemaEditVm vm)
+    public async Task<CinemaDetailsDto?> GetDetailsAsync(int id)
     {
-        Validate(vm);
+        var cinema = await _repo.GetByIdAsync(id);
+        if (cinema == null) return null;
 
+        return new CinemaDetailsDto
+        {
+            Id = cinema.Id,
+            Name = cinema.Name,
+            Address = cinema.Address,
+            City = cinema.City ?? ""
+        };
+    }
+
+    public async Task<int> CreateAsync(CinemaEditDto dto)
+    {
         var cinema = new Cinema
         {
-            Name = vm.Name.Trim(),
-            Address = vm.Address.Trim(),
-            City = vm.City.Trim()
+            Name = dto.Name.Trim(),
+            Address = dto.Address.Trim(),
+            City = dto.City.Trim()
         };
 
         await _repo.AddAsync(cinema);
         return cinema.Id;
     }
 
-    public async Task<bool> UpdateAsync(CinemaEditVm vm)
+    public async Task UpdateAsync(CinemaEditDto dto)
     {
-        if (vm.Id <= 0) return false;
+        if (dto.Id <= 0)
+            throw new NotFoundDomainException("Cinema not found.");
 
-        Validate(vm);
+        var cinema = await _repo.GetByIdAsync(dto.Id);
+        if (cinema == null)
+            throw new NotFoundDomainException("Cinema not found.");
 
-        var cinema = await _repo.GetByIdAsync(vm.Id);
-        if (cinema == null) return false;
-
-        cinema.Name = vm.Name.Trim();
-        cinema.Address = vm.Address.Trim();
-        cinema.City = vm.City.Trim();
+        cinema.Name = dto.Name.Trim();
+        cinema.Address = dto.Address.Trim();
+        cinema.City = dto.City.Trim();
 
         await _repo.UpdateAsync(cinema);
-        return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
         var cinema = await _repo.GetByIdAsync(id);
-        if (cinema == null) return false;
+        if (cinema == null)
+            throw new NotFoundDomainException("Cinema not found.");
+
+        var hasHalls = await _repo.HasHallsAsync(id);
+        var hasSessions = await _repo.HasSessionsAsync(id);
+
+        if (hasHalls || hasSessions)
+            throw new ConflictDomainException("Cannot delete cinema because it has halls or sessions.");
 
         await _repo.DeleteAsync(cinema);
-        return true;
-    }
-
-    private static void Validate(CinemaEditVm vm)
-    {
-        if (string.IsNullOrWhiteSpace(vm.Name))
-            throw new ArgumentException("Cinema name is required.");
-
-        if (string.IsNullOrWhiteSpace(vm.Address))
-            throw new ArgumentException("Cinema address is required.");
-
-        if (string.IsNullOrWhiteSpace(vm.City))
-            throw new ArgumentException("Cinema city is required.");
     }
 }

@@ -1,5 +1,6 @@
-﻿using Application.Interfaces;
-using Application.DTOs;
+﻿using Application.DTOs;
+using Application.Exceptions;
+using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers;
@@ -13,69 +14,97 @@ public class CinemasController : Controller
         _cinemaService = cinemaService;
     }
 
-    // GET: /Cinemas
-    public async Task<IActionResult> Index()
+    // GET: /Cinemas?city=&search=&sort=
+    public async Task<IActionResult> Index(string? city, string? search, string? sort)
     {
-        var cinemas = await _cinemaService.GetAllAsync();
+        ViewBag.City = city ?? "";
+        ViewBag.Search = search ?? "";
+        ViewBag.Sort = sort ?? "";
+        ViewBag.Cities = await _cinemaService.GetCitiesAsync();
+
+        var cinemas = await _cinemaService.GetAllAsync(city, search, sort);
         return View(cinemas);
+    }
+
+    // GET: /Cinemas/Details/5
+    public async Task<IActionResult> Details(int id)
+    {
+        var dto = await _cinemaService.GetDetailsAsync(id);
+        if (dto == null) return NotFound();
+        return View(dto);
     }
 
     // GET: /Cinemas/Create
     public IActionResult Create()
-    {
-        return View(new CinemaEditVm());
-    }
+        => View(new CinemaEditDto());
 
     // POST: /Cinemas/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CinemaEditVm vm)
+    public async Task<IActionResult> Create(CinemaEditDto dto)
     {
         if (!ModelState.IsValid)
-            return View(vm);
+            return View(dto);
 
-        await _cinemaService.CreateAsync(vm);
+        await _cinemaService.CreateAsync(dto);
+        TempData["Success"] = "Cinema created successfully.";
         return RedirectToAction(nameof(Index));
     }
 
     // GET: /Cinemas/Edit/5
     public async Task<IActionResult> Edit(int id)
     {
-        var vm = await _cinemaService.GetForEditAsync(id);
-        if (vm == null) return NotFound();
-
-        return View(vm);
+        var dto = await _cinemaService.GetForEditAsync(id);
+        if (dto == null) return NotFound();
+        return View(dto);
     }
 
     // POST: /Cinemas/Edit
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(CinemaEditVm vm)
+    public async Task<IActionResult> Edit(CinemaEditDto dto)
     {
         if (!ModelState.IsValid)
-            return View(vm);
+            return View(dto);
 
-        var updated = await _cinemaService.UpdateAsync(vm);
-        if (!updated) return NotFound();
-
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            await _cinemaService.UpdateAsync(dto);
+            TempData["Success"] = "Cinema updated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DomainException ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            return View(dto);
+        }
     }
 
     // GET: /Cinemas/Delete/5
     public async Task<IActionResult> Delete(int id)
     {
-        var vm = await _cinemaService.GetForEditAsync(id);
-        if (vm == null) return NotFound();
+        var dto = await _cinemaService.GetForEditAsync(id);
+        if (dto == null) return NotFound();
 
-        return View(vm);
+        return View(dto);
     }
 
-    // POST: /Cinemas/DeleteConfirmed/5
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        await _cinemaService.DeleteAsync(id);
+        if (id <= 0) return BadRequest();
+
+        try
+        {
+            await _cinemaService.DeleteAsync(id);
+            TempData["Success"] = "Cinema deleted successfully.";
+        }
+        catch (DomainException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }

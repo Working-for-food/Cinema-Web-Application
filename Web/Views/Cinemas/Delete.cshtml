@@ -1,12 +1,28 @@
-﻿@model Application.DTOs.CinemaEditVm
+﻿@model Application.DTOs.CinemaEditDto
+
+@{
+    ViewData["Title"] = "Delete Cinema";
+}
 
 <h2>Delete Cinema</h2>
 
-<p>Are you sure you want to delete <b>@Model.Name</b>?</p>
+<div class="alert alert-warning">
+    Are you sure you want to delete this cinema?
+</div>
 
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" asp-for="Id" />
-    <button type="submit">Yes, delete</button>
+<dl class="row">
+    <dt class="col-sm-2">Name</dt>
+    <dd class="col-sm-10">@Model.Name</dd>
+
+    <dt class="col-sm-2">Address</dt>
+    <dd class="col-sm-10">@Model.Address</dd>
+
+    <dt class="col-sm-2">City</dt>
+    <dd class="col-sm-10">@Model.City</dd>
+</dl>
+
+<form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Yes, delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>
-
-<a asp-action="Index">Cancel</a>

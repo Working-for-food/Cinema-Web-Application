@@ -1,6 +1,6 @@
 ﻿namespace Application.DTOs;
 
-public class CinemaEditVm
+public class CinemaListDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
