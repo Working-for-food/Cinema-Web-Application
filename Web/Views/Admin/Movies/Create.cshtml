@@ -1,0 +1,71 @@
+﻿@model Web.ViewModels.Admin.MovieEditVm
+
+@{
+    ViewData["Title"] = "Add a movie";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Add new movie</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Title</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ReleaseDate" class="form-label">Release Date</label>
+                                <input asp-for="ReleaseDate" type="date" class="form-control" />
+                                <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Duration" class="form-label">Duration (min)</label>
+                                <input asp-for="Duration" type="number" class="form-control" />
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProductionCountryCode" class="form-label">Country Code (e.g. UA, US)</label>
+                            <input asp-for="ProductionCountryCode" class="form-control" maxlength="2" style="text-transform: uppercase" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="SelectedGenreIds" class="form-label">Choose genres (Ctrl + Click)</label>
+                            <select asp-for="SelectedGenreIds" asp-items="Model.GenreList" class="form-control" multiple size="5">
+                            </select>
+                            <span asp-validation-for="SelectedGenreIds" class="text-danger"></span>
+                            <div class="form-text">Hold Ctrl (Windows) or Command (Mac) to select multiple.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
