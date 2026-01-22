@@ -19,11 +19,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
 
-// ===== DI (DAL) =====
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
-
-// ===== DI (BLL) =====
 builder.Services.AddScoped<IHallService, HallService>();
 
 

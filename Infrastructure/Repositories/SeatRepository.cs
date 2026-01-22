@@ -33,4 +33,16 @@ public class SeatRepository : ISeatRepository
         _db.Seats.RemoveRange(seats);
         await _db.SaveChangesAsync();
     }
+
+    public async Task<Dictionary<int, int>> CountByHallIdsAsync(IEnumerable<int> hallIds)
+    {
+        var ids = hallIds.Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<int, int>();
+
+        return await _db.Seats
+            .Where(s => ids.Contains(s.HallId))
+            .GroupBy(s => s.HallId)
+            .Select(g => new { HallId = g.Key, Cnt = g.Count() })
+            .ToDictionaryAsync(x => x.HallId, x => x.Cnt);
+    }
 }

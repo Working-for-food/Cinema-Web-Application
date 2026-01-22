@@ -8,6 +8,7 @@ public interface ISeatRepository
     Task<List<Seat>> GetByHallAsync(int hallId);
 
     Task AddRangeAsync(IEnumerable<Seat> seats);
-
     Task DeleteByHallAsync(int hallId);
+
+    Task<Dictionary<int, int>> CountByHallIdsAsync(IEnumerable<int> hallIds);
 }

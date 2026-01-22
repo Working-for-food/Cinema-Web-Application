@@ -1,7 +1,9 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Web.ViewModels.Admin.Halls;
 
 namespace Web.Controllers.Admin;
@@ -10,18 +12,26 @@ namespace Web.Controllers.Admin;
 public class HallsController : Controller
 {
     private readonly IHallService _hallService;
-    private readonly ICinemaLookupService _cinemaLookup;
+    private readonly CinemaDbContext _db;
 
-    public HallsController(IHallService hallService, ICinemaLookupService cinemaLookup)
+    private const string IndexViewPath = "~/Views/Admin/Halls/Index.cshtml";
+    private const string EditViewPath = "~/Views/Admin/Halls/Edit.cshtml";
+    private const string SeatsViewPath = "~/Views/Admin/Halls/Seats.cshtml";
+
+    public HallsController(IHallService hallService, CinemaDbContext db)
     {
         _hallService = hallService;
-        _cinemaLookup = cinemaLookup;
+        _db = db;
     }
 
     // GET: /Admin/Halls?cinemaId=1
     public async Task<IActionResult> Index(int? cinemaId)
     {
-        var cinemas = await _cinemaLookup.GetAllAsync();
+        var cinemas = await _db.Cinemas
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .Select(c => new { c.Id, c.Name })
+            .ToListAsync();
 
         var halls = cinemaId.HasValue
             ? await _hallService.GetByCinemaAsync(cinemaId.Value)
@@ -39,14 +49,18 @@ public class HallsController : Controller
             Halls = halls
         };
 
-        return View(vm);
+        return View(IndexViewPath, vm);
     }
 
     // GET: /Admin/Halls/Create
     [HttpGet]
     public async Task<IActionResult> Create(int? cinemaId)
     {
-        var cinemas = await _cinemaLookup.GetAllAsync();
+        var cinemas = await _db.Cinemas
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .Select(c => new { c.Id, c.Name })
+            .ToListAsync();
 
         var vm = new HallEditVm
         {
@@ -54,7 +68,7 @@ public class HallsController : Controller
             Cinemas = cinemas.Select(c => new SelectListItem(c.Name, c.Id.ToString())).ToList()
         };
 
-        return View("Edit", vm);
+        return View(EditViewPath, vm);
     }
 
     // POST: /Admin/Halls/Create
@@ -65,7 +79,7 @@ public class HallsController : Controller
         if (!ModelState.IsValid)
         {
             await FillCinemasAsync(vm);
-            return View("Edit", vm);
+            return View(EditViewPath, vm);
         }
 
         try
@@ -82,7 +96,7 @@ public class HallsController : Controller
         {
             ModelState.AddModelError("", ex.Message);
             await FillCinemasAsync(vm);
-            return View("Edit", vm);
+            return View(EditViewPath, vm);
         }
     }
 
@@ -101,7 +115,7 @@ public class HallsController : Controller
         };
 
         await FillCinemasAsync(vm);
-        return View(vm);
+        return View(EditViewPath, vm);
     }
 
     // POST: /Admin/Halls/Edit
@@ -112,7 +126,7 @@ public class HallsController : Controller
         if (!ModelState.IsValid)
         {
             await FillCinemasAsync(vm);
-            return View(vm);
+            return View(EditViewPath, vm);
         }
 
         try
@@ -130,7 +144,7 @@ public class HallsController : Controller
         {
             ModelState.AddModelError("", ex.Message);
             await FillCinemasAsync(vm);
-            return View(vm);
+            return View(EditViewPath, vm);
         }
     }
 
@@ -145,25 +159,31 @@ public class HallsController : Controller
 
     // GET: /Admin/Halls/Seats/5
     [HttpGet]
-    public async Task<IActionResult> Seats(int id)
+    public async Task<IActionResult> Seats(int id, int? rows, int? seatsPerRow)
     {
-        var already = await _hallService.SeatsAlreadyGeneratedAsync(id);
-        var seats = already ? await _hallService.GetSeatsAsync(id) : new List<SeatDto>();
+        var dto = await _hallService.GetSeatingAsync(id, rows, seatsPerRow);
+        if (dto == null) return NotFound();
 
-        ViewBag.HallId = id;
-        ViewBag.AlreadyGenerated = already;
+        ViewBag.SeatsError = TempData["SeatsError"] as string;
+        return View(SeatsViewPath, dto);
+    }
 
-        return View(seats);
+    // POST: /Admin/Halls/ConfigureSeats
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ConfigureSeats(int hallId, int rows, int seatsPerRow)
+    {
+        return RedirectToAction(nameof(Seats), new { id = hallId, rows, seatsPerRow });
     }
 
     // POST: /Admin/Halls/GenerateSeats
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GenerateSeats(int hallId, int rows, int seatsPerRow, bool allowRegenerate)
+    public async Task<IActionResult> GenerateSeats(int hallId, bool allowRegenerate, List<RowSeatsDto> rowConfigs)
     {
         try
         {
-            await _hallService.GenerateSeatsAsync(hallId, rows, seatsPerRow, allowRegenerate);
+            await _hallService.GenerateSeatsByConfigAsync(hallId, rowConfigs, allowRegenerate);
             return RedirectToAction(nameof(Seats), new { id = hallId });
         }
         catch (Exception ex)
@@ -175,7 +195,14 @@ public class HallsController : Controller
 
     private async Task FillCinemasAsync(HallEditVm vm)
     {
-        var cinemas = await _cinemaLookup.GetAllAsync();
-        vm.Cinemas = cinemas.Select(c => new SelectListItem(c.Name, c.Id.ToString(), c.Id == vm.CinemaId)).ToList();
+        var cinemas = await _db.Cinemas
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .Select(c => new { c.Id, c.Name })
+            .ToListAsync();
+
+        vm.Cinemas = cinemas
+            .Select(c => new SelectListItem(c.Name, c.Id.ToString(), c.Id == vm.CinemaId))
+            .ToList();
     }
 }

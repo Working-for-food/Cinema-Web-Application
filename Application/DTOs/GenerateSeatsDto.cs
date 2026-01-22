@@ -12,5 +12,6 @@ public class GenerateSeatsDto
     public bool CanEditSeats { get; set; }
     public string? LockReason { get; set; }
 
+    public List<RowSeatsDto> RowConfigs { get; set; } = new();
     public List<SeatDto> Seats { get; set; } = new();
 }

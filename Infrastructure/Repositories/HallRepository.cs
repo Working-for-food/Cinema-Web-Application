@@ -55,11 +55,14 @@ public class HallRepository : IHallRepository
     public Task<bool> ExistsAsync(int hallId)
         => _db.Halls.AnyAsync(h => h.Id == hallId);
 
-    // ===== Етап 2: заборони =====
-
     public Task<bool> HasAnySessionsAsync(int hallId)
         => _db.Sessions.AnyAsync(s => s.HallId == hallId);
 
     public Task<bool> HasAnyBookingsAsync(int hallId)
-        => _db.Bookings.AnyAsync(b => b.Session.HallId == hallId);
+        => _db.Bookings
+            .Join(_db.Sessions,
+                b => b.SessionId,
+                s => s.Id,
+                (b, s) => new { b, s })
+            .AnyAsync(x => x.s.HallId == hallId);
 }

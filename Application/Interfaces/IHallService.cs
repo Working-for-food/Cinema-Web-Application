@@ -15,9 +15,7 @@ public interface IHallService
     Task<bool> SeatsAlreadyGeneratedAsync(int hallId);
     Task<List<SeatDto>> GetSeatsAsync(int hallId);
 
-    Task<List<SeatDto>> GenerateSeatsAsync(
-        int hallId,
-        int rows,
-        int seatsPerRow,
-        bool allowRegenerate);
+    Task<GenerateSeatsDto?> GetSeatingAsync(int hallId, int? rows = null, int? seatsPerRow = null);
+
+    Task GenerateSeatsByConfigAsync(int hallId, List<RowSeatsDto> rows, bool allowRegenerate);
 }
