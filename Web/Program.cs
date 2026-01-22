@@ -4,6 +4,7 @@ using Infrastructure.Repositories;
 using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Data.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+    await CountrySeeder.SeedAsync(db);
+}
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
