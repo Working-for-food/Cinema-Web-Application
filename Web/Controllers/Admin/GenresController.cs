@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels.Genres;
 
-namespace Web.Areas.Admin.Controllers;
+namespace Web.Controllers.Admin;
 
 [Area("Admin")]
 public class GenresController : Controller
