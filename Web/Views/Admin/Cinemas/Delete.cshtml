@@ -1,4 +1,4 @@
-﻿@model Application.DTOs.CinemaEditDto
+﻿@model Web.ViewModels.Admin.Cinemas.CinemaEditVm
 
 @{
     ViewData["Title"] = "Delete Cinema";
@@ -21,8 +21,22 @@
     <dd class="col-sm-10">@Model.City</dd>
 </dl>
 
-<form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
+<form asp-area="Admin"
+      asp-controller="Cinemas"
+      asp-action="DeleteConfirmed"
+      asp-route-id="@Model.Id"
+      method="post">
+
     @Html.AntiForgeryToken()
-    <button type="submit" class="btn btn-danger">Yes, delete</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+
+    <button type="submit" class="btn btn-danger">
+        Yes, delete
+    </button>
+
+    <a asp-area="Admin"
+       asp-controller="Cinemas"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Cancel
+    </a>
 </form>

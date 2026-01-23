@@ -126,7 +126,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("Id", "SessionId")
                         .IsUnique();
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Cinema", b =>
@@ -158,7 +158,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cinemas");
+                    b.ToTable("Cinemas", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Country", b =>
@@ -178,7 +178,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Countries");
+                    b.ToTable("Countries", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Genre", b =>
@@ -198,7 +198,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Genres");
+                    b.ToTable("Genres", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Hall", b =>
@@ -220,7 +220,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("CinemaId");
 
-                    b.ToTable("Halls");
+                    b.ToTable("Halls", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
@@ -274,7 +274,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("ProductionCountryCode");
 
-                    b.ToTable("Movies");
+                    b.ToTable("Movies", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>
@@ -301,7 +301,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "CustOrder")
                         .IsUnique();
 
-                    b.ToTable("MovieActors");
+                    b.ToTable("MovieActors", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieCountry", b =>
@@ -321,7 +321,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "CountryCode")
                         .IsUnique();
 
-                    b.ToTable("MovieCountries");
+                    b.ToTable("MovieCountries", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieDirector", b =>
@@ -345,7 +345,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "DirectorId")
                         .IsUnique();
 
-                    b.ToTable("MovieDirectors");
+                    b.ToTable("MovieDirectors", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieGenre", b =>
@@ -365,7 +365,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "GenreId")
                         .IsUnique();
 
-                    b.ToTable("MovieGenres");
+                    b.ToTable("MovieGenres", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Person", b =>
@@ -409,7 +409,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("CountryCode");
 
-                    b.ToTable("People");
+                    b.ToTable("People", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
@@ -437,7 +437,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("HallId", "RowNumber", "SeatNumber")
                         .IsUnique();
 
-                    b.ToTable("Seats");
+                    b.ToTable("Seats", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Session", b =>
@@ -482,7 +482,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Sessions");
+                    b.ToTable("Sessions", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.SessionSeat", b =>
@@ -515,7 +515,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("SessionId", "SeatId")
                         .IsUnique();
 
-                    b.ToTable("SessionSeats");
+                    b.ToTable("SessionSeats", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

@@ -46,10 +46,10 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ===== Area route (Admin) =====
+// Area route (Admin)
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Halls}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 // Default route
 app.MapControllerRoute(

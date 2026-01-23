@@ -1,12 +1,7 @@
-﻿@model List<Application.DTOs.CinemaListDto>
+﻿@model Web.ViewModels.Admin.Cinemas.CinemasIndexVm
 
 @{
     ViewData["Title"] = "Cinemas";
-
-    var cities = ViewBag.Cities as List<string> ?? new List<string>();
-    string city = ViewBag.City as string ?? "";
-    string search = ViewBag.Search as string ?? "";
-    string sort = ViewBag.Sort as string ?? "";
 }
 
 <h2>Cinemas</h2>
@@ -20,27 +15,27 @@
     <div class="alert alert-danger">@err</div>
 }
 
-<form method="get" class="row g-2 mb-3">
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+
     <div class="col-md-3">
-        <input name="search" value="@search" class="form-control" placeholder="Search by name/address/city" />
+        <input name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Search by name/address/city" />
     </div>
 
     <div class="col-md-3">
-        <select name="city" class="form-select">
+        <select name="city"
+                class="form-select"
+                asp-items="Model.Cities">
             <option value="">All cities</option>
-            @foreach (var c in cities)
-            {
-                <option value="@c" selected="@(c == city)">@c</option>
-            }
         </select>
     </div>
 
     <div class="col-md-3">
-        <select name="sort" class="form-select">
-            <option value="" selected="@(sort == "")">Name ↑</option>
-            <option value="name_desc" selected="@(sort == "name_desc")">Name ↓</option>
-            <option value="city" selected="@(sort == "city")">City ↑</option>
-            <option value="city_desc" selected="@(sort == "city_desc")">City ↓</option>
+        <select name="sort"
+                class="form-select"
+                asp-items="Model.SortOptions">
         </select>
     </div>
 
@@ -61,7 +56,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var c in Model)
+        @foreach (var c in Model.Cinemas)
         {
             <tr>
                 <td>@c.Name</td>
