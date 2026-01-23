@@ -1,0 +1,45 @@
+﻿@model Web.ViewModels.Admin.Halls.HallsIndexVm
+
+<h2>Halls</h2>
+
+<form method="get" asp-action="Index">
+    <label>Cinema:</label>
+    <select asp-for="CinemaId" asp-items="Model.Cinemas" onchange="this.form.submit()">
+        <option value="">All</option>
+    </select>
+    <noscript><button type="submit">Filter</button></noscript>
+</form>
+
+<p>
+    <a asp-action="Create" asp-route-cinemaId="@Model.CinemaId">Create Hall</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Cinema</th>
+            <th>Hall</th>
+            <th>Seats</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var h in Model.Halls)
+        {
+            <tr>
+                <td>@h.CinemaName</td>
+                <td>@h.HallName</td>
+                <td>@h.SeatsCount</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@h.HallId">Edit</a> |
+                    <a asp-action="Seats" asp-route-id="@h.HallId">Seats</a> |
+
+                    <form method="post" asp-action="Delete" asp-route-id="@h.HallId" asp-route-cinemaId="@Model.CinemaId" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" onclick="return confirm('Delete this hall?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

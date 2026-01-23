@@ -1,0 +1,176 @@
+﻿@using Application.DTOs
+@model GenerateSeatsDto
+
+@{
+    var error = ViewBag.SeatsError as string;
+
+    var grouped = Model.Seats
+        .GroupBy(s => s.RowNumber)
+        .OrderBy(g => g.Key)
+        .ToList();
+
+    var maxSeats = grouped.Count == 0 ? 0 : grouped.Max(g => g.Count());
+}
+
+<h2>Seats: @Model.HallName</h2>
+
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <div style="color:red; margin-bottom:10px;">@error</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.LockReason))
+{
+    <div style="color:#b45309; margin-bottom:12px;">
+        <b>Locked:</b> @Model.LockReason
+    </div>
+}
+
+<p>
+    <a asp-action="Index">Back to halls</a>
+</p>
+
+<hr />
+
+@if (!Model.AlreadyGenerated)
+{
+    <h3>1) Configure rows</h3>
+
+    <form method="post" asp-action="ConfigureSeats">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="hallId" value="@Model.HallId" />
+
+        <div>
+            <label>Rows</label>
+            <input type="number" name="rows" min="1" value="@Model.Rows" @(Model.CanEditSeats ? "" : "disabled") />
+        </div>
+
+        <div>
+            <label>Default seats per row</label>
+            <input type="number" name="seatsPerRow" min="1" value="@Model.SeatsPerRow" @(Model.CanEditSeats ? "" : "disabled") />
+        </div>
+
+        <button type="submit" @(Model.CanEditSeats ? "" : "disabled")>Build table</button>
+    </form>
+
+    <hr />
+
+    <h3>2) Edit seats per row</h3>
+
+    @if (!Model.CanEditSeats)
+    {
+        <p>Seats editing is disabled.</p>
+    }
+    else
+    {
+        <form method="post" asp-action="GenerateSeats">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="hallId" value="@Model.HallId" />
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Row</th>
+                        <th>SeatsCount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.RowConfigs.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                @Model.RowConfigs[i].RowNumber
+                                <input type="hidden" name="rowConfigs[@i].RowNumber" value="@Model.RowConfigs[i].RowNumber" />
+                            </td>
+                            <td>
+                                <input type="number"
+                                       name="rowConfigs[@i].SeatsCount"
+                                       min="1"
+                                       value="@Model.RowConfigs[i].SeatsCount" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <button type="submit">Generate seats</button>
+        </form>
+    }
+}
+else
+{
+    <h3>Seats generated</h3>
+
+    <form method="post" asp-action="GenerateSeats" onsubmit="return confirmRegenerate();">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="hallId" value="@Model.HallId" />
+
+        <label>
+            <input type="checkbox" name="allowRegenerate" value="true" @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled") />
+            Regenerate (deletes existing seats)
+        </label>
+
+        <button type="submit" @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled")>Regenerate</button>
+    </form>
+
+    <hr />
+
+    @if (grouped.Count == 0)
+    {
+        <p>No seats found.</p>
+    }
+    else
+    {
+        <h4>Seat grid</h4>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Row</th>
+                    @for (int i = 1; i <= maxSeats; i++)
+                    {
+                        <th>@i</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in grouped)
+                {
+                    var seatsInRow = row.OrderBy(x => x.SeatNumber).ToList();
+
+                    <tr>
+                        <td>@row.Key</td>
+
+                        @for (int s = 1; s <= maxSeats; s++)
+                        {
+                            var exists = seatsInRow.Any(x => x.SeatNumber == s);
+                            <td style="text-align:center;">
+                                @if (exists)
+                                {
+                                    <span style="display:inline-block; width:22px; height:22px; border:1px solid #999; border-radius:4px; line-height:22px;">
+                                        @s
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color:#bbb;">-</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+<script>
+    function confirmRegenerate() {
+        const allow = document.querySelector('input[name="allowRegenerate"]');
+        if (allow && allow.checked) {
+            return confirm("Regenerate will delete existing seats. Continue?");
+        }
+        alert("To regenerate, check the checkbox first.");
+        return false;
+    }
+</script>
