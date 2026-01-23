@@ -22,6 +22,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<MovieService>();
 
+builder.Services.AddScoped<Infrastructure.Repositories.IGenreRepository, Infrastructure.Repositories.GenreRepository>();
+builder.Services.AddScoped<Application.Interfaces.IGenreService, Application.Services.GenreService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -40,9 +43,14 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
 
 
 app.Run();
