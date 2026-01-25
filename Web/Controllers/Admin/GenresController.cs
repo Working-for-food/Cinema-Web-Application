@@ -1,93 +1,99 @@
 ﻿using Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels.Genres;
 
 namespace Web.Controllers.Admin;
 
-[Area("Admin")]
+[Route("admin/genres")]
 public class GenresController : Controller
 {
+    private const string ViewsRoot = "~/Views/Admin/Genres";
     private readonly IGenreService _service;
 
     public GenresController(IGenreService service) => _service = service;
 
-    public async Task<IActionResult> Index()
+    [HttpGet("")]
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
-        var genres = await _service.GetAllAsync();
-        return View(genres);
+        var genres = await _service.GetAllAsync(ct);
+        return View($"{ViewsRoot}/Index.cshtml", genres);
     }
 
-    public async Task<IActionResult> Details(int id)
+    [HttpGet("details/{id:int}")]
+    public async Task<IActionResult> Details(int id, CancellationToken ct)
     {
-        var genre = await _service.GetByIdAsync(id);
+        var genre = await _service.GetByIdAsync(id, ct);
         if (genre == null) return NotFound();
-        return View(genre);
+        return View($"{ViewsRoot}/Details.cshtml", genre);
     }
 
-    [HttpGet]
-    public IActionResult Create() => View(new GenreEditVm());
+    [HttpGet("create")]
+    public IActionResult Create() => View($"{ViewsRoot}/Create.cshtml", new GenreEditVm());
 
-    [HttpPost]
+    [HttpPost("create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(GenreEditVm vm)
+    public async Task<IActionResult> Create(GenreEditVm vm, CancellationToken ct)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+            return View($"{ViewsRoot}/Create.cshtml", vm);
 
-        var (ok, error) = await _service.CreateAsync(vm.Name);
+        var (ok, error) = await _service.CreateAsync(vm.Name, ct);
         if (!ok)
         {
             ModelState.AddModelError(nameof(vm.Name), error!);
-            return View(vm);
+            return View($"{ViewsRoot}/Create.cshtml", vm);
         }
 
         TempData["Success"] = "Жанр створено.";
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Edit(int id)
+    [HttpGet("edit/{id:int}")]
+    public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
-        var genre = await _service.GetByIdAsync(id);
+        var genre = await _service.GetByIdAsync(id, ct);
         if (genre == null) return NotFound();
 
-        return View(new GenreEditVm { Id = genre.Id, Name = genre.Name });
+        return View($"{ViewsRoot}/Edit.cshtml", new GenreEditVm { Id = genre.Id, Name = genre.Name });
     }
 
-    [HttpPost]
+    [HttpPost("edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(GenreEditVm vm)
+    public async Task<IActionResult> Edit(int id, GenreEditVm vm, CancellationToken ct)
     {
-        if (!ModelState.IsValid) return View(vm);
+        vm.Id = id;
 
-        var (ok, error) = await _service.UpdateAsync(vm.Id, vm.Name);
+        if (!ModelState.IsValid)
+            return View($"{ViewsRoot}/Edit.cshtml", vm);
+
+        var (ok, error) = await _service.UpdateAsync(vm.Id, vm.Name, ct);
         if (!ok)
         {
             ModelState.AddModelError(nameof(vm.Name), error!);
-            return View(vm);
+            return View($"{ViewsRoot}/Edit.cshtml", vm);
         }
 
         TempData["Success"] = "Жанр оновлено.";
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Delete(int id)
+    [HttpGet("delete/{id:int}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        var genre = await _service.GetByIdAsync(id);
+        var genre = await _service.GetByIdAsync(id, ct);
         if (genre == null) return NotFound();
 
-        return View(genre);
+        return View($"{ViewsRoot}/Delete.cshtml", genre);
     }
 
-    [HttpPost, ActionName("Delete")]
+    [HttpPost("delete/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken ct)
     {
-        var (ok, error) = await _service.DeleteAsync(id);
+        var (ok, error) = await _service.DeleteAsync(id, ct);
         if (!ok)
         {
-            TempData["Error"] = "Неможливо видалити: жанр використовується у фільмах.";
+            TempData["Error"] = error ?? "Неможливо видалити жанр.";
             return RedirectToAction(nameof(Delete), new { id });
         }
 

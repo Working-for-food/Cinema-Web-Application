@@ -1,70 +1,22 @@
 ﻿@model Web.ViewModels.Genres.GenreEditVm
 
 <style>
-    .container {
-        max-width: 720px;
-        margin: 30px auto;
-    }
-
-    .card {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 16px;
-    }
-
-    .field {
-        margin-top: 12px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 600;
-    }
-
-    input[type="text"] {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #bbb;
-        border-radius: 8px;
-    }
-
-    .actions {
-        margin-top: 14px;
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn {
-        padding: 10px 14px;
-        border-radius: 8px;
-        text-decoration: none;
-        display: inline-block;
-        border: 0;
-        cursor: pointer;
-    }
-
-    .btn-primary {
-        background: #4f46e5;
-        color: #fff;
-    }
-
-    .btn-secondary {
-        background: #e5e7eb;
-        color: #111;
-    }
-
-    .text-danger {
-        color: #b91c1c;
-        margin-top: 6px;
-        display: block;
-    }
+    .container { max-width: 720px; margin: 30px auto; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
+    .field { margin-top: 12px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; }
+    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #bbb; border-radius: 8px; }
+    .actions { margin-top: 14px; display: flex; gap: 10px; }
+    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; border: 0; cursor: pointer; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-secondary { background: #e5e7eb; color: #111; }
+    .text-danger { color: #b91c1c; margin-top: 6px; display: block; }
 </style>
 
 <div class="container">
     <h2>Додати жанр</h2>
 
-    <form asp-area="Admin" asp-controller="Genres" asp-action="Create" method="post" class="card">
+    <form asp-controller="Genres" asp-action="Create" method="post" class="card">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
         <div class="field">
@@ -75,7 +27,11 @@
 
         <div class="actions">
             <button type="submit" class="btn btn-primary">Зберегти</button>
-            <a class="btn btn-secondary" asp-area="Admin" asp-controller="Genres" asp-action="Index">Назад</a>
+            <a class="btn btn-secondary" asp-controller="Genres" asp-action="Index">Назад</a>
         </div>
     </form>
 </div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

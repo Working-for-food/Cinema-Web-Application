@@ -1,123 +1,113 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Infrastructure.Interfaces;
-using Infrastructure.Data; 
+﻿using Infrastructure.Data;
 using Infrastructure.Entities;
+using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Repositories;
+
+public class MovieRepository : IMovieRepository
 {
-    public class MovieRepository : IMovieRepository
+    private readonly CinemaDbContext _db;
+
+    public MovieRepository(CinemaDbContext db) => _db = db;
+
+    public async Task<(IEnumerable<Movie> Items, int TotalCount)> GetAllAsync(
+        string? searchTerm,
+        string? sortBy,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
     {
-        private readonly CinemaDbContext _context;
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
 
-        public MovieRepository(CinemaDbContext context)
-        {
-            _context = context;
-        }
-
-        // GetAll
-        public async Task<(IEnumerable<Movie> Items, int TotalCount)> GetAllAsync(
-            string? searchTerm, string? sortBy, int page, int pageSize)
-        {
-            var query = _context.Movies
-                .Include(m => m.MovieGenres)
+        var query = _db.Movies
+            .AsNoTracking()
+            .Include(m => m.MovieGenres)
                 .ThenInclude(mg => mg.Genre)
-                .AsQueryable();
+            .Include(m => m.Sessions)
+            .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                query = query.Where(m => m.Title.Contains(searchTerm));
-            }
-
-            // Switch expression
-            query = sortBy switch
-            {
-                "date_asc" => query.OrderBy(m => m.ReleaseDate),
-                "date_desc" => query.OrderByDescending(m => m.ReleaseDate),
-                "title_desc" => query.OrderByDescending(m => m.Title),
-                _ => query.OrderBy(m => m.Title) // Default
-            };
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return (items, totalCount);
-        }
-
-        // GetById
-        public async Task<Movie?> GetByIdAsync(int id)
+        if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            return await _context.Movies
-                .Include(m => m.MovieGenres)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var term = searchTerm.Trim();
+            query = query.Where(m => EF.Functions.Like(m.Title, $"%{term}%"));
         }
 
-        // Add
-        public async Task AddAsync(Movie movie, IEnumerable<int> genreIds)
+        query = (sortBy ?? "title").ToLowerInvariant() switch
         {
-            
-            foreach (var gId in genreIds)
-            {
-                movie.MovieGenres.Add(new MovieGenre { GenreId = gId });
-            }
+            "date_asc" => query.OrderBy(m => m.ReleaseDate),
+            "date_desc" => query.OrderByDescending(m => m.ReleaseDate),
+            "title_desc" => query.OrderByDescending(m => m.Title),
+            _ => query.OrderBy(m => m.Title)
+        };
 
-            await _context.Movies.AddAsync(movie);
-            await _context.SaveChangesAsync();
-        }
+        var totalCount = await query.CountAsync(ct);
 
-        // Update
-        public async Task UpdateAsync(Movie movie, IEnumerable<int> genreIds)
-        {
-            var existingMovie = await _context.Movies
-                .Include(m => m.MovieGenres)
-                .FirstOrDefaultAsync(m => m.Id == movie.Id);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
 
-            if (existingMovie == null) return;
-
-            
-            existingMovie.Title = movie.Title;
-            existingMovie.Description = movie.Description;
-            existingMovie.ReleaseDate = movie.ReleaseDate;
-            existingMovie.Duration = movie.Duration;
-            existingMovie.ProductionCountryCode = movie.ProductionCountryCode;
-
-            
-            existingMovie.MovieGenres.Clear();
-
-            
-            foreach (var gId in genreIds)
-            {
-                existingMovie.MovieGenres.Add(new MovieGenre { MovieId = existingMovie.Id, GenreId = gId });
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
-        // Delete
-        public async Task DeleteAsync(int id)
-        {
-            var movie = await _context.Movies.FindAsync(id);
-            if (movie != null)
-            {
-                _context.Movies.Remove(movie);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        // Genres
-
-        // GetAllGenres
-        public async Task<IEnumerable<Genre>> GetAllGenresAsync()
-        {
-            return await _context.Genres.OrderBy(g => g.Name).ToListAsync();
-        }
+        return (items, totalCount);
     }
+
+    public Task<Movie?> GetByIdAsync(int id, CancellationToken ct = default) =>
+        _db.Movies
+            .AsNoTracking()
+            .Include(m => m.MovieGenres)
+            .FirstOrDefaultAsync(m => m.Id == id, ct);
+
+    public Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default) =>
+        _db.Movies
+            .AsNoTracking()
+            .Include(m => m.MovieGenres)
+                .ThenInclude(mg => mg.Genre)
+            .Include(m => m.Sessions)
+            .FirstOrDefaultAsync(m => m.Id == id, ct);
+
+    public async Task AddAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default)
+    {
+        var ids = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        foreach (var gId in ids)
+            movie.MovieGenres.Add(new MovieGenre { GenreId = gId });
+
+        await _db.Movies.AddAsync(movie, ct);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default)
+    {
+        var existing = await _db.Movies
+            .Include(m => m.MovieGenres)
+            .FirstOrDefaultAsync(m => m.Id == movie.Id, ct);
+
+        if (existing == null)
+            throw new InvalidOperationException("Movie not found.");
+
+        existing.Title = movie.Title;
+        existing.Description = movie.Description;
+        existing.ReleaseDate = movie.ReleaseDate;
+        existing.Duration = movie.Duration;
+        existing.ProductionCountryCode = movie.ProductionCountryCode;
+
+        existing.MovieGenres.Clear();
+        var ids = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        foreach (var gId in ids)
+            existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    {
+        var movie = await _db.Movies.FindAsync([id], ct);
+        if (movie == null) return;
+
+        _db.Movies.Remove(movie);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public Task<bool> AnySessionsAsync(int movieId, CancellationToken ct = default) =>
+        _db.Sessions.AsNoTracking().AnyAsync(s => s.MovieId == movieId, ct);
 }

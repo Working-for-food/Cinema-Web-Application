@@ -1,0 +1,52 @@
+﻿@model Infrastructure.Entities.Movie
+
+@{
+    ViewData["Title"] = "Movie details";
+    var genres = Model.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@Model.Title</h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Release date</dt>
+                <dd class="col-sm-9">@(Model.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</dd>
+
+                <dt class="col-sm-3">Duration</dt>
+                <dd class="col-sm-9">@(Model.Duration.HasValue ? $"{Model.Duration} min" : "-")</dd>
+
+                <dt class="col-sm-3">Country</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.ProductionCountryCode) ? "-" : Model.ProductionCountryCode)</dd>
+
+                <dt class="col-sm-3">Genres</dt>
+                <dd class="col-sm-9">
+                    @if (genres.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        foreach (var g in genres)
+                        {
+                            <span class="badge bg-info text-dark me-1">@g</span>
+                        }
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Sessions</dt>
+                <dd class="col-sm-9">@(Model.Sessions?.Count ?? 0)</dd>
+
+                <dt class="col-sm-3">Description</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
+            </dl>
+        </div>
+    </div>
+</div>

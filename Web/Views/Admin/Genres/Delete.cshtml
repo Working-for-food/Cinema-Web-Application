@@ -1,49 +1,13 @@
 ﻿@model Infrastructure.Entities.Genre
 
 <style>
-    .container {
-        max-width: 720px;
-        margin: 30px auto;
-    }
-
-    .card {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 16px;
-    }
-
-    .alert-error {
-        background: #fee2e2;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        color: #7f1d1d;
-    }
-
-    .actions {
-        margin-top: 14px;
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn {
-        padding: 10px 14px;
-        border-radius: 8px;
-        text-decoration: none;
-        display: inline-block;
-        border: 0;
-        cursor: pointer;
-    }
-
-    .btn-danger {
-        background: #fecaca;
-        color: #7f1d1d;
-    }
-
-    .btn-secondary {
-        background: #e5e7eb;
-        color: #111;
-    }
+    .container { max-width: 720px; margin: 30px auto; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
+    .alert-error { background: #fee2e2; padding: 10px; border-radius: 8px; margin-bottom: 12px; color: #7f1d1d; }
+    .actions { margin-top: 14px; display: flex; gap: 10px; }
+    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; border: 0; cursor: pointer; }
+    .btn-danger { background: #fecaca; color: #7f1d1d; }
+    .btn-secondary { background: #e5e7eb; color: #111; }
 </style>
 
 <div class="container">
@@ -58,10 +22,8 @@
         <p>Ти точно хочеш видалити жанр <strong>@Model.Name</strong>?</p>
     </div>
 
-    <form asp-area="Admin" asp-controller="Genres" asp-action="Delete" method="post" class="actions">
-        <input type="hidden" name="id" value="@Model.Id" />
-        @Html.AntiForgeryToken()
+    <form asp-controller="Genres" asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="actions">
         <button type="submit" class="btn btn-danger">Видалити</button>
-        <a class="btn btn-secondary" asp-area="Admin" asp-controller="Genres" asp-action="Index">Скасувати</a>
+        <a class="btn btn-secondary" asp-controller="Genres" asp-action="Index">Скасувати</a>
     </form>
 </div>

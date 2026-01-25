@@ -1,49 +1,14 @@
 ﻿@model Infrastructure.Entities.Genre
 
 <style>
-    .container {
-        max-width: 720px;
-        margin: 30px auto;
-    }
-
-    .card {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 16px;
-    }
-
-    .row {
-        display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 10px 16px;
-    }
-
-    .label {
-        font-weight: 700;
-    }
-
-    .actions {
-        margin-top: 14px;
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn {
-        padding: 10px 14px;
-        border-radius: 8px;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn-primary {
-        background: #4f46e5;
-        color: #fff;
-    }
-
-    .btn-secondary {
-        background: #e5e7eb;
-        color: #111;
-    }
+    .container { max-width: 720px; margin: 30px auto; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
+    .row { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; }
+    .label { font-weight: 700; }
+    .actions { margin-top: 14px; display: flex; gap: 10px; }
+    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-secondary { background: #e5e7eb; color: #111; }
 </style>
 
 <div class="container">
@@ -60,7 +25,7 @@
     </div>
 
     <div class="actions">
-        <a class="btn btn-primary" asp-area="Admin" asp-controller="Genres" asp-action="Edit" asp-route-id="@Model.Id">Редагувати</a>
-        <a class="btn btn-secondary" asp-area="Admin" asp-controller="Genres" asp-action="Index">Назад</a>
+        <a class="btn btn-primary" asp-controller="Genres" asp-action="Edit" asp-route-id="@Model.Id">Редагувати</a>
+        <a class="btn btn-secondary" asp-controller="Genres" asp-action="Index">Назад</a>
     </div>
 </div>

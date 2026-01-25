@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Web.ViewModels.Admin
 {
-
     public class MovieIndexVm
     {
         public IEnumerable<Application.DTOs.MovieDto> Movies { get; set; } = new List<Application.DTOs.MovieDto>();
@@ -12,7 +11,6 @@ namespace Web.ViewModels.Admin
         public string? SearchTerm { get; set; }
         public string? SortBy { get; set; }
     }
-
 
     public class MovieEditVm
     {
@@ -32,6 +30,7 @@ namespace Web.ViewModels.Admin
         public string? ProductionCountryCode { get; set; }
 
         [Display(Name = "Genres")]
+        [MinLength(1, ErrorMessage = "Select at least one genre")]
         public List<int> SelectedGenreIds { get; set; } = new();
 
         public MultiSelectList? GenreList { get; set; }

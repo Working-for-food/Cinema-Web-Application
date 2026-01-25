@@ -13,14 +13,19 @@ namespace Infrastructure.Interfaces
             string? searchTerm,
             string? sortBy,
             int page,
-            int pageSize);
+            int pageSize,
+            CancellationToken ct = default);
 
-        Task<Movie?> GetByIdAsync(int id);
-        Task AddAsync(Movie movie, IEnumerable<int> genreIds);
-        Task UpdateAsync(Movie movie, IEnumerable<int> genreIds);
-        Task DeleteAsync(int id);
+        Task<Movie?> GetByIdAsync(int id, CancellationToken ct = default);
 
-        // Genres
-        Task<IEnumerable<Genre>> GetAllGenresAsync();
+        // for details screen (includes genres + sessions)
+        Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
+
+        Task AddAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default);
+        Task UpdateAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default);
+        Task DeleteAsync(int id, CancellationToken ct = default);
+
+        // "status" check: is this movie used in sessions?
+        Task<bool> AnySessionsAsync(int movieId, CancellationToken ct = default);
     }
 }
