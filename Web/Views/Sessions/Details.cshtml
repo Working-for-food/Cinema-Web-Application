@@ -1,65 +1,56 @@
-﻿@model Web.ViewModels.SessionEditVm
+﻿```cshtml
+@model SessionDetailsDto
+
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Деталі сеансу";
 }
 
-<h1>Details</h1>
+<h1>Сеанс №@Model.Id</h1>
 
-@* <div>
-    <h4>Session</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StartTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StartTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EndTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EndTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Movie)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Movie.Title)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Hall)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Hall.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PresentationType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PresentationType)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsCancelled)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsCancelled)
-        </dd>
-    </dl>
+<dl class="row">
+    <dt class="col-sm-3">ID фільму</dt>
+    <dd class="col-sm-9">@Model.MovieId</dd>
+
+    <dt class="col-sm-3">ID залу</dt>
+    <dd class="col-sm-9">@Model.HallId</dd>
+
+    <dt class="col-sm-3">Початок</dt>
+    <dd class="col-sm-9">@Model.StartTime</dd>
+
+    <dt class="col-sm-3">Кінець</dt>
+    <dd class="col-sm-9">@Model.EndTime</dd>
+
+    <dt class="col-sm-3">Тип показу</dt>
+    <dd class="col-sm-9">@Model.PresentationType</dd>
+
+    <dt class="col-sm-3">Скасований</dt>
+    <dd class="col-sm-9">@(Model.IsCancelled ? "Так" : "Ні")</dd>
+
+    <dt class="col-sm-3">Створено</dt>
+    <dd class="col-sm-9">@Model.CreatedAt</dd>
+
+    <dt class="col-sm-3">Оновлено</dt>
+    <dd class="col-sm-9">@Model.UpdatedAt</dd>
+</dl>
+
+<div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Редагувати</a>
+
+    @if (!Model.IsCancelled)
+    {
+        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-danger" type="submit">Скасувати</button>
+        </form>
+    }
+    else
+    {
+        <form asp-action="Restore" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-success" type="submit">Відновити</button>
+        </form>
+    }
+
+    <a class="btn btn-link" asp-action="Index">Назад</a>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div> *@
+```

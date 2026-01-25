@@ -1,54 +1,131 @@
-﻿@model IReadOnlyList<Application.DTOs.SessionListDto>
+﻿@model List<SessionListDto>
 
-<h2>Sessions</h2>
-
-@if (TempData["success"] is string msg)
-{
-    <div class="alert alert-success">@msg</div>
+@{
+    ViewData["Title"] = "Сеанси (адмін)";
 }
 
-<form method="get" class="mb-3">
-    <label>From</label>
-    <input type="datetime-local" name="from" />
-    <label>To</label>
-    <input type="datetime-local" name="to" />
-    <button type="submit">Filter</button>
-    <a asp-action="Create">Create</a>
+<h1>Сеанси</h1>
+
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
+</p>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+        <label class="form-label">З</label>
+        <input class="form-control" type="datetime-local" name="from"
+               value="@(Context.Request.Query["from"])" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">До</label>
+        <input class="form-control" type="datetime-local" name="to"
+               value="@(Context.Request.Query["to"])" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">ID залу</label>
+        <input class="form-control" type="number" name="hallId"
+               value="@(Context.Request.Query["hallId"])" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">ID фільму</label>
+        <input class="form-control" type="number" name="movieId"
+               value="@(Context.Request.Query["movieId"])" />
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="includeCancelled" value="true"
+                   @(Context.Request.Query["includeCancelled"] == "true" ? "checked" : "") />
+            <label class="form-check-label">Показувати скасовані</label>
+        </div>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end gap-2">
+        <button class="btn btn-secondary w-100" type="submit">Фільтрувати</button>
+        <a class="btn btn-outline-secondary w-100" asp-action="Index">Очистити</a>
+    </div>
 </form>
 
-<table class="table">
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>Start</th>
-            <th>End</th>
-            <th>MovieId</th>
-            <th>HallId</th>
-            <th>Type</th>
-            <th>Cancelled</th>
+            <th>ID</th>
+            <th>ID фільму</th>
+            <th>ID залу</th>
+            <th>Початок</th>
+            <th>Кінець</th>
+            <th>Тип показу</th>
+            <th>Скасований</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var s in Model)
+        @if (Model is null || Model.Count == 0)
         {
             <tr>
-                <td>@s.StartTime</td>
-                <td>@s.EndTime</td>
-                <td>@s.MovieId</td>
-                <td>@s.HallId</td>
-                <td>@s.PresentationType</td>
-                <td>@s.IsCancelled</td>
-                <td>
-                    @if (!s.IsCancelled)
-                    {
-                        <form asp-action="Cancel" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@s.Id" />
-                            <button type="submit" class="btn btn-sm btn-warning">Cancel</button>
-                        </form>
-                    }
-                </td>
+                <td colspan="8">Сеансів не знайдено.</td>
             </tr>
+        }
+        else
+        {
+            foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Id</td>
+                    <td>@s.MovieId</td>
+                    <td>@s.HallId</td>
+                    <td>@s.StartTime</td>
+                    <td>@s.EndTime</td>
+                    <td>@s.PresentationType</td>
+                    <td>@(s.IsCancelled ? "Так" : "Ні")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary"
+                           asp-action="Details"
+                           asp-route-id="@s.Id">
+                            Деталі
+                        </a>
+
+                        <a class="btn btn-sm btn-outline-secondary"
+                           asp-action="Edit"
+                           asp-route-id="@s.Id">
+                            Редагувати
+                        </a>
+
+                        @if (!s.IsCancelled)
+                        {
+                            <form asp-action="Cancel"
+                                  asp-route-id="@s.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-danger" type="submit">
+                                    Скасувати
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Restore"
+                                  asp-route-id="@s.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-success" type="submit">
+                                    Відновити
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>

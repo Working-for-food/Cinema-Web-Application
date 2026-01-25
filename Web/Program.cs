@@ -1,5 +1,9 @@
+using Application.Interfaces;
+using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Entities;
+using Infrastructure.Interfaces;
+using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +16,11 @@ builder.Services.AddDbContext<CinemaDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
+
+//Services
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -28,6 +37,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

@@ -1,69 +1,62 @@
-﻿@model Infrastructure.Entities.Session
+﻿```cshtml
+@model SessionEditDto
+@using Infrastructure.Entities
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Редагувати сеанс";
+    string FormatDt(DateTime dt) => dt.ToString("yyyy-MM-ddTHH:mm");
 }
 
-<h1>Edit</h1>
+<h1>Редагувати сеанс</h1>
 
-<h4>Session</h4>
-<hr />
-@* <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="MovieId" class="control-label"></label>
-                <select asp-for="MovieId" class="form-control" asp-items="ViewBag.MovieId"></select>
-                <span asp-validation-for="MovieId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="HallId" class="control-label"></label>
-                <select asp-for="HallId" class="form-control" asp-items="ViewBag.HallId"></select>
-                <span asp-validation-for="HallId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StartTime" class="control-label"></label>
-                <input asp-for="StartTime" class="form-control" />
-                <span asp-validation-for="StartTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EndTime" class="control-label"></label>
-                <input asp-for="EndTime" class="form-control" />
-                <span asp-validation-for="EndTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UpdatedAt" class="control-label"></label>
-                <input asp-for="UpdatedAt" class="form-control" />
-                <span asp-validation-for="UpdatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PresentationType" class="control-label"></label>
-                <select asp-for="PresentationType" class="form-control"></select>
-                <span asp-validation-for="PresentationType" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsCancelled" /> @Html.DisplayNameFor(model => model.IsCancelled)
-                </label>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label class="form-label">ID фільму</label>
+        <input class="form-control" asp-for="MovieId" />
+        <span class="text-danger" asp-validation-for="MovieId"></span>
     </div>
-</div> *@
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+    <div class="mb-3">
+        <label class="form-label">ID залу</label>
+        <input class="form-control" asp-for="HallId" />
+        <span class="text-danger" asp-validation-for="HallId"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Початок</label>
+        <input class="form-control"
+               name="StartTime"
+               type="datetime-local"
+               value="@FormatDt(Model.StartTime)" />
+        <span class="text-danger" asp-validation-for="StartTime"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Кінець</label>
+        <input class="form-control"
+               name="EndTime"
+               type="datetime-local"
+               value="@FormatDt(Model.EndTime)" />
+        <span class="text-danger" asp-validation-for="EndTime"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Тип показу</label>
+        <select class="form-select"
+                asp-for="PresentationType"
+                asp-items="Html.GetEnumSelectList<PresentationType>()"></select>
+        <span class="text-danger" asp-validation-for="PresentationType"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Зберегти</button>
+    <a class="btn btn-link" asp-action="Index">Назад</a>
+</form>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <partial name="_ValidationScriptsPartial" />
 }
+```
