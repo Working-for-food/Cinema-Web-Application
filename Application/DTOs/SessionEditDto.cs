@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Application.DTOs
 {
-    public record SessionEditDto
+    public record SessionEditDto : IValidatableObject
     {
         [Required]
         [Range(1, int.MaxValue)]
