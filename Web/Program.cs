@@ -21,6 +21,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 
+builder.Services.AddScoped<ITestMovieRepository, TestMovieRepository>();
+builder.Services.AddScoped<ITestHallRepository, TestHallRepository>();
+builder.Services.AddScoped<ISessionLookupService, SessionLookupService>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

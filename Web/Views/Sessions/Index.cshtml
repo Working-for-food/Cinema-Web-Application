@@ -1,4 +1,6 @@
-﻿@model List<SessionListDto>
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using Application.DTOs
+@model List<SessionListDto>
 
 @{
     ViewData["Title"] = "Сеанси (адмін)";
@@ -15,6 +17,12 @@
     <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
 </p>
 
+@{
+    var movies = ViewBag.Movies as List<LookupItemDto> ?? new();
+    var movieIdFromQuery = Context.Request.Query["movieId"].ToString();
+    var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
+}
+
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-2">
         <label class="form-label">З</label>
@@ -28,16 +36,32 @@
                value="@(Context.Request.Query["to"])" />
     </div>
 
-    <div class="col-md-2">
-        <label class="form-label">ID залу</label>
-        <input class="form-control" type="number" name="hallId"
-               value="@(Context.Request.Query["hallId"])" />
+    <div class="col-md-3">
+        <label class="form-label">Зал</label>
+        <select class="form-select" name="hallId" asp-items="(IEnumerable<SelectListItem>)ViewBag.Halls">
+            <option value="">— Усі —</option>
+        </select>
     </div>
 
-    <div class="col-md-2">
-        <label class="form-label">ID фільму</label>
-        <input class="form-control" type="number" name="movieId"
-               value="@(Context.Request.Query["movieId"])" />
+    <div class="col-md-3">
+        <label class="form-label">Фільм</label>
+
+        <input class="form-control"
+               list="movieList"
+               id="movieTitleInput"
+               name="movieTitle"
+               placeholder="Почніть вводити назву..."
+               value="@movieTitleFromQuery" />
+
+        <datalist id="movieList">
+            @foreach (var m in movies)
+            {
+                <option value="@m.Title" data-id="@m.Id"></option>
+            }
+        </datalist>
+
+        <input type="hidden" id="movieIdHidden" name="movieId" value="@movieIdFromQuery" />
+        <div class="form-text">Показано до 50 підказок.</div>
     </div>
 
     <div class="col-md-2 d-flex align-items-end">
@@ -58,8 +82,8 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>ID фільму</th>
-            <th>ID залу</th>
+            <th>Фільм</th>
+            <th>Зал</th>
             <th>Початок</th>
             <th>Кінець</th>
             <th>Тип показу</th>
@@ -80,12 +104,22 @@
             {
                 <tr>
                     <td>@s.Id</td>
-                    <td>@s.MovieId</td>
-                    <td>@s.HallId</td>
-                    <td>@s.StartTime</td>
-                    <td>@s.EndTime</td>
+
+                    <td>
+                        @* Очікується, що SessionListDto має поле MovieTitle *@
+                        @(s.MovieTitle ?? $"#{s.MovieId}")
+                    </td>
+
+                    <td>
+                        @* Очікується, що SessionListDto має поле HallDisplayName або HallName *@
+                        @(s.HallName ?? s.HallName ?? $"#{s.HallId}")
+                    </td>
+
+                    <td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@s.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>@s.PresentationType</td>
                     <td>@(s.IsCancelled ? "Так" : "Ні")</td>
+
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-primary"
                            asp-action="Details"
@@ -129,3 +163,20 @@
         }
     </tbody>
 </table>
+
+<script>
+    (function () {
+      const input = document.getElementById('movieTitleInput');
+      const hidden = document.getElementById('movieIdHidden');
+      const list = document.getElementById('movieList');
+
+      function syncHidden() {
+        const value = input.value.trim();
+        const option = Array.from(list.options).find(o => o.value === value);
+        hidden.value = option ? option.dataset.id : '';
+      }
+
+      input.addEventListener('input', syncHidden);
+      syncHidden();
+    })();
+</script>

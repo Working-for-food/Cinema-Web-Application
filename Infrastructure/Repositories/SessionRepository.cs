@@ -27,7 +27,11 @@ namespace Infrastructure.Repositories
             bool includeCancelled,
             CancellationToken ct)
         {
-            IQueryable<Session> query = _context.Sessions.AsNoTracking();
+            IQueryable<Session> query = _context.Sessions
+                .AsNoTracking()
+                .Include(x => x.Movie)
+                .Include(x => x.Hall)
+                    .ThenInclude(h => h.Cinema);
 
             if (!includeCancelled)
                 query = query.Where(x => !x.IsCancelled);
