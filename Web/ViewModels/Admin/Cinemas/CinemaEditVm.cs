@@ -6,15 +6,15 @@ public class CinemaEditVm
 {
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "Name is required")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Name must be 2–100 characters")]
+    [Required(ErrorMessage = "Назва є обов’язковою")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Назва має містити від 2 до 100 символів")]
     public string Name { get; set; } = "";
 
-    [Required(ErrorMessage = "Address is required")]
-    [StringLength(150, MinimumLength = 3, ErrorMessage = "Address must be 3–150 characters")]
+    [Required(ErrorMessage = "Адреса є обов’язковою")]
+    [StringLength(150, MinimumLength = 3, ErrorMessage = "Адреса має містити від 3 до 150 символів")]
     public string Address { get; set; } = "";
 
-    [Required(ErrorMessage = "City is required")]
-    [StringLength(50, MinimumLength = 2, ErrorMessage = "City must be 2–50 characters")]
+    [Required(ErrorMessage = "Місто є обов’язковим")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "Назва міста має містити від 2 до 50 символів")]
     public string City { get; set; } = "";
 }

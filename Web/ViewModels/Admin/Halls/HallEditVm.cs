@@ -10,8 +10,8 @@ public class HallEditVm
     [Required]
     public int CinemaId { get; set; }
 
-    [Required]
-    [StringLength(100)]
+    [Required(ErrorMessage = "Назва є обов’язковою")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Назва має містити від 3 до 100 символів")]
     public string Name { get; set; } = "";
 
     public List<SelectListItem> Cinemas { get; set; } = new();
