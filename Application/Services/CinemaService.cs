@@ -15,9 +15,15 @@ public class CinemaService : ICinemaService
         _repo = repo;
     }
 
-    public async Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null)
+    private static string NormalizeRequired(string value)
+        => (value ?? "").Trim();
+
+    public async Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null, CancellationToken ct = default)
     {
-        var cinemas = await _repo.GetAllAsync(city, search, sort);
+        city = string.IsNullOrWhiteSpace(city) ? null : city.Trim();
+        search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+
+        var cinemas = await _repo.GetAllAsync(city, search, sort, includeDeleted: false, ct);
 
         return cinemas.Select(c => new CinemaListDto
         {
@@ -28,12 +34,12 @@ public class CinemaService : ICinemaService
         }).ToList();
     }
 
-    public Task<List<string>> GetCitiesAsync()
-        => _repo.GetCitiesAsync();
+    public Task<List<string>> GetCitiesAsync(CancellationToken ct = default)
+        => _repo.GetCitiesAsync(includeDeleted: false, ct);
 
-    public async Task<CinemaEditDto?> GetForEditAsync(int id)
+    public async Task<CinemaEditDto?> GetForEditAsync(int id, CancellationToken ct = default)
     {
-        var cinema = await _repo.GetByIdAsync(id);
+        var cinema = await _repo.GetByIdAsync(id, asTracking: false, includeDeleted: false, ct);
         if (cinema == null) return null;
 
         return new CinemaEditDto
@@ -45,9 +51,9 @@ public class CinemaService : ICinemaService
         };
     }
 
-    public async Task<CinemaDetailsDto?> GetDetailsAsync(int id)
+    public async Task<CinemaDetailsDto?> GetDetailsAsync(int id, CancellationToken ct = default)
     {
-        var cinema = await _repo.GetByIdAsync(id);
+        var cinema = await _repo.GetByIdAsync(id, asTracking: false, includeDeleted: false, ct);
         if (cinema == null) return null;
 
         return new CinemaDetailsDto
@@ -59,47 +65,47 @@ public class CinemaService : ICinemaService
         };
     }
 
-    public async Task<int> CreateAsync(CinemaEditDto dto)
+    public async Task<int> CreateAsync(CinemaEditDto dto, CancellationToken ct = default)
     {
         var cinema = new Cinema
         {
-            Name = dto.Name.Trim(),
-            Address = dto.Address.Trim(),
-            City = dto.City.Trim()
+            Name = NormalizeRequired(dto.Name),
+            Address = NormalizeRequired(dto.Address),
+            City = NormalizeRequired(dto.City)
         };
 
-        await _repo.AddAsync(cinema);
+        await _repo.AddAsync(cinema, ct);
         return cinema.Id;
     }
 
-    public async Task UpdateAsync(CinemaEditDto dto)
+    public async Task UpdateAsync(CinemaEditDto dto, CancellationToken ct = default)
     {
         if (dto.Id <= 0)
             throw new NotFoundDomainException("Cinema not found.");
 
-        var cinema = await _repo.GetByIdAsync(dto.Id);
+        var cinema = await _repo.GetByIdAsync(dto.Id, asTracking: true, includeDeleted: false, ct);
         if (cinema == null)
             throw new NotFoundDomainException("Cinema not found.");
 
-        cinema.Name = dto.Name.Trim();
-        cinema.Address = dto.Address.Trim();
-        cinema.City = dto.City.Trim();
+        cinema.Name = NormalizeRequired(dto.Name);
+        cinema.Address = NormalizeRequired(dto.Address);
+        cinema.City = NormalizeRequired(dto.City);
 
-        await _repo.UpdateAsync(cinema);
+        await _repo.UpdateAsync(cinema, ct);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var cinema = await _repo.GetByIdAsync(id);
+        var cinema = await _repo.GetByIdAsync(id, asTracking: true, includeDeleted: false, ct);
         if (cinema == null)
             throw new NotFoundDomainException("Cinema not found.");
 
-        var hasHalls = await _repo.HasHallsAsync(id);
-        var hasSessions = await _repo.HasSessionsAsync(id);
+        var hasHalls = await _repo.HasHallsAsync(id, ct);
+        var hasSessions = await _repo.HasSessionsAsync(id, ct);
 
         if (hasHalls || hasSessions)
             throw new ConflictDomainException("Cannot delete cinema because it has halls or sessions.");
 
-        await _repo.DeleteAsync(cinema);
+        await _repo.DeleteAsync(cinema, ct);
     }
 }

@@ -8,6 +8,6 @@ public class Cinema
     public string Name { get; set; } = null!;
     public string Address { get; set; } = null!;
     public string? City { get; set; }
-    public bool IsDeleted { get; set; } = false; // soft delete flag
+    public bool IsDeleted { get; set; } = false;
     public ICollection<Hall> Halls { get; set; } = new List<Hall>();
 }

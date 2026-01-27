@@ -14,21 +14,29 @@ public class CinemaRepository : ICinemaRepository
         _db = db;
     }
 
+    private IQueryable<Cinema> CinemasQuery(bool asTracking, bool includeDeleted)
+    {
+        var q = asTracking ? _db.Cinemas : _db.Cinemas.AsNoTracking();
+        if (!includeDeleted)
+            q = q.Where(c => !c.IsDeleted);
+        return q;
+    }
+
     public async Task<List<Cinema>> GetAllAsync(
         string? city = null,
         string? search = null,
-        string? sort = null)
+        string? sort = null,
+        bool includeDeleted = false,
+        CancellationToken ct = default)
     {
-        IQueryable<Cinema> q = _db.Cinemas.AsNoTracking();
+        IQueryable<Cinema> q = CinemasQuery(asTracking: false, includeDeleted: includeDeleted);
 
-        // 🔹 Filter by city (normalized)
         if (!string.IsNullOrWhiteSpace(city))
         {
             city = city.Trim();
-            q = q.Where(c => c.City != null && c.City.Trim() == city);
+            q = q.Where(c => c.City != null && c.City == city);
         }
 
-        // 🔹 Search
         if (!string.IsNullOrWhiteSpace(search))
         {
             search = search.Trim();
@@ -38,7 +46,6 @@ public class CinemaRepository : ICinemaRepository
                 (c.City != null && EF.Functions.Like(c.City, $"%{search}%")));
         }
 
-        // 🔹 Sorting
         q = sort switch
         {
             "name_desc" => q.OrderByDescending(c => c.Name),
@@ -47,60 +54,54 @@ public class CinemaRepository : ICinemaRepository
             _ => q.OrderBy(c => c.Name)
         };
 
-        return await q.ToListAsync();
+        return await q.ToListAsync(ct);
     }
 
-    public Task<Cinema?> GetByIdAsync(int id)
-        => _db.Cinemas.FirstOrDefaultAsync(c => c.Id == id);
+    public Task<Cinema?> GetByIdAsync(
+        int id,
+        bool asTracking = true,
+        bool includeDeleted = false,
+        CancellationToken ct = default)
+        => CinemasQuery(asTracking, includeDeleted)
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
 
-    public async Task AddAsync(Cinema cinema)
+    public async Task AddAsync(Cinema cinema, CancellationToken ct = default)
     {
-        // Optional normalization on save
-        cinema.Name = cinema.Name.Trim();
-        cinema.Address = cinema.Address.Trim();
-        cinema.City = cinema.City?.Trim();
-
         _db.Cinemas.Add(cinema);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
     }
 
-    public async Task UpdateAsync(Cinema cinema)
+    public async Task UpdateAsync(Cinema cinema, CancellationToken ct = default)
     {
-        cinema.Name = cinema.Name.Trim();
-        cinema.Address = cinema.Address.Trim();
-        cinema.City = cinema.City?.Trim();
-
         _db.Cinemas.Update(cinema);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
     }
 
-    // 🔹 Soft delete
-    public async Task DeleteAsync(Cinema cinema)
+    public async Task DeleteAsync(Cinema cinema, CancellationToken ct = default)
     {
         cinema.IsDeleted = true;
         _db.Cinemas.Update(cinema);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
     }
 
-    public Task<bool> ExistsAsync(int id)
-        => _db.Cinemas.AnyAsync(c => c.Id == id);
+    public Task<bool> ExistsAsync(int id, bool includeDeleted = false, CancellationToken ct = default)
+        => CinemasQuery(asTracking: false, includeDeleted: includeDeleted)
+            .AnyAsync(c => c.Id == id, ct);
 
-    public Task<bool> HasHallsAsync(int cinemaId)
-        => _db.Halls.AnyAsync(h => h.CinemaId == cinemaId);
+    public Task<bool> HasHallsAsync(int cinemaId, CancellationToken ct = default)
+        => _db.Halls.AnyAsync(h => h.CinemaId == cinemaId, ct);
 
-    public Task<bool> HasSessionsAsync(int cinemaId)
+    public Task<bool> HasSessionsAsync(int cinemaId, CancellationToken ct = default)
         => _db.Sessions.AnyAsync(s =>
-            _db.Halls.Any(h => h.Id == s.HallId && h.CinemaId == cinemaId));
+            _db.Halls.Any(h => h.Id == s.HallId && h.CinemaId == cinemaId), ct);
 
-    // 🔹 Normalized list of cities for filter
-    public async Task<List<string>> GetCitiesAsync()
+    public async Task<List<string>> GetCitiesAsync(bool includeDeleted = false, CancellationToken ct = default)
     {
-        return await _db.Cinemas
-            .AsNoTracking()
-            .Where(c => c.City != null && c.City.Trim() != "")
-            .Select(c => c.City!.Trim())
+        return await CinemasQuery(asTracking: false, includeDeleted: includeDeleted)
+            .Where(c => c.City != null && c.City != "")
+            .Select(c => c.City!)
             .Distinct()
             .OrderBy(x => x)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 }
