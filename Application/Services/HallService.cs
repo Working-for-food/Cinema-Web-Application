@@ -29,7 +29,7 @@ public class HallService : IHallService
         {
             HallId = h.Id,
             HallName = h.Name,
-            CinemaName = h.Cinema?.Name ?? $"Cinema #{h.CinemaId}",
+            CinemaName = h.Cinema?.Name ?? $"Кінотеатр #{h.CinemaId}",
             SeatsCount = counts.TryGetValue(h.Id, out var c) ? c : 0
         }).ToList();
     }
@@ -37,7 +37,7 @@ public class HallService : IHallService
     public async Task<List<HallListDto>> GetByCinemaAsync(int cinemaId)
     {
         if (!await CinemaExistsAsync(cinemaId))
-            throw new ArgumentException("CinemaId does not exist");
+            throw new ArgumentException("Кінотеатр не знайдено.");
 
         var halls = await _halls.GetByCinemaWithCinemaAsync(cinemaId);
         var counts = await _seats.CountByHallIdsAsync(halls.Select(h => h.Id));
@@ -46,7 +46,7 @@ public class HallService : IHallService
         {
             HallId = h.Id,
             HallName = h.Name,
-            CinemaName = h.Cinema?.Name ?? $"Cinema #{h.CinemaId}",
+            CinemaName = h.Cinema?.Name ?? $"Кінотеатр #{h.CinemaId}",
             SeatsCount = counts.TryGetValue(h.Id, out var c) ? c : 0
         }).ToList();
     }
@@ -71,7 +71,7 @@ public class HallService : IHallService
         var hall = new Hall
         {
             CinemaId = dto.CinemaId,
-            Name = dto.Name.Trim()
+            Name = (dto.Name ?? string.Empty).Trim()
         };
 
         await _halls.AddAsync(hall);
@@ -80,16 +80,16 @@ public class HallService : IHallService
     public async Task UpdateAsync(HallEditDto dto)
     {
         if (dto.Id == null)
-            throw new ArgumentException("Hall id is required");
+            throw new ArgumentException("Ідентифікатор залу є обов’язковим.");
 
         await ValidateHallAsync(dto);
 
         var hall = await _halls.GetByIdAsync(dto.Id.Value);
         if (hall == null)
-            throw new InvalidOperationException("Hall not found");
+            throw new InvalidOperationException("Зал не знайдено.");
 
         hall.CinemaId = dto.CinemaId;
-        hall.Name = dto.Name.Trim();
+        hall.Name = (dto.Name ?? string.Empty).Trim();
 
         await _halls.UpdateAsync(hall);
     }
@@ -99,7 +99,7 @@ public class HallService : IHallService
         var hall = await _halls.GetByIdAsync(hallId);
         if (hall == null) return;
 
-        await EnsureHallCanBeChangedAsync(hallId, op: "delete hall");
+        await EnsureHallCanBeDeletedAsync(hallId);
 
         await using var tx = await _db.Database.BeginTransactionAsync();
         try
@@ -141,8 +141,10 @@ public class HallService : IHallService
         var hasBookings = await _halls.HasAnyBookingsAsync(hallId);
         var hasSessions = await _halls.HasAnySessionsAsync(hallId);
 
-        if (hasBookings) lockReason = "Cannot change seats: there are bookings for sessions in this hall.";
-        else if (hasSessions) lockReason = "Cannot change seats: this hall already has sessions.";
+        if (hasBookings)
+            lockReason = "Неможливо змінювати місця: у цьому залі є бронювання на сеанси.";
+        else if (hasSessions)
+            lockReason = "Неможливо змінювати місця: у цьому залі вже є сеанси.";
 
         var canEdit = string.IsNullOrEmpty(lockReason) && !already;
 
@@ -182,36 +184,28 @@ public class HallService : IHallService
     public async Task GenerateSeatsByConfigAsync(int hallId, List<RowSeatsDto> rows, bool allowRegenerate)
     {
         if (!await _halls.ExistsAsync(hallId))
-            throw new InvalidOperationException("Hall not found");
+            throw new InvalidOperationException("Зал не знайдено.");
 
-        await EnsureHallCanBeChangedAsync(hallId, op: "change seats");
+        await EnsureHallCanBeModifiedAsync(hallId);
 
         if (rows == null || rows.Count == 0)
         {
-            if (allowRegenerate)
-            {
-                var existing = await _seats.GetByHallAsync(hallId);
+            if (!allowRegenerate)
+                throw new ArgumentException("Конфігурація рядів порожня.");
 
-                rows = existing
-                    .GroupBy(s => s.RowNumber)
-                    .Select(g => new RowSeatsDto
-                    {
-                        RowNumber = g.Key,
-                        SeatsCount = g.Count()
-                    })
-                    .OrderBy(x => x.RowNumber)
-                    .ToList();
+            var existing = await _seats.GetByHallAsync(hallId);
 
-                if (rows.Count == 0)
-                    throw new ArgumentException("Rows config is empty");
-            }
-            else
-            {
-                throw new ArgumentException("Rows config is empty");
-            }
+            rows = existing
+                .GroupBy(s => s.RowNumber)
+                .Select(g => new RowSeatsDto { RowNumber = g.Key, SeatsCount = g.Count() })
+                .OrderBy(x => x.RowNumber)
+                .ToList();
+
+            if (rows.Count == 0)
+                throw new ArgumentException("Неможливо повторно створити місця: поточні місця відсутні.");
         }
 
-        // Дедуп по RowNumber, щоб не впасти на унікальному індексі (HallId, RowNumber, SeatNumber)
+        // дедуп по номеру ряду
         rows = rows
             .GroupBy(r => r.RowNumber)
             .Select(g => new RowSeatsDto { RowNumber = g.Key, SeatsCount = g.Max(x => x.SeatsCount) })
@@ -220,14 +214,14 @@ public class HallService : IHallService
 
         foreach (var r in rows)
         {
-            if (r.RowNumber < 1) throw new ArgumentException("RowNumber must be >= 1");
-            if (r.SeatsCount < 1) throw new ArgumentException("SeatsCount must be >= 1");
+            if (r.RowNumber < 1) throw new ArgumentException("Номер ряду має бути >= 1.");
+            if (r.SeatsCount < 1) throw new ArgumentException("Кількість місць у ряду має бути >= 1.");
         }
 
         var already = await _seats.AnyForHallAsync(hallId);
 
         if (already && !allowRegenerate)
-            throw new InvalidOperationException("Seats already generated. Regenerate is not allowed.");
+            throw new InvalidOperationException("Місця вже згенеровані. Повторне створення можливе лише після підтвердження.");
 
         await using var tx = await _db.Database.BeginTransactionAsync();
         try
@@ -263,21 +257,30 @@ public class HallService : IHallService
     private async Task ValidateHallAsync(HallEditDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
-            throw new ArgumentException("Name is required");
+            throw new ArgumentException("Назва залу є обов’язковою.");
 
         if (!await CinemaExistsAsync(dto.CinemaId))
-            throw new ArgumentException("CinemaId does not exist");
+            throw new ArgumentException("Кінотеатр не знайдено.");
     }
 
     private Task<bool> CinemaExistsAsync(int cinemaId)
         => _db.Cinemas.AnyAsync(c => c.Id == cinemaId && !c.IsDeleted);
 
-    private async Task EnsureHallCanBeChangedAsync(int hallId, string op)
+    private async Task EnsureHallCanBeDeletedAsync(int hallId)
     {
         if (await _halls.HasAnyBookingsAsync(hallId))
-            throw new InvalidOperationException($"Cannot {op}: there are bookings for sessions in this hall.");
+            throw new InvalidOperationException("Неможливо видалити зал: у цьому залі є бронювання на сеанси.");
 
         if (await _halls.HasAnySessionsAsync(hallId))
-            throw new InvalidOperationException($"Cannot {op}: this hall already has sessions.");
+            throw new InvalidOperationException("Неможливо видалити зал: у цьому залі вже є сеанси.");
+    }
+
+    private async Task EnsureHallCanBeModifiedAsync(int hallId)
+    {
+        if (await _halls.HasAnyBookingsAsync(hallId))
+            throw new InvalidOperationException("Неможливо змінювати місця: у цьому залі є бронювання на сеанси.");
+
+        if (await _halls.HasAnySessionsAsync(hallId))
+            throw new InvalidOperationException("Неможливо змінювати місця: у цьому залі вже є сеанси.");
     }
 }

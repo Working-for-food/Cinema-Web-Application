@@ -1,23 +1,23 @@
 ﻿@model Web.ViewModels.Admin.Cinemas.CinemaEditVm
 
 @{
-    ViewData["Title"] = "Delete Cinema";
+    ViewData["Title"] = "Видалити кінотеатр";
 }
 
-<h2>Delete Cinema</h2>
+<h2>Видалити кінотеатр</h2>
 
 <div class="alert alert-warning">
-    Are you sure you want to delete this cinema?
+    Ви впевнені, що хочете видалити цей кінотеатр?
 </div>
 
 <dl class="row">
-    <dt class="col-sm-2">Name</dt>
+    <dt class="col-sm-2">Назва</dt>
     <dd class="col-sm-10">@Model.Name</dd>
 
-    <dt class="col-sm-2">Address</dt>
+    <dt class="col-sm-2">Адреса</dt>
     <dd class="col-sm-10">@Model.Address</dd>
 
-    <dt class="col-sm-2">City</dt>
+    <dt class="col-sm-2">Місто</dt>
     <dd class="col-sm-10">@Model.City</dd>
 </dl>
 
@@ -30,13 +30,13 @@
     @Html.AntiForgeryToken()
 
     <button type="submit" class="btn btn-danger">
-        Yes, delete
+        Так, видалити
     </button>
 
     <a asp-area="Admin"
        asp-controller="Cinemas"
        asp-action="Index"
        class="btn btn-secondary">
-        Cancel
+        Скасувати
     </a>
 </form>

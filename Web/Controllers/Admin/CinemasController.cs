@@ -43,10 +43,10 @@ public class CinemasController : Controller
 
             SortOptions = new List<SelectListItem>
             {
-                new("Name ↑", "") { Selected = string.IsNullOrEmpty(sort) },
-                new("Name ↓", "name_desc") { Selected = sort == "name_desc" },
-                new("City ↑", "city") { Selected = sort == "city" },
-                new("City ↓", "city_desc") { Selected = sort == "city_desc" }
+                new("За назвою (А→Я)", "") { Selected = string.IsNullOrEmpty(sort) },
+                new("За назвою (Я→А)", "name_desc") { Selected = sort == "name_desc" },
+                new("За містом (А→Я)", "city") { Selected = sort == "city" },
+                new("За містом (Я→А)", "city_desc") { Selected = sort == "city_desc" }
             },
 
             Cinemas = cinemas

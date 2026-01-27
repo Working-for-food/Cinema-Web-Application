@@ -1,7 +1,7 @@
 ﻿@model Web.ViewModels.Admin.Halls.HallEditVm
 
 @{
-    ViewData["Title"] = Model.Id == null ? "Create Hall" : "Edit Hall";
+    ViewData["Title"] = Model.Id == null ? "Створити зал" : "Редагувати зал";
 }
 
 <h2>@ViewData["Title"]</h2>
@@ -20,23 +20,23 @@
     }
 
     <div class="mb-3">
-        <label asp-for="CinemaId" class="form-label">Cinema</label>
+        <label for="CinemaId" class="form-label">Кінотеатр</label>
         <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select"></select>
         <span asp-validation-for="CinemaId" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
+        <label for="Name" class="form-label">Назва</label>
         <input asp-for="Name" class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-primary">Зберегти</button>
     <a asp-area="Admin"
        asp-controller="Halls"
        asp-action="Index"
        asp-route-cinemaId="@Model.CinemaId"
-       class="btn btn-secondary">Back</a>
+       class="btn btn-secondary">Назад</a>
 </form>
 
 @section Scripts {

@@ -1,10 +1,10 @@
 ﻿@model Web.ViewModels.Admin.Halls.HallsIndexVm
 
 @{
-    ViewData["Title"] = "Halls";
+    ViewData["Title"] = "Зали";
 }
 
-<h2>Halls</h2>
+<h2>Зали</h2>
 
 @if (TempData["Success"] is string ok)
 {
@@ -17,12 +17,12 @@
 
 <form method="get" asp-area="Admin" asp-controller="Halls" asp-action="Index" class="row g-2 align-items-end mb-3">
     <div class="col-md-4">
-        <label class="form-label">Cinema</label>
+        <label class="form-label">Кінотеатр</label>
         <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select" onchange="this.form.submit()">
-            <option value="">All</option>
+            <option value="">Усі</option>
         </select>
         <noscript>
-            <button type="submit" class="btn btn-outline-primary mt-2">Filter</button>
+            <button type="submit" class="btn btn-outline-primary mt-2">Фільтрувати</button>
         </noscript>
     </div>
 
@@ -32,7 +32,7 @@
            asp-action="Create"
            asp-route-cinemaId="@Model.CinemaId"
            class="btn btn-primary">
-            Create Hall
+            Створити зал
         </a>
     </div>
 </form>
@@ -40,9 +40,9 @@
 <table class="table table-striped align-middle">
     <thead>
         <tr>
-            <th>Cinema</th>
-            <th>Hall</th>
-            <th class="text-end">Seats</th>
+            <th>Кінотеатр</th>
+            <th>Зал</th>
+            <th class="text-end">Місця</th>
             <th class="text-end"></th>
         </tr>
     </thead>
@@ -55,10 +55,10 @@
                 <td class="text-end">@h.SeatsCount</td>
                 <td class="text-end">
                     <a asp-area="Admin" asp-controller="Halls" asp-action="Edit" asp-route-id="@h.HallId" class="btn btn-sm btn-outline-secondary">
-                        Edit
+                        Редагувати
                     </a>
                     <a asp-area="Admin" asp-controller="Halls" asp-action="Seats" asp-route-id="@h.HallId" class="btn btn-sm btn-outline-primary">
-                        Seats
+                        Місця
                     </a>
 
                     <form method="post"
@@ -70,8 +70,8 @@
                           class="d-inline">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Delete this hall?');">
-                            Delete
+                                onclick="return confirm('Видалити цей зал?');">
+                            Видалити
                         </button>
                     </form>
                 </td>

@@ -15,8 +15,8 @@ public class CinemaService : ICinemaService
         _repo = repo;
     }
 
-    private static string NormalizeRequired(string value)
-        => (value ?? "").Trim();
+    private static string Normalize(string? value)
+        => (value ?? string.Empty).Trim();
 
     public async Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null, CancellationToken ct = default)
     {
@@ -69,9 +69,9 @@ public class CinemaService : ICinemaService
     {
         var cinema = new Cinema
         {
-            Name = NormalizeRequired(dto.Name),
-            Address = NormalizeRequired(dto.Address),
-            City = NormalizeRequired(dto.City)
+            Name = Normalize(dto.Name),
+            Address = Normalize(dto.Address),
+            City = Normalize(dto.City)
         };
 
         await _repo.AddAsync(cinema, ct);
@@ -81,15 +81,15 @@ public class CinemaService : ICinemaService
     public async Task UpdateAsync(CinemaEditDto dto, CancellationToken ct = default)
     {
         if (dto.Id <= 0)
-            throw new NotFoundDomainException("Cinema not found.");
+            throw new NotFoundDomainException("Кінотеатр не знайдено.");
 
         var cinema = await _repo.GetByIdAsync(dto.Id, asTracking: true, includeDeleted: false, ct);
         if (cinema == null)
-            throw new NotFoundDomainException("Cinema not found.");
+            throw new NotFoundDomainException("Кінотеатр не знайдено.");
 
-        cinema.Name = NormalizeRequired(dto.Name);
-        cinema.Address = NormalizeRequired(dto.Address);
-        cinema.City = NormalizeRequired(dto.City);
+        cinema.Name = Normalize(dto.Name);
+        cinema.Address = Normalize(dto.Address);
+        cinema.City = Normalize(dto.City);
 
         await _repo.UpdateAsync(cinema, ct);
     }
@@ -98,13 +98,13 @@ public class CinemaService : ICinemaService
     {
         var cinema = await _repo.GetByIdAsync(id, asTracking: true, includeDeleted: false, ct);
         if (cinema == null)
-            throw new NotFoundDomainException("Cinema not found.");
+            throw new NotFoundDomainException("Кінотеатр не знайдено.");
 
         var hasHalls = await _repo.HasHallsAsync(id, ct);
         var hasSessions = await _repo.HasSessionsAsync(id, ct);
 
         if (hasHalls || hasSessions)
-            throw new ConflictDomainException("Cannot delete cinema because it has halls or sessions.");
+            throw new ConflictDomainException("Неможливо видалити кінотеатр, оскільки він має зали або сеанси.");
 
         await _repo.DeleteAsync(cinema, ct);
     }

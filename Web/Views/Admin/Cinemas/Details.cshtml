@@ -1,19 +1,19 @@
 ﻿@model Application.DTOs.CinemaDetailsDto
 
 @{
-    ViewData["Title"] = "Cinema Details";
+    ViewData["Title"] = "Деталі кінотеатру";
 }
 
-<h2>Cinema Details</h2>
+<h2>Деталі кінотеатру</h2>
 
 <dl class="row">
-    <dt class="col-sm-2">Name</dt>
+    <dt class="col-sm-2">Назва</dt>
     <dd class="col-sm-10">@Model.Name</dd>
 
-    <dt class="col-sm-2">Address</dt>
+    <dt class="col-sm-2">Адреса</dt>
     <dd class="col-sm-10">@Model.Address</dd>
 
-    <dt class="col-sm-2">City</dt>
+    <dt class="col-sm-2">Місто</dt>
     <dd class="col-sm-10">@Model.City</dd>
 </dl>
 
@@ -23,7 +23,7 @@
        asp-action="Edit"
        asp-route-id="@Model.Id"
        class="btn btn-warning">
-        Edit
+        Редагувати
     </a>
 
     <a asp-area="Admin"
@@ -31,13 +31,13 @@
        asp-action="Index"
        asp-route-cinemaId="@Model.Id"
        class="btn btn-primary">
-        Halls
+        Зали
     </a>
 
     <a asp-area="Admin"
        asp-controller="Cinemas"
        asp-action="Index"
        class="btn btn-secondary">
-        Back
+        Назад
     </a>
 </div>
