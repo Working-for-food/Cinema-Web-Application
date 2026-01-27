@@ -6,4 +6,4 @@ using System.Threading.Tasks;
 
 namespace Application.DTOs;
 
-public record LookupItemDto(int Id, string Title);
+public record LookupItemDto(int Id, string Title, int? DurationMinutes = null);

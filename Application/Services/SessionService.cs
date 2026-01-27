@@ -23,7 +23,13 @@ public class SessionService : ISessionService
         {
             Id = s.Id,
             MovieId = s.MovieId,
+            MovieTitle = s.Movie?.Title ?? "",
+
             HallId = s.HallId,
+            HallTitle = s.Hall?.Cinema != null
+                ? $"{s.Hall.Cinema.Name} — {s.Hall.Name}"
+                : (s.Hall?.Name ?? ""),
+
             StartTime = s.StartTime,
             EndTime = s.EndTime,
             PresentationType = s.PresentationType,

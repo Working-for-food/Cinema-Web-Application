@@ -16,7 +16,11 @@ namespace Infrastructure.Repositories
 
         public Task<Session?> GetByIdAsync(int id, CancellationToken ct)
         {
-            return _context.Sessions.FirstOrDefaultAsync(x => x.Id == id, ct);
+            return _context.Sessions
+                .AsNoTracking()
+                .Include(s => s.Movie)
+                .Include(s => s.Hall).ThenInclude(h => h.Cinema)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
         public async Task<List<Session>> GetAllAsync(

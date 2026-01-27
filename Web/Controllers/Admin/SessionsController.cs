@@ -1,6 +1,5 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -11,6 +10,12 @@ namespace Web.Controllers.Admin
     {
         private readonly ISessionService _sessions;
         private readonly ISessionLookupService _lookups;
+
+        public SessionsController(ISessionService sessions, ISessionLookupService lookups)
+        {
+            _sessions = sessions;
+            _lookups = lookups;
+        }
 
         private async Task FillLookupsAsync(int? selectedHallId, CancellationToken ct)
         {
@@ -26,13 +31,8 @@ namespace Web.Controllers.Admin
             ViewBag.Movies = await _lookups.GetMoviesAsync(null, ct);
         }
 
-        public SessionsController(ISessionService sessions, ISessionLookupService lookups)
-        {
-            _sessions = sessions;
-            _lookups = lookups;
-        }
-
-        // GET: /Admin/Sessions
+        // GET: /Admin/Sessions/Index
+        [HttpGet]
         public async Task<IActionResult> Index(
             DateTime? from,
             DateTime? to,
@@ -42,12 +42,9 @@ namespace Web.Controllers.Admin
             CancellationToken ct = default)
         {
             var list = await _sessions.GetAllAsync(from, to, hallId, movieId, includeCancelled, ct);
-
             await FillLookupsAsync(hallId, ct);
-
             return View(list);
-}
-
+        }
 
         // GET: /Admin/Sessions/Details/5
         [HttpGet("{id:int}")]
@@ -60,16 +57,18 @@ namespace Web.Controllers.Admin
 
         // GET: /Admin/Sessions/Create
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(CancellationToken ct)
         {
-            var now = DateTime.Now;
+            await FillLookupsAsync(selectedHallId: null, ct);
 
+            var now = DateTime.Now;
             now = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute / 5 * 5, 0);
 
             var dto = new SessionEditDto
             {
                 StartTime = now,
-                EndTime = now.AddHours(2)
+                EndTime = now.AddHours(2),
+                PresentationType = Infrastructure.Entities.PresentationType.TwoD
             };
 
             return View(dto);
@@ -107,6 +106,11 @@ namespace Web.Controllers.Admin
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
 
+            await FillLookupsAsync(s.HallId, ct);
+
+            // щоб у полі пошуку фільму підставити назву
+            // ViewBag.MovieTitle = s.MovieTitle;
+
             var dto = new SessionEditDto
             {
                 MovieId = s.MovieId,
@@ -124,7 +128,11 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, SessionEditDto dto, CancellationToken ct)
         {
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid)
+            {
+                await FillLookupsAsync(dto.HallId, ct);
+                return View(dto);
+            }
 
             try
             {
@@ -136,6 +144,7 @@ namespace Web.Controllers.Admin
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
+                await FillLookupsAsync(dto.HallId, ct);
                 return View(dto);
             }
         }
