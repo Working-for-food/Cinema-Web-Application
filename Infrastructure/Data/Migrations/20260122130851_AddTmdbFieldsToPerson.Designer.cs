@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Data.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    partial class CinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122130851_AddTmdbFieldsToPerson")]
+    partial class AddTmdbFieldsToPerson
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,20 +189,12 @@ namespace Infrastructure.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<int?>("TmdbId")
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .IsUnique();
-
-                    b.HasIndex("TmdbId")
-                        .IsUnique()
-                        .HasFilter("[TmdbId] IS NOT NULL");
 
                     b.ToTable("Genres");
                 });
@@ -234,38 +229,27 @@ namespace Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BackdropPath")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("CountryCode")
-                        .HasColumnType("nchar(2)");
-
                     b.Property<string>("Description")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<int?>("Duration")
+                    b.Property<int?>("DirectorId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                    b.Property<int?>("Duration")
+                        .HasColumnType("int");
 
                     b.Property<string>("Language")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("OriginalTitle")
+                    b.Property<string>("OriginalName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PersonId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PosterPath")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<string>("ProductionCountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("nchar(2)")
+                        .IsFixedLength();
 
                     b.Property<decimal?>("Rating")
                         .HasPrecision(4, 1)
@@ -278,22 +262,15 @@ namespace Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TmdbId")
-                        .HasColumnType("int");
-
                     b.Property<string>("TrailerUrl")
                         .HasMaxLength(700)
                         .HasColumnType("nvarchar(700)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CountryCode");
+                    b.HasIndex("DirectorId");
 
-                    b.HasIndex("PersonId");
-
-                    b.HasIndex("TmdbId")
-                        .IsUnique()
-                        .HasFilter("[TmdbId] IS NOT NULL");
+                    b.HasIndex("ProductionCountryCode");
 
                     b.ToTable("Movies");
                 });
@@ -315,6 +292,9 @@ namespace Infrastructure.Data.Migrations
                     b.HasKey("MovieId", "ActorId");
 
                     b.HasIndex("ActorId");
+
+                    b.HasIndex("MovieId", "ActorId")
+                        .IsUnique();
 
                     b.HasIndex("MovieId", "CustOrder")
                         .IsUnique();
@@ -360,6 +340,9 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "BillingOrder")
                         .IsUnique();
 
+                    b.HasIndex("MovieId", "DirectorId")
+                        .IsUnique();
+
                     b.ToTable("MovieDirectors");
                 });
 
@@ -376,6 +359,9 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("GenreId");
 
                     b.HasIndex("MovieId");
+
+                    b.HasIndex("MovieId", "GenreId")
+                        .IsUnique();
 
                     b.ToTable("MovieGenres");
                 });
@@ -401,15 +387,15 @@ namespace Infrastructure.Data.Migrations
                         .IsFixedLength();
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
@@ -709,13 +695,19 @@ namespace Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
                 {
-                    b.HasOne("Infrastructure.Entities.Country", null)
-                        .WithMany("ProducedMovies")
-                        .HasForeignKey("CountryCode");
-
-                    b.HasOne("Infrastructure.Entities.Person", null)
+                    b.HasOne("Infrastructure.Entities.Person", "Director")
                         .WithMany("DirectedMoviesMain")
-                        .HasForeignKey("PersonId");
+                        .HasForeignKey("DirectorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Infrastructure.Entities.Country", "ProductionCountry")
+                        .WithMany("ProducedMovies")
+                        .HasForeignKey("ProductionCountryCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Director");
+
+                    b.Navigation("ProductionCountry");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>
