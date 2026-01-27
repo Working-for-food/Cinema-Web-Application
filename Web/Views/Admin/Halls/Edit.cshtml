@@ -1,29 +1,75 @@
 ﻿@model Web.ViewModels.Admin.Halls.HallEditVm
 
-<h2>@(Model.Id == null ? "Create Hall" : "Edit Hall")</h2>
+@{
+    var isCreate = Model.Id == null;
+    ViewData["Title"] = isCreate ? "Створення залу" : "Редагування залу";
+}
 
-<form method="post" asp-action="@(Model.Id == null ? "Create" : "Edit")">
-    @Html.AntiForgeryToken()
+<section class="sessions-section py-4 pb-5 gray-bg">
+    <div class="container">
 
-    @if (Model.Id != null)
-    {
-        <input type="hidden" asp-for="Id" />
-    }
+        <div class="text-center mb-4">
+            <h1 class="section-title mb-0">
+                @(isCreate ? "Створити зал" : "Редагувати зал")
+            </h1>
+            <p class="text-muted mt-3 mb-0">
+                Вкажіть кінотеатр та назву залу — і натисніть “Зберегти”.
+            </p>
+        </div>
 
-    <div>
-        <label>Cinema</label>
-        <select asp-for="CinemaId" asp-items="Model.Cinemas"></select>
-        <span asp-validation-for="CinemaId"></span>
+        <div class="card shadow-sm rounded-4 modern-card">
+            <div class="card-body p-4 p-md-5">
+                <form method="post" asp-action="@(isCreate ? "Create" : "Edit")" class="modern-form">
+                    @Html.AntiForgeryToken()
+
+                    @if (!isCreate)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
+                    <div class="row g-4">
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="CinemaId" class="form-label">Кінотеатр</label>
+                            <select asp-for="CinemaId"
+                                    asp-items="Model.Cinemas"
+                                    class="form-select form-select-lg">
+                            </select>
+                            <span asp-validation-for="CinemaId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="Name" class="form-label">Назва залу</label>
+                            <input asp-for="Name"
+                                   class="form-control form-control-lg"
+                                   placeholder="Наприклад: Зал №1 / IMAX / VIP"
+                                   autocomplete="off" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                            <div class="form-text">
+                                Коротка назва, яку буде видно у списку залів.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div asp-validation-summary="All" class="text-danger mt-3"></div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-2">
+                        <a asp-action="Index"
+                           asp-route-cinemaId="@Model.CinemaId"
+                           class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Назад
+                        </a>
+
+                        <button type="submit" class="btn btn-maroon btn-lg">
+                            <i class="fas fa-save me-2"></i>Зберегти
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
+</section>
 
-    <div>
-        <label>Name</label>
-        <input asp-for="Name" />
-        <span asp-validation-for="Name"></span>
-    </div>
-
-    <div asp-validation-summary="All"></div>
-
-    <button type="submit">Save</button>
-    <a asp-action="Index" asp-route-cinemaId="@Model.CinemaId">Back</a>
-</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

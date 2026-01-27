@@ -1,45 +1,98 @@
 ﻿@model Web.ViewModels.Admin.Halls.HallsIndexVm
 
-<h2>Halls</h2>
+@{
+    ViewData["Title"] = "Зали";
+}
 
-<form method="get" asp-action="Index">
-    <label>Cinema:</label>
-    <select asp-for="CinemaId" asp-items="Model.Cinemas" onchange="this.form.submit()">
-        <option value="">All</option>
-    </select>
-    <noscript><button type="submit">Filter</button></noscript>
-</form>
+<section class="sessions-section py-4 gray-bg">
+    <div class="container-fluid">
+        <h1 class="section-title text-center mb-5">Зали</h1>
 
-<p>
-    <a asp-action="Create" asp-route-cinemaId="@Model.CinemaId">Create Hall</a>
-</p>
+        <div class="row align-items-end mb-4">
+            <div class="col-md-6">
+                <form method="get" asp-action="Index" class="filter-group">
+                    <label asp-for="CinemaId" class="form-label">Кінотеатр</label>
+                    <select asp-for="CinemaId"
+                            asp-items="Model.Cinemas"
+                            class="form-select"
+                            onchange="this.form.submit()">
+                        <option value="">Усі</option>
+                    </select>
+                    <noscript>
+                        <button type="submit" class="btn btn-secondary mt-2">
+                            Фільтрувати
+                        </button>
+                    </noscript>
+                </form>
+            </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Cinema</th>
-            <th>Hall</th>
-            <th>Seats</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var h in Model.Halls)
-        {
-            <tr>
-                <td>@h.CinemaName</td>
-                <td>@h.HallName</td>
-                <td>@h.SeatsCount</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@h.HallId">Edit</a> |
-                    <a asp-action="Seats" asp-route-id="@h.HallId">Seats</a> |
+            <div class="col-md-6 text-end">
+                <a asp-action="Create"
+                   asp-route-cinemaId="@Model.CinemaId"
+                   class="btn btn-maroon">
+                    <i class="fas fa-plus me-1"></i>Створити зал
+                </a>
 
-                    <form method="post" asp-action="Delete" asp-route-id="@h.HallId" asp-route-cinemaId="@Model.CinemaId" style="display:inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" onclick="return confirm('Delete this hall?');">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                <a asp-controller="Cinemas"
+                   asp-action="Index"
+                   class="btn btn-secondary ms-2">
+                    <i class="fas fa-arrow-left me-2"></i>Назад
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm rounded">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-maroon text-white">
+                        <tr>
+                            <th scope="col">Кінотеатр</th>
+                            <th scope="col">Зал</th>
+                            <th scope="col">Кількість місць</th>
+                            <th scope="col" class="text-end">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in Model.Halls)
+                        {
+                            <tr>
+                                <td>@h.CinemaName</td>
+                                <td>@h.HallName</td>
+                                <td>@h.SeatsCount</td>
+                                <td class="text-end">
+                                    <a asp-action="Edit"
+                                       asp-route-id="@h.HallId"
+                                       class="btn btn-sm btn-maroon me-1"
+                                       title="Редагувати">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <a asp-action="Seats"
+                                       asp-route-id="@h.HallId"
+                                       class="btn btn-sm btn-secondary me-1"
+                                       title="Місця">
+                                        <i class="fas fa-chair"></i>
+                                    </a>
+
+                                    <form method="post"
+                                          asp-action="Delete"
+                                          asp-route-id="@h.HallId"
+                                          asp-route-cinemaId="@Model.CinemaId"
+                                          class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                title="Видалити"
+                                                onclick="return confirm('Видалити цей зал?');">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

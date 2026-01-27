@@ -25,3 +25,18 @@
     color: #b22222;
     font-size: 0.8rem;
 }
+
+/* Modern input group */
+.input-group-modern .input-group-text {
+    background: #f8fafc;
+    border-color: rgba(15,23,42,.12);
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+}
+
+.input-group-modern .form-control {
+    border-color: rgba(15,23,42,.12);
+    border-left: 0;
+    border-radius: 0 12px 12px 0;
+}
+

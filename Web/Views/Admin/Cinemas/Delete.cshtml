@@ -1,36 +1,42 @@
 ﻿@model Web.ViewModels.Admin.Cinemas.CinemaEditVm
 
 @{
-    ViewData["Title"] = "Delete Cinema";
+    ViewData["Title"] = "Видалення кінотеатру";
 }
 
 <section class="sessions-section py-4 gray-bg">
     <div class="container-fluid">
-        <h1 class="section-title text-center mb-5">Delete Cinema</h1>
+        <h1 class="section-title text-center mb-5">Видалення кінотеатру</h1>
 
         <div class="card shadow-sm rounded">
             <div class="card-header bg-maroon text-white">
-                <h5 class="mb-0"><i class="fas fa-trash me-2"></i>Confirm Deletion</h5>
+                <h5 class="mb-0">
+                    <i class="fas fa-trash me-2"></i>Підтвердження видалення
+                </h5>
             </div>
 
             <div class="card-body">
                 @if (TempData["ErrorMessage"] != null)
                 {
-                    <div class="alert alert-danger mb-4">@TempData["ErrorMessage"]</div>
+                    <div class="alert alert-danger mb-4">
+                        @TempData["ErrorMessage"]
+                    </div>
                 }
 
                 <div class="alert alert-warning mb-4">
-                    Are you sure you want to delete the cinema <strong>@Model.Name</strong>? This action cannot be undone.
+                    Ви впевнені, що хочете видалити кінотеатр
+                    <strong>@Model.Name</strong>?
+                    Цю дію неможливо скасувати.
                 </div>
 
                 <dl class="row">
-                    <dt class="col-sm-3">Name</dt>
+                    <dt class="col-sm-3">Назва</dt>
                     <dd class="col-sm-9">@Model.Name</dd>
 
-                    <dt class="col-sm-3">City</dt>
+                    <dt class="col-sm-3">Місто</dt>
                     <dd class="col-sm-9">@Model.City</dd>
 
-                    <dt class="col-sm-3">Address</dt>
+                    <dt class="col-sm-3">Адреса</dt>
                     <dd class="col-sm-9">@Model.Address</dd>
                 </dl>
 
@@ -44,13 +50,14 @@
 
                     <div class="d-flex justify-content-end mt-4">
                         <button type="submit" class="btn btn-danger me-2">
-                            <i class="fas fa-trash me-1"></i> Yes, delete
+                            <i class="fas fa-trash me-1"></i>Так, видалити
                         </button>
+
                         <a asp-area="Admin"
                            asp-controller="Cinemas"
                            asp-action="Index"
                            class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i> Cancel
+                            <i class="fas fa-arrow-left me-1"></i>Скасувати
                         </a>
                     </div>
                 </form>
