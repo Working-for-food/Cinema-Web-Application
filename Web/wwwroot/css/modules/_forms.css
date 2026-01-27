@@ -1,0 +1,27 @@
+﻿.form-label {
+    color: #800020;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control {
+    border: 1px solid #d1d1d1;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    color: #800020;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+    .form-control:focus {
+        border-color: #800020;
+        box-shadow: 0 0 0 0.2rem rgba(128, 0, 32, 0.15);
+        outline: none;
+    }
+
+.text-danger {
+    color: #b22222;
+    font-size: 0.8rem;
+}

@@ -1,0 +1,15 @@
+﻿/* 1. Variables & Reset: Define colors and fonts first */
+@import url('_variables.css');
+@import url('_base.css');
+
+/* 2. Global Typography: Headers, text, and decorative lines */
+@import url('_typography.css');
+
+/* 3. Layout: Main containers and grid settings */
+@import url('_layout.css');
+
+/* 4. Components: Cards, Buttons, and UI elements */
+@import url('_components.css');
+
+/* 5. Forms: Form controls and validation messages */
+@import url('_forms.css');
