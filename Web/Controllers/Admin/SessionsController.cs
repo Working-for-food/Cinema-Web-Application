@@ -80,16 +80,22 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SessionEditDto dto, CancellationToken ct)
         {
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid)
+            {
+                await FillLookupsAsync(dto.HallId, ct);
+                return View(dto);
+            }
 
             try
             {
                 var id = await _sessions.CreateAsync(dto, ct);
-                return RedirectToAction(nameof(Details), new { id });
+                TempData["Success"] = "Сеанс успішно створено.";
+                return View(dto);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
+                await FillLookupsAsync(dto.HallId, ct);
                 return View(dto);
             }
         }

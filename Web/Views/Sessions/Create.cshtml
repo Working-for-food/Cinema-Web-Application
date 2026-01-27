@@ -1,12 +1,21 @@
-﻿@model SessionEditDto
+﻿@using Application.DTOs
+@using Microsoft.AspNetCore.Mvc.Rendering
 @using Infrastructure.Entities
+@model SessionEditDto
 
 @{
     ViewData["Title"] = "Створити сеанс";
     string FormatDt(DateTime dt) => dt.ToString("yyyy-MM-ddTHH:mm");
+
+    var movies = ViewBag;
 }
 
 <h1>Створити сеанс</h1>
+
+@if (TempData["Success"] is string msg)
+{
+    <div class="alert alert-success">@msg</div>
+}
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
