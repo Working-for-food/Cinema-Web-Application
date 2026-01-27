@@ -16,9 +16,15 @@ public class CinemaRepository : ICinemaRepository
 
     private IQueryable<Cinema> CinemasQuery(bool asTracking, bool includeDeleted)
     {
-        var q = asTracking ? _db.Cinemas : _db.Cinemas.AsNoTracking();
-        if (!includeDeleted)
+        IQueryable<Cinema> q = asTracking
+            ? _db.Cinemas.AsQueryable()
+            : _db.Cinemas.AsNoTracking();
+
+        if (includeDeleted)
+            q = q.IgnoreQueryFilters();
+        else
             q = q.Where(c => !c.IsDeleted);
+
         return q;
     }
 
