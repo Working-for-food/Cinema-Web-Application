@@ -32,6 +32,7 @@ public class HallRepository : IHallRepository
     public Task<Hall?> GetByIdWithCinemaAsync(int id)
         => _db.Halls
             .Include(h => h.Cinema)
+            .AsNoTracking()
             .FirstOrDefaultAsync(h => h.Id == id);
 
     public async Task AddAsync(Hall hall)
@@ -60,9 +61,10 @@ public class HallRepository : IHallRepository
 
     public Task<bool> HasAnyBookingsAsync(int hallId)
         => _db.Bookings
+            .Where(b => !b.IsDeleted)
             .Join(_db.Sessions,
                 b => b.SessionId,
                 s => s.Id,
-                (b, s) => new { b, s })
-            .AnyAsync(x => x.s.HallId == hallId);
+                (b, s) => s)
+            .AnyAsync(s => s.HallId == hallId);
 }

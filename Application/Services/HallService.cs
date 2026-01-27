@@ -5,7 +5,6 @@ using Infrastructure.Entities;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace Application.Services;
 
 public class HallService : IHallService
@@ -100,8 +99,21 @@ public class HallService : IHallService
         var hall = await _halls.GetByIdAsync(hallId);
         if (hall == null) return;
 
-        await _seats.DeleteByHallAsync(hallId);
-        await _halls.DeleteAsync(hall);
+        await EnsureHallCanBeChangedAsync(hallId, op: "delete hall");
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        try
+        {
+            await _seats.DeleteByHallAsync(hallId);
+            await _halls.DeleteAsync(hall);
+
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     public Task<bool> SeatsAlreadyGeneratedAsync(int hallId)
@@ -172,11 +184,7 @@ public class HallService : IHallService
         if (!await _halls.ExistsAsync(hallId))
             throw new InvalidOperationException("Hall not found");
 
-        if (await _halls.HasAnyBookingsAsync(hallId))
-            throw new InvalidOperationException("Cannot change seats: there are bookings for sessions in this hall.");
-
-        if (await _halls.HasAnySessionsAsync(hallId))
-            throw new InvalidOperationException("Cannot change seats: this hall already has sessions.");
+        await EnsureHallCanBeChangedAsync(hallId, op: "change seats");
 
         if (rows == null || rows.Count == 0)
         {
@@ -193,12 +201,22 @@ public class HallService : IHallService
                     })
                     .OrderBy(x => x.RowNumber)
                     .ToList();
+
+                if (rows.Count == 0)
+                    throw new ArgumentException("Rows config is empty");
             }
             else
             {
                 throw new ArgumentException("Rows config is empty");
             }
         }
+
+        // Дедуп по RowNumber, щоб не впасти на унікальному індексі (HallId, RowNumber, SeatNumber)
+        rows = rows
+            .GroupBy(r => r.RowNumber)
+            .Select(g => new RowSeatsDto { RowNumber = g.Key, SeatsCount = g.Max(x => x.SeatsCount) })
+            .OrderBy(x => x.RowNumber)
+            .ToList();
 
         foreach (var r in rows)
         {
@@ -211,26 +229,35 @@ public class HallService : IHallService
         if (already && !allowRegenerate)
             throw new InvalidOperationException("Seats already generated. Regenerate is not allowed.");
 
-        if (already && allowRegenerate)
-            await _seats.DeleteByHallAsync(hallId);
-
-        var list = new List<Seat>();
-
-        foreach (var row in rows.OrderBy(x => x.RowNumber))
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        try
         {
-            for (int n = 1; n <= row.SeatsCount; n++)
-            {
-                list.Add(new Seat
-                {
-                    HallId = hallId,
-                    RowNumber = row.RowNumber,
-                    SeatNumber = n,
-                    Category = SeatCategory.Standard
-                });
-            }
-        }
+            if (already && allowRegenerate)
+                await _seats.DeleteByHallAsync(hallId);
 
-        await _seats.AddRangeAsync(list);
+            var list = new List<Seat>();
+            foreach (var row in rows)
+            {
+                for (int n = 1; n <= row.SeatsCount; n++)
+                {
+                    list.Add(new Seat
+                    {
+                        HallId = hallId,
+                        RowNumber = row.RowNumber,
+                        SeatNumber = n,
+                        Category = SeatCategory.Standard
+                    });
+                }
+            }
+
+            await _seats.AddRangeAsync(list);
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     private async Task ValidateHallAsync(HallEditDto dto)
@@ -243,5 +270,14 @@ public class HallService : IHallService
     }
 
     private Task<bool> CinemaExistsAsync(int cinemaId)
-        => _db.Cinemas.AnyAsync(c => c.Id == cinemaId);
+        => _db.Cinemas.AnyAsync(c => c.Id == cinemaId && !c.IsDeleted);
+
+    private async Task EnsureHallCanBeChangedAsync(int hallId, string op)
+    {
+        if (await _halls.HasAnyBookingsAsync(hallId))
+            throw new InvalidOperationException($"Cannot {op}: there are bookings for sessions in this hall.");
+
+        if (await _halls.HasAnySessionsAsync(hallId))
+            throw new InvalidOperationException($"Cannot {op}: this hall already has sessions.");
+    }
 }

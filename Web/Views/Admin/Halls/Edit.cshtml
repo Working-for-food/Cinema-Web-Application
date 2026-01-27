@@ -1,29 +1,44 @@
 ﻿@model Web.ViewModels.Admin.Halls.HallEditVm
 
-<h2>@(Model.Id == null ? "Create Hall" : "Edit Hall")</h2>
+@{
+    ViewData["Title"] = Model.Id == null ? "Create Hall" : "Edit Hall";
+}
 
-<form method="post" asp-action="@(Model.Id == null ? "Create" : "Edit")">
+<h2>@ViewData["Title"]</h2>
+
+<form asp-area="Admin"
+      asp-controller="Halls"
+      asp-action="@(Model.Id == null ? "Create" : "Edit")"
+      method="post">
     @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     @if (Model.Id != null)
     {
         <input type="hidden" asp-for="Id" />
     }
 
-    <div>
-        <label>Cinema</label>
-        <select asp-for="CinemaId" asp-items="Model.Cinemas"></select>
-        <span asp-validation-for="CinemaId"></span>
+    <div class="mb-3">
+        <label asp-for="CinemaId" class="form-label">Cinema</label>
+        <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select"></select>
+        <span asp-validation-for="CinemaId" class="text-danger"></span>
     </div>
 
-    <div>
-        <label>Name</label>
-        <input asp-for="Name" />
-        <span asp-validation-for="Name"></span>
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
-    <div asp-validation-summary="All"></div>
-
-    <button type="submit">Save</button>
-    <a asp-action="Index" asp-route-cinemaId="@Model.CinemaId">Back</a>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-area="Admin"
+       asp-controller="Halls"
+       asp-action="Index"
+       asp-route-cinemaId="@Model.CinemaId"
+       class="btn btn-secondary">Back</a>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

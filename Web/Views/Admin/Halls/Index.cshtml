@@ -1,26 +1,49 @@
 ﻿@model Web.ViewModels.Admin.Halls.HallsIndexVm
 
+@{
+    ViewData["Title"] = "Halls";
+}
+
 <h2>Halls</h2>
 
-<form method="get" asp-action="Index">
-    <label>Cinema:</label>
-    <select asp-for="CinemaId" asp-items="Model.Cinemas" onchange="this.form.submit()">
-        <option value="">All</option>
-    </select>
-    <noscript><button type="submit">Filter</button></noscript>
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<form method="get" asp-area="Admin" asp-controller="Halls" asp-action="Index" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Cinema</label>
+        <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select" onchange="this.form.submit()">
+            <option value="">All</option>
+        </select>
+        <noscript>
+            <button type="submit" class="btn btn-outline-primary mt-2">Filter</button>
+        </noscript>
+    </div>
+
+    <div class="col-md-8 text-md-end">
+        <a asp-area="Admin"
+           asp-controller="Halls"
+           asp-action="Create"
+           asp-route-cinemaId="@Model.CinemaId"
+           class="btn btn-primary">
+            Create Hall
+        </a>
+    </div>
 </form>
 
-<p>
-    <a asp-action="Create" asp-route-cinemaId="@Model.CinemaId">Create Hall</a>
-</p>
-
-<table class="table">
+<table class="table table-striped align-middle">
     <thead>
         <tr>
             <th>Cinema</th>
             <th>Hall</th>
-            <th>Seats</th>
-            <th></th>
+            <th class="text-end">Seats</th>
+            <th class="text-end"></th>
         </tr>
     </thead>
     <tbody>
@@ -29,14 +52,27 @@
             <tr>
                 <td>@h.CinemaName</td>
                 <td>@h.HallName</td>
-                <td>@h.SeatsCount</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@h.HallId">Edit</a> |
-                    <a asp-action="Seats" asp-route-id="@h.HallId">Seats</a> |
+                <td class="text-end">@h.SeatsCount</td>
+                <td class="text-end">
+                    <a asp-area="Admin" asp-controller="Halls" asp-action="Edit" asp-route-id="@h.HallId" class="btn btn-sm btn-outline-secondary">
+                        Edit
+                    </a>
+                    <a asp-area="Admin" asp-controller="Halls" asp-action="Seats" asp-route-id="@h.HallId" class="btn btn-sm btn-outline-primary">
+                        Seats
+                    </a>
 
-                    <form method="post" asp-action="Delete" asp-route-id="@h.HallId" asp-route-cinemaId="@Model.CinemaId" style="display:inline;">
+                    <form method="post"
+                          asp-area="Admin"
+                          asp-controller="Halls"
+                          asp-action="Delete"
+                          asp-route-id="@h.HallId"
+                          asp-route-cinemaId="@Model.CinemaId"
+                          class="d-inline">
                         @Html.AntiForgeryToken()
-                        <button type="submit" onclick="return confirm('Delete this hall?');">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Delete this hall?');">
+                            Delete
+                        </button>
                     </form>
                 </td>
             </tr>

@@ -29,9 +29,7 @@ public class SeatRepository : ISeatRepository
 
     public async Task DeleteByHallAsync(int hallId)
     {
-        var seats = await _db.Seats.Where(s => s.HallId == hallId).ToListAsync();
-        _db.Seats.RemoveRange(seats);
-        await _db.SaveChangesAsync();
+        await _db.Seats.Where(s => s.HallId == hallId).ExecuteDeleteAsync();
     }
 
     public async Task<Dictionary<int, int>> CountByHallIdsAsync(IEnumerable<int> hallIds)

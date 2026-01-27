@@ -2,9 +2,11 @@
 @model GenerateSeatsDto
 
 @{
+    ViewData["Title"] = $"Seats: {Model.HallName}";
+
     var error = ViewBag.SeatsError as string;
 
-    var grouped = Model.Seats
+    var grouped = (Model.Seats ?? new List<SeatDto>())
         .GroupBy(s => s.RowNumber)
         .OrderBy(g => g.Key)
         .ToList();
@@ -12,165 +14,207 @@
     var maxSeats = grouped.Count == 0 ? 0 : grouped.Max(g => g.Count());
 }
 
-<h2>Seats: @Model.HallName</h2>
+<h2>@ViewData["Title"]</h2>
 
 @if (!string.IsNullOrWhiteSpace(error))
 {
-    <div style="color:red; margin-bottom:10px;">@error</div>
+    <div class="alert alert-danger mb-3">@error</div>
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.LockReason))
 {
-    <div style="color:#b45309; margin-bottom:12px;">
-        <b>Locked:</b> @Model.LockReason
+    <div class="alert alert-warning mb-3">
+        <strong>Locked:</strong> @Model.LockReason
     </div>
 }
 
-<p>
-    <a asp-action="Index">Back to halls</a>
-</p>
-
-<hr />
+<div class="mb-3">
+    <a asp-area="Admin" asp-controller="Halls" asp-action="Index" class="btn btn-secondary">
+        Back to halls
+    </a>
+</div>
 
 @if (!Model.AlreadyGenerated)
 {
-    <h3>1) Configure rows</h3>
+    <div class="card mb-3">
+        <div class="card-header">1) Configure rows</div>
+        <div class="card-body">
+            <form method="post" asp-area="Admin" asp-controller="Halls" asp-action="ConfigureSeats">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="hallId" value="@Model.HallId" />
 
-    <form method="post" asp-action="ConfigureSeats">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="hallId" value="@Model.HallId" />
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Rows</label>
+                        <input type="number" name="rows" min="1" value="@Model.Rows"
+                               class="form-control"
+                               @(Model.CanEditSeats ? "" : "disabled") />
+                    </div>
 
-        <div>
-            <label>Rows</label>
-            <input type="number" name="rows" min="1" value="@Model.Rows" @(Model.CanEditSeats ? "" : "disabled") />
+                    <div class="col-md-4">
+                        <label class="form-label">Default seats per row</label>
+                        <input type="number" name="seatsPerRow" min="1" value="@Model.SeatsPerRow"
+                               class="form-control"
+                               @(Model.CanEditSeats ? "" : "disabled") />
+                    </div>
+
+                    <div class="col-md-5 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary"
+                                @(Model.CanEditSeats ? "" : "disabled")>
+                            Build table
+                        </button>
+                    </div>
+                </div>
+
+                @if (!Model.CanEditSeats)
+                {
+                    <div class="mt-3 text-muted">
+                        Seats editing is disabled.
+                    </div>
+                }
+            </form>
         </div>
+    </div>
 
-        <div>
-            <label>Default seats per row</label>
-            <input type="number" name="seatsPerRow" min="1" value="@Model.SeatsPerRow" @(Model.CanEditSeats ? "" : "disabled") />
+    <div class="card">
+        <div class="card-header">2) Edit seats per row</div>
+        <div class="card-body">
+            @if (!Model.CanEditSeats)
+            {
+                <div class="alert alert-secondary mb-0">
+                    Seats editing is disabled.
+                </div>
+            }
+            else
+            {
+                <form method="post" asp-area="Admin" asp-controller="Halls" asp-action="GenerateSeats">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="hallId" value="@Model.HallId" />
+
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 140px;">Row</th>
+                                    <th style="width: 220px;">SeatsCount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.RowConfigs.Count; i++)
+                                {
+                                    <tr>
+                                        <td>
+                                            @Model.RowConfigs[i].RowNumber
+                                            <input type="hidden" name="rowConfigs[@i].RowNumber" value="@Model.RowConfigs[i].RowNumber" />
+                                        </td>
+                                        <td>
+                                            <input type="number"
+                                                   name="rowConfigs[@i].SeatsCount"
+                                                   min="1"
+                                                   value="@Model.RowConfigs[i].SeatsCount"
+                                                   class="form-control" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Generate seats</button>
+                </form>
+            }
         </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">Seats generated</div>
+        <div class="card-body">
+            <form method="post"
+                  asp-area="Admin" asp-controller="Halls" asp-action="GenerateSeats"
+                  onsubmit="return confirmRegenerate();">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="hallId" value="@Model.HallId" />
 
-        <button type="submit" @(Model.CanEditSeats ? "" : "disabled")>Build table</button>
-    </form>
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="allowRegenerate"
+                           name="allowRegenerate"
+                           value="true"
+                           @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled") />
+                    <label class="form-check-label" for="allowRegenerate">
+                        Regenerate (deletes existing seats)
+                    </label>
+                </div>
 
-    <hr />
+                <button type="submit" class="btn btn-danger"
+                        @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled")>
+                    Regenerate
+                </button>
+            </form>
+        </div>
+    </div>
 
-    <h3>2) Edit seats per row</h3>
-
-    @if (!Model.CanEditSeats)
+    @if (grouped.Count == 0)
     {
-        <p>Seats editing is disabled.</p>
+        <div class="alert alert-secondary">No seats found.</div>
     }
     else
     {
-        <form method="post" asp-action="GenerateSeats">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="hallId" value="@Model.HallId" />
+        <h4 class="mt-3">Seat grid</h4>
 
-            <table class="table">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center">
                 <thead>
                     <tr>
-                        <th>Row</th>
-                        <th>SeatsCount</th>
+                        <th class="text-start" style="min-width: 80px;">Row</th>
+                        @for (int i = 1; i <= maxSeats; i++)
+                        {
+                            <th style="min-width: 44px;">@i</th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
-                    @for (int i = 0; i < Model.RowConfigs.Count; i++)
+                    @foreach (var row in grouped)
                     {
+                        var seatsInRow = row.OrderBy(x => x.SeatNumber).ToList();
+
                         <tr>
-                            <td>
-                                @Model.RowConfigs[i].RowNumber
-                                <input type="hidden" name="rowConfigs[@i].RowNumber" value="@Model.RowConfigs[i].RowNumber" />
-                            </td>
-                            <td>
-                                <input type="number"
-                                       name="rowConfigs[@i].SeatsCount"
-                                       min="1"
-                                       value="@Model.RowConfigs[i].SeatsCount" />
-                            </td>
+                            <td class="text-start fw-semibold">@row.Key</td>
+
+                            @for (int s = 1; s <= maxSeats; s++)
+                            {
+                                var exists = seatsInRow.Any(x => x.SeatNumber == s);
+                                <td>
+                                    @if (exists)
+                                    {
+                                        <span class="badge text-bg-light border">@s</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            }
                         </tr>
                     }
                 </tbody>
             </table>
-
-            <button type="submit">Generate seats</button>
-        </form>
-    }
-}
-else
-{
-    <h3>Seats generated</h3>
-
-    <form method="post" asp-action="GenerateSeats" onsubmit="return confirmRegenerate();">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="hallId" value="@Model.HallId" />
-
-        <label>
-            <input type="checkbox" name="allowRegenerate" value="true" @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled") />
-            Regenerate (deletes existing seats)
-        </label>
-
-        <button type="submit" @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled")>Regenerate</button>
-    </form>
-
-    <hr />
-
-    @if (grouped.Count == 0)
-    {
-        <p>No seats found.</p>
-    }
-    else
-    {
-        <h4>Seat grid</h4>
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Row</th>
-                    @for (int i = 1; i <= maxSeats; i++)
-                    {
-                        <th>@i</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in grouped)
-                {
-                    var seatsInRow = row.OrderBy(x => x.SeatNumber).ToList();
-
-                    <tr>
-                        <td>@row.Key</td>
-
-                        @for (int s = 1; s <= maxSeats; s++)
-                        {
-                            var exists = seatsInRow.Any(x => x.SeatNumber == s);
-                            <td style="text-align:center;">
-                                @if (exists)
-                                {
-                                    <span style="display:inline-block; width:22px; height:22px; border:1px solid #999; border-radius:4px; line-height:22px;">
-                                        @s
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span style="color:#bbb;">-</span>
-                                }
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
+        </div>
     }
 }
 
-<script>
-    function confirmRegenerate() {
-        const allow = document.querySelector('input[name="allowRegenerate"]');
-        if (allow && allow.checked) {
-            return confirm("Regenerate will delete existing seats. Continue?");
+@section Scripts {
+    <script>
+        function confirmRegenerate() {
+            const allow = document.querySelector('#allowRegenerate');
+            if (allow && allow.checked) {
+                return confirm("Regenerate will delete existing seats. Continue?");
+            }
+            alert("To regenerate, check the checkbox first.");
+            return false;
         }
-        alert("To regenerate, check the checkbox first.");
-        return false;
-    }
-</script>
+    </script>
+}
