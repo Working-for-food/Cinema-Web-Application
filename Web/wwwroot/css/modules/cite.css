@@ -13,3 +13,6 @@
 
 /* 5. Forms: Form controls and validation messages */
 @import url('_forms.css');
+
+/* 6. Footer: Form footer */
+@import url('_footer.css');
