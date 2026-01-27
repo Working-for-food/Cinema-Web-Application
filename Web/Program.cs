@@ -1,7 +1,10 @@
 using Infrastructure.Data;
 using Infrastructure.Entities;
+using Infrastructure.Repositories;
+using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Data.Seed;
 
 using Application.Services;       
 using Infrastructure.Interfaces;  
@@ -13,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
@@ -27,6 +31,11 @@ builder.Services.AddScoped<Application.Interfaces.IGenreService, Application.Ser
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+    await CountrySeeder.SeedAsync(db);
+}
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
