@@ -1,43 +1,82 @@
 ﻿@model Application.DTOs.CinemaDetailsDto
 
 @{
-    ViewData["Title"] = "Cinema Details";
+    ViewData["Title"] = "Деталі кінотеатру";
 }
 
-<h2>Cinema Details</h2>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-<dl class="row">
-    <dt class="col-sm-2">Name</dt>
-    <dd class="col-sm-10">@Model.Name</dd>
+        <h1 class="section-title">Деталі кінотеатру</h1>
 
-    <dt class="col-sm-2">Address</dt>
-    <dd class="col-sm-10">@Model.Address</dd>
+        <div class="card shadow-sm col-lg-8 mx-auto">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Інформація про кінотеатр
+                </h5>
+            </div>
 
-    <dt class="col-sm-2">City</dt>
-    <dd class="col-sm-10">@Model.City</dd>
-</dl>
+            <div class="card-body p-4">
 
-<div class="d-flex gap-2">
-    <a asp-area="Admin"
-       asp-controller="Cinemas"
-       asp-action="Edit"
-       asp-route-id="@Model.Id"
-       class="btn btn-warning">
-        Edit
-    </a>
+                <div class="mb-4">
 
-    <a asp-area="Admin"
-       asp-controller="Halls"
-       asp-action="Index"
-       asp-route-cinemaId="@Model.Id"
-       class="btn btn-primary">
-        Halls
-    </a>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-film me-1"></i>
+                            Назва кінотеатру
+                        </label>
+                        <div class="fw-semibold fs-5">@Model.Name</div>
+                    </div>
 
-    <a asp-area="Admin"
-       asp-controller="Cinemas"
-       asp-action="Index"
-       class="btn btn-secondary">
-        Back
-    </a>
-</div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-location-dot me-1"></i>
+                            Місто
+                        </label>
+                        <div class="fw-semibold fs-5">@Model.City</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-map-location-dot me-1"></i>
+                            Адреса
+                        </label>
+                        <div class="fw-semibold fs-5">@Model.Address</div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a asp-area="Admin"
+                       asp-controller="Cinemas"
+                       asp-action="Index"
+                       class="btn btn-secondary">
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Назад
+                    </a>
+
+                    <a asp-area="Admin"
+                       asp-controller="Halls"
+                       asp-action="Index"
+                       asp-route-cinemaId="@Model.Id"
+                       class="btn btn-secondary">
+                        <i class="fa-solid fa-door-open me-1"></i>
+                        Зали
+                    </a>
+
+                    <a asp-area="Admin"
+                       asp-controller="Cinemas"
+                       asp-action="Edit"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-maroon">
+                        <i class="fa-solid fa-pen-to-square me-1"></i>
+                        Редагувати кінотеатр
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>

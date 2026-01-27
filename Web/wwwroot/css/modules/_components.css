@@ -23,10 +23,10 @@
     transition: background-color 0.2s;
 }
 
-    .btn-maroon:hover {
-        background-color: #660000;
-        color: white;
-    }
+.btn-maroon:hover {
+    background-color: #660000;
+    color: white;
+}
 
 .btn-secondary {
     background-color: #6c757d;
@@ -34,6 +34,32 @@
     color: white;
     padding: 8px 16px;
     border-radius: 6px;
+}
+
+.btn-danger {
+    background-color: #6f0018; 
+    border-color: #6f0018;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+    background-color: #550012; 
+    border-color: #550012;
+    color: #ffffff;
+}
+
+.btn-danger:active {
+    background-color: #43000e;
+    border-color: #43000e;
+}
+
+.btn-compact {
+    padding: 6px 12px;
+    font-size: 0.85rem;
 }
 
 /* Modern card */
