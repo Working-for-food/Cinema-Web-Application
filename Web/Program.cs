@@ -5,6 +5,10 @@ using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data.Seed;
+using Application.Interfaces;
+using Application.Services;
+using Application.Options;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +20,13 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
+builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));
+builder.Services.AddHttpClient<ITmdbClient, TmdbClient>((sp, http) =>
+{
+    var opt = sp.GetRequiredService<IOptions<TmdbOptions>>().Value;
+    http.BaseAddress = new Uri(opt.BaseUrl);
+    http.Timeout = TimeSpan.FromSeconds(15);
+});
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

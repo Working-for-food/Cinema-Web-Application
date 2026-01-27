@@ -1,0 +1,11 @@
+﻿@model Infrastructure.Entities.Movie
+
+<h2>Видалити фільм</h2>
+
+<p>Ви впевненні що хочете видалити: <strong>@Model.Title</strong>?</p>
+
+<form method="post" action="/admin/movies/delete/@Model.Id">
+  @Html.AntiForgeryToken()
+  <button class="btn btn-danger" type="submit">Видалити</button>
+  <a class="btn btn-secondary" href="/admin/movies">Скасувати</a>
+</form>
