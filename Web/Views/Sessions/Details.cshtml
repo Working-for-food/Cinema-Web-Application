@@ -1,0 +1,63 @@
+﻿@model SessionDetailsDto
+
+@{
+    ViewData["Title"] = "Деталі сеансу";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Сеанс №@Model.Id</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">До списку</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Фільм</dt>
+            <dd class="col-sm-9">@((Model as dynamic).MovieTitle ?? $"#{Model.MovieId}")</dd>
+
+            <dt class="col-sm-3">Зал</dt>
+            <dd class="col-sm-9">@((Model as dynamic).HallTitle ?? $"#{Model.HallId}")</dd>
+
+            <dt class="col-sm-3">Початок</dt>
+            <dd class="col-sm-9">@Model.StartTime.ToString("dd.MM.yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">Кінець</dt>
+            <dd class="col-sm-9">@Model.EndTime.ToString("dd.MM.yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">Тип показу</dt>
+            <dd class="col-sm-9">@Model.PresentationType</dd>
+
+            <dt class="col-sm-3">Скасований</dt>
+            <dd class="col-sm-9">
+                <span class="badge @(Model.IsCancelled ? "bg-danger" : "bg-success")">
+                    @(Model.IsCancelled ? "Так" : "Ні")
+                </span>
+            </dd>
+
+            <dt class="col-sm-3">Створено</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">Оновлено</dt>
+            <dd class="col-sm-9">@Model.UpdatedAt?.ToString("dd.MM.yyyy HH:mm")</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="d-flex gap-2 mt-3">
+    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Редагувати</a>
+
+    @if (!Model.IsCancelled)
+    {
+        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-danger" type="submit">Скасувати</button>
+        </form>
+    }
+    else
+    {
+        <form asp-action="Restore" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-success" type="submit">Відновити</button>
+        </form>
+    }
+</div>

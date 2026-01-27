@@ -23,11 +23,19 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
 
+//Services
 builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
 builder.Services.AddScoped<ICinemaService, CinemaService>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 builder.Services.AddScoped<IHallService, HallService>();
+
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+
+builder.Services.AddScoped<ITestMovieRepository, TestMovieRepository>();
+builder.Services.AddScoped<ITestHallRepository, TestHallRepository>();
+builder.Services.AddScoped<ISessionLookupService, SessionLookupService>();
 
 var app = builder.Build();
 
@@ -52,6 +60,10 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 // Default route
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

@@ -1,0 +1,182 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using Application.DTOs
+@model List<SessionListDto>
+
+@{
+    ViewData["Title"] = "Сеанси (адмін)";
+}
+
+<h1>Сеанси</h1>
+
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
+</p>
+
+@{
+    var movies = ViewBag.Movies as List<LookupItemDto> ?? new();
+    var movieIdFromQuery = Context.Request.Query["movieId"].ToString();
+    var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+        <label class="form-label">З</label>
+        <input class="form-control" type="datetime-local" name="from"
+               value="@(Context.Request.Query["from"])" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">До</label>
+        <input class="form-control" type="datetime-local" name="to"
+               value="@(Context.Request.Query["to"])" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Зал</label>
+        <select class="form-select" name="hallId" asp-items="(IEnumerable<SelectListItem>)ViewBag.Halls">
+            <option value="">— Усі —</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Фільм</label>
+
+        <input class="form-control"
+               list="movieList"
+               id="movieTitleInput"
+               name="movieTitle"
+               placeholder="Почніть вводити назву..."
+               value="@movieTitleFromQuery" />
+
+        <datalist id="movieList">
+            @foreach (var m in movies)
+            {
+                <option value="@m.Title" data-id="@m.Id"></option>
+            }
+        </datalist>
+
+        <input type="hidden" id="movieIdHidden" name="movieId" value="@movieIdFromQuery" />
+        <div class="form-text">Показано до 50 підказок.</div>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="includeCancelled" value="true"
+                   @(Context.Request.Query["includeCancelled"] == "true" ? "checked" : "") />
+            <label class="form-check-label">Показувати скасовані</label>
+        </div>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end gap-2">
+        <button class="btn btn-secondary w-100" type="submit">Фільтрувати</button>
+        <a class="btn btn-outline-secondary w-100" asp-action="Index">Очистити</a>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Фільм</th>
+            <th>Зал</th>
+            <th>Початок</th>
+            <th>Кінець</th>
+            <th>Тип показу</th>
+            <th>Скасований</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model is null || Model.Count == 0)
+        {
+            <tr>
+                <td colspan="8">Сеансів не знайдено.</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Id</td>
+
+                    <td>
+                        @* Очікується, що SessionListDto має поле MovieTitle *@
+                        @(s.MovieTitle ?? $"#{s.MovieId}")
+                    </td>
+
+                    <td>
+                        @* Очікується, що SessionListDto має поле HallDisplayName або HallName *@
+                        @(s.HallName ?? s.HallName ?? $"#{s.HallId}")
+                    </td>
+
+                    <td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@s.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@s.PresentationType</td>
+                    <td>@(s.IsCancelled ? "Так" : "Ні")</td>
+
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary"
+                           asp-action="Details"
+                           asp-route-id="@s.Id">
+                            Деталі
+                        </a>
+
+                        <a class="btn btn-sm btn-outline-secondary"
+                           asp-action="Edit"
+                           asp-route-id="@s.Id">
+                            Редагувати
+                        </a>
+
+                        @if (!s.IsCancelled)
+                        {
+                            <form asp-action="Cancel"
+                                  asp-route-id="@s.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-danger" type="submit">
+                                    Скасувати
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Restore"
+                                  asp-route-id="@s.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-success" type="submit">
+                                    Відновити
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<script>
+    (function () {
+      const input = document.getElementById('movieTitleInput');
+      const hidden = document.getElementById('movieIdHidden');
+      const list = document.getElementById('movieList');
+
+      function syncHidden() {
+        const value = input.value.trim();
+        const option = Array.from(list.options).find(o => o.value === value);
+        hidden.value = option ? option.dataset.id : '';
+      }
+
+      input.addEventListener('input', syncHidden);
+      syncHidden();
+    })();
+</script>

@@ -1,0 +1,128 @@
+﻿@using Application.DTOs
+@using Infrastructure.Entities
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model SessionEditDto
+
+@{
+    ViewData["Title"] = "Редагувати сеанс";
+    string FormatDt(DateTime dt) => dt.ToString("yyyy-MM-ddTHH:mm");
+
+    var movies = ViewBag.Movies as List<LookupItemDto> ?? new();
+    var movieTitle = ViewBag.MovieTitle as string ?? "";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Редагувати сеанс</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">До списку</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Фільм</label>
+
+                    <input class="form-control"
+                           list="movieList"
+                           id="movieTitleInput"
+                           name="movieTitle"
+                           placeholder="Почніть вводити назву..."
+                           autocomplete="off"
+                           value="@movieTitle" />
+
+                    <datalist id="movieList">
+                        @foreach (var m in movies)
+                        {
+                            <option value="@m.Title" data-id="@m.Id"></option>
+                        }
+                    </datalist>
+
+                    @* ВАЖЛИВО: саме це поле іде в DTO як MovieId *@
+                    <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+
+                    <div class="form-text">Показано до 50 підказок.</div>
+                    <span class="text-danger" asp-validation-for="MovieId"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Зал</label>
+
+                    <select class="form-select"
+                            asp-for="HallId"
+                            asp-items="(IEnumerable<SelectListItem>)ViewBag.Halls">
+                        <option value="">— Оберіть зал —</option>
+                    </select>
+
+                    <span class="text-danger" asp-validation-for="HallId"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Початок</label>
+                    <input class="form-control"
+                           name="StartTime"
+                           type="datetime-local"
+                           value="@FormatDt(Model.StartTime)" />
+                    <span class="text-danger" asp-validation-for="StartTime"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Кінець</label>
+                    <input class="form-control"
+                           name="EndTime"
+                           type="datetime-local"
+                           value="@FormatDt(Model.EndTime)" />
+                    <span class="text-danger" asp-validation-for="EndTime"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Тип показу</label>
+                    <select class="form-select"
+                            asp-for="PresentationType"
+                            asp-items="Html.GetEnumSelectList<PresentationType>()"></select>
+                    <span class="text-danger" asp-validation-for="PresentationType"></span>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Зберегти</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Скасувати</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+          const input = document.getElementById('movieTitleInput');
+          const hidden = document.getElementById('movieIdHidden');
+          const list = document.getElementById('movieList');
+
+          function syncHidden() {
+            const value = (input.value || '').trim();
+            const option = Array.from(list.options).find(o => o.value === value);
+
+            // Якщо назва співпала з підказкою — підставляємо MovieId.
+            // Якщо ні — не даємо зберегти "старий" MovieId випадково.
+            hidden.value = option ? option.dataset.id : '';
+          }
+
+          input.addEventListener('input', syncHidden);
+
+          // Якщо на сторінці вже є MovieId (hidden), але назва пуста — не чіпаємо.
+          // Якщо назва заповнена — синхронізуємо.
+          if (input.value && input.value.trim().length > 0) {
+            syncHidden();
+          }
+        })();
+    </script>
+}
