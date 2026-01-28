@@ -88,7 +88,6 @@ public class SessionService : ISessionService
         };
 
         await _repo.AddAsync(entity, ct);
-        await _repo.SaveChangesAsync(ct);
 
         return entity.Id;
     }
@@ -114,8 +113,7 @@ public class SessionService : ISessionService
         entity.PresentationType = dto.PresentationType;
         entity.UpdatedAt = DateTime.UtcNow;
 
-        _repo.Update(entity);
-        await _repo.SaveChangesAsync(ct);
+        await _repo.UpdateAsync(entity, ct);
 
         return true;
     }
@@ -129,8 +127,7 @@ public class SessionService : ISessionService
         {
             entity.IsCancelled = true;
             entity.UpdatedAt = DateTime.UtcNow;
-            _repo.Update(entity);
-            await _repo.SaveChangesAsync(ct);
+            await _repo.UpdateAsync(entity, ct);
         }
 
         return true;
@@ -150,8 +147,7 @@ public class SessionService : ISessionService
             entity.IsCancelled = false;
             entity.UpdatedAt = DateTime.UtcNow;
 
-            _repo.Update(entity);
-            await _repo.SaveChangesAsync(ct);
+            await _repo.UpdateAsync(entity, ct);
         }
 
         return true;
@@ -160,6 +156,6 @@ public class SessionService : ISessionService
     private static void ValidateTimeRange(DateTime start, DateTime end)
     {
         if (start >= end)
-            throw new ArgumentException("StartTime має бути раніше EndTime.");
+            throw new ArgumentException("Час початку має бути раніше часу завершення.");
     }
 }

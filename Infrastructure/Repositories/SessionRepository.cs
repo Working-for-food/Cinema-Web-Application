@@ -17,7 +17,6 @@ namespace Infrastructure.Repositories
         public Task<Session?> GetByIdAsync(int id, CancellationToken ct)
         {
             return _context.Sessions
-                .AsNoTracking()
                 .Include(s => s.Movie)
                 .Include(s => s.Hall).ThenInclude(h => h.Cinema)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -55,11 +54,23 @@ namespace Infrastructure.Repositories
             return await query.OrderBy(x => x.StartTime).ToListAsync(ct);
         }
 
-        public Task AddAsync(Session session, CancellationToken ct) => _context.Sessions.AddAsync(session, ct).AsTask();
+        public async Task AddAsync(Session session, CancellationToken ct)
+        {
+            await _context.Sessions.AddAsync(session, ct);
+            await _context.SaveChangesAsync(ct);
+        }
 
-        public void Update(Session session) => _context.Sessions.Update(session);
+        public async Task UpdateAsync(Session session, CancellationToken ct)
+        {
+            _context.Sessions.Update(session);
+            await _context.SaveChangesAsync(ct);
+        }
 
-        public void Delete(Session session) => _context.Sessions.Remove(session);
+        public async Task DeleteAsync(Session session, CancellationToken ct)
+        {
+            _context.Sessions.Remove(session);
+            await _context.SaveChangesAsync(ct);
+        }
 
         public Task<int> SaveChangesAsync(CancellationToken ct) => _context.SaveChangesAsync(ct);
 

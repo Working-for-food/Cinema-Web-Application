@@ -18,7 +18,10 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+        }
 
         <form asp-action="Edit" method="post">
             @Html.AntiForgeryToken()
@@ -42,7 +45,6 @@
                         }
                     </datalist>
 
-                    @* ВАЖЛИВО: саме це поле іде в DTO як MovieId *@
                     <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
 
                     <div class="form-text">Показано до 50 підказок.</div>
@@ -111,15 +113,11 @@
             const value = (input.value || '').trim();
             const option = Array.from(list.options).find(o => o.value === value);
 
-            // Якщо назва співпала з підказкою — підставляємо MovieId.
-            // Якщо ні — не даємо зберегти "старий" MovieId випадково.
             hidden.value = option ? option.dataset.id : '';
           }
 
           input.addEventListener('input', syncHidden);
 
-          // Якщо на сторінці вже є MovieId (hidden), але назва пуста — не чіпаємо.
-          // Якщо назва заповнена — синхронізуємо.
           if (input.value && input.value.trim().length > 0) {
             syncHidden();
           }

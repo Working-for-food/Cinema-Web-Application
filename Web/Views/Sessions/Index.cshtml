@@ -106,12 +106,10 @@
                     <td>@s.Id</td>
 
                     <td>
-                        @* Очікується, що SessionListDto має поле MovieTitle *@
                         @(s.MovieTitle ?? $"#{s.MovieId}")
                     </td>
 
                     <td>
-                        @* Очікується, що SessionListDto має поле HallDisplayName або HallName *@
                         @(s.HallName ?? s.HallName ?? $"#{s.HallId}")
                     </td>
 

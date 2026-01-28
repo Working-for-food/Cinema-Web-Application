@@ -7,9 +7,9 @@ namespace Application.Services;
 public class SessionLookupService : ISessionLookupService
 {
     private readonly ITestMovieRepository _movies;
-    private readonly ITestHallRepository _halls;
+    private readonly IHallRepository _halls;
 
-    public SessionLookupService(ITestMovieRepository movies, ITestHallRepository halls)
+    public SessionLookupService(ITestMovieRepository movies, IHallRepository halls)
     {
         _movies = movies;
         _halls = halls;
@@ -23,7 +23,12 @@ public class SessionLookupService : ISessionLookupService
 
     public async Task<List<LookupItemDto>> GetHallsAsync(CancellationToken ct)
     {
-        var list = await _halls.GetAllWithCinemaAsync(ct);
+        ct.ThrowIfCancellationRequested();
+
+        var list = await _halls.GetAllWithCinemaAsync();
+
+        ct.ThrowIfCancellationRequested();
+
         return list.Select(h => new LookupItemDto(h.Id, $"{h.Cinema.Name} — {h.Name}")).ToList();
     }
 }
