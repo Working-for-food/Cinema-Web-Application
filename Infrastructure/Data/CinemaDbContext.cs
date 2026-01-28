@@ -90,6 +90,10 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.Property(x => x.Name).IsRequired();
             e.Property(x => x.Address).IsRequired().HasMaxLength(150);
             e.Property(x => x.City).IsRequired().HasMaxLength(50);
+
+            // Soft delete
+            e.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
+            e.HasQueryFilter(x => !x.IsDeleted);
         });
 
         // Halls
