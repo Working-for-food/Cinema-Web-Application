@@ -66,14 +66,6 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync(ct);
         }
 
-        public async Task DeleteAsync(Session session, CancellationToken ct)
-        {
-            _context.Sessions.Remove(session);
-            await _context.SaveChangesAsync(ct);
-        }
-
-        public Task<int> SaveChangesAsync(CancellationToken ct) => _context.SaveChangesAsync(ct);
-
         public Task<bool> HasOverlapAsync(int hallId, DateTime start, DateTime end, int? ignoreSessionId, CancellationToken ct)
         {
             IQueryable<Session> query = _context.Sessions

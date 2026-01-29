@@ -98,29 +98,14 @@ namespace Web.Controllers.Admin
             var dto = await _sessions.GetByIdAsync(id, ct);
             if (dto is null) return NotFound();
 
-            var cinemaName = "";
-            var hallName = "";
-
-            if (!string.IsNullOrWhiteSpace(dto.HallTitle))
-            {
-                var parts = dto.HallTitle.Split('—', 2, StringSplitOptions.TrimEntries);
-                if (parts.Length == 2)
-                {
-                    cinemaName = parts[0];
-                    hallName = parts[1];
-                }
-                else
-                {
-                    hallName = dto.HallTitle.Trim();
-                }
-            }
-
             var vm = new SessionDetailsVm
             {
                 Id = dto.Id,
                 MovieTitle = dto.MovieTitle,
-                CinemaName = cinemaName,
-                HallName = hallName,
+
+                CinemaName = dto.CinemaName,
+                HallName = dto.HallName,
+
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
                 PresentationType = dto.PresentationType,

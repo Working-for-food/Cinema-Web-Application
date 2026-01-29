@@ -14,9 +14,7 @@ namespace Infrastructure.Interfaces
 
         Task AddAsync (Session session, CancellationToken ct);
         Task UpdateAsync(Session session, CancellationToken ct);
-        Task DeleteAsync(Session session, CancellationToken ct);
 
         Task<bool> HasOverlapAsync(int hallId, DateTime start, DateTime end, int? ignoreSessionId, CancellationToken ct);
-        Task<int> SaveChangesAsync(CancellationToken ct);
     }
 }

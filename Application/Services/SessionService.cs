@@ -16,9 +16,6 @@ public class SessionService : ISessionService
         var s = await _repo.GetByIdAsync(id, ct);
         if (s is null) return null;
 
-        var cinemaName = s.Hall?.Cinema?.Name ?? "";
-        var hallName = s.Hall?.Name ?? "";
-
         return new SessionDetailsDto
         {
             Id = s.Id,
@@ -26,9 +23,8 @@ public class SessionService : ISessionService
             MovieTitle = s.Movie?.Title ?? "",
 
             HallId = s.HallId,
-            HallTitle = !string.IsNullOrWhiteSpace(cinemaName)
-                ? $"{cinemaName} — {hallName}"
-                : hallName,
+            CinemaName = s.Hall?.Cinema?.Name ?? "",
+            HallName = s.Hall?.Name ?? "",
 
             StartTime = s.StartTime,
             EndTime = s.EndTime,
@@ -66,9 +62,6 @@ public class SessionService : ISessionService
 
         return list.Select(s =>
         {
-            var cinemaName = s.Hall?.Cinema?.Name ?? "";
-            var hallName = s.Hall?.Name ?? "";
-
             return new SessionListDto
             {
                 Id = s.Id,
@@ -76,8 +69,8 @@ public class SessionService : ISessionService
                 MovieTitle = s.Movie?.Title ?? "",
 
                 HallId = s.HallId,
-                CinemaName = cinemaName,
-                HallName = hallName,
+                CinemaName = s.Hall?.Cinema?.Name ?? "",
+                HallName = s.Hall?.Name ?? "",
 
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
