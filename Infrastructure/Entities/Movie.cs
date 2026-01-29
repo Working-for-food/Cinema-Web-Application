@@ -10,20 +10,17 @@ public class Movie
     public DateOnly? ReleaseDate { get; set; }
     public string? OriginalName { get; set; }
 
-    // FK -> People.id (optional)
     public int? DirectorId { get; set; }
 
     public string? Description { get; set; }
     public string? Language { get; set; }
     public int? Duration { get; set; }
 
-    // FK -> Countries.code (optional)
     public string? ProductionCountryCode { get; set; }
 
     public string? TrailerUrl { get; set; }
     public decimal? Rating { get; set; } // decimal(4,1)
 
-    // navs
     public Person? Director { get; set; }
     public Country? ProductionCountry { get; set; }
 
