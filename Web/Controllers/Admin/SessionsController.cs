@@ -13,6 +13,11 @@ namespace Web.Controllers.Admin
         private readonly ISessionService _sessions;
         private readonly ISessionLookupService _lookups;
 
+        private const string IndexViewPath = "~/Views/Admin/Sessions/Index.cshtml";
+        private const string CreateViewPath = "~/Views/Admin/Sessions/Create.cshtml";
+        private const string EditViewPath = "~/Views/Admin/Sessions/Edit.cshtml";
+        private const string DetailsViewPath = "~/Views/Admin/Sessions/Details.cshtml";
+
         public SessionsController(ISessionService sessions, ISessionLookupService lookups)
         {
             _sessions = sessions;
@@ -83,19 +88,16 @@ namespace Web.Controllers.Admin
                 ct);
 
             await FillIndexLookupsAsync(vm, ct);
-            return View(vm);
+            return View(IndexViewPath, vm);
         }
 
         // GET: /Admin/Sessions/Details/5
-
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Details(int id, CancellationToken ct)
         {
             var dto = await _sessions.GetByIdAsync(id, ct);
             if (dto is null) return NotFound();
 
-            // dto.HallTitle у тебе формату "Cinema — Hall"
-            // а VM хоче окремо CinemaName і HallName
             var cinemaName = "";
             var hallName = "";
 
@@ -109,7 +111,6 @@ namespace Web.Controllers.Admin
                 }
                 else
                 {
-                    // якщо раптом у dto тільки назва залу
                     hallName = dto.HallTitle.Trim();
                 }
             }
@@ -128,7 +129,7 @@ namespace Web.Controllers.Admin
                 UpdatedAt = dto.UpdatedAt
             };
 
-            return View(vm);
+            return View(DetailsViewPath, vm);
         }
 
         // GET: /Admin/Sessions/Create
@@ -146,7 +147,7 @@ namespace Web.Controllers.Admin
             };
 
             await FillEditLookupsAsync(vm, ct);
-            return View(vm);
+            return View(CreateViewPath, vm);
         }
 
         // POST: /Admin/Sessions/Create
@@ -157,7 +158,7 @@ namespace Web.Controllers.Admin
             if (!ModelState.IsValid)
             {
                 await FillEditLookupsAsync(vm, ct);
-                return View(vm);
+                return View(CreateViewPath, vm);
             }
 
             try
@@ -168,13 +169,13 @@ namespace Web.Controllers.Admin
                 vm.Id = null;
 
                 await FillEditLookupsAsync(vm, ct);
-                return View(vm);
+                return View(CreateViewPath, vm);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
                 await FillEditLookupsAsync(vm, ct);
-                return View(vm);
+                return View(CreateViewPath, vm);
             }
         }
 
@@ -196,9 +197,9 @@ namespace Web.Controllers.Admin
             };
 
             await FillEditLookupsAsync(vm, ct);
-
             ViewBag.MovieTitle = s.MovieTitle;
-            return View(vm);
+
+            return View(EditViewPath, vm);
         }
 
         // POST: /Admin/Sessions/Edit/5
@@ -211,7 +212,7 @@ namespace Web.Controllers.Admin
             if (!ModelState.IsValid)
             {
                 await FillEditLookupsAsync(vm, ct);
-                return View(vm);
+                return View(EditViewPath, vm);
             }
 
             try
@@ -222,14 +223,15 @@ namespace Web.Controllers.Admin
                 TempData["Success"] = "Сеанс успішно оновлено.";
 
                 await FillEditLookupsAsync(vm, ct);
+                ViewBag.MovieTitle = vm.Movies.FirstOrDefault(x => x.Value == vm.MovieId.ToString())?.Text ?? "";
 
-                return View(vm);
+                return View(EditViewPath, vm);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
                 await FillEditLookupsAsync(vm, ct);
-                return View(vm);
+                return View(EditViewPath, vm);
             }
         }
 
