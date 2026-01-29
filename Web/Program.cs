@@ -8,31 +8,23 @@ using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Application.Interfaces;
+using Application.Services;
+using Infrastructure.Interfaces;
+using Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC + auto antiforgery for unsafe HTTP methods
+// Add services to the container.
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
 });
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
-{
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        x => x.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-    );
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    if (builder.Environment.IsDevelopment())
-    {
-        options.EnableDetailedErrors();
-        // НЕ вмикаємо EnableSensitiveDataLogging у “ідеальній” версії
-    }
-});
-
-builder.Services
-    .AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
 
@@ -41,12 +33,17 @@ builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
+builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
+builder.Services.AddScoped<IHallRepository, HallRepository>();
+builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 
 // Services
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<ICountryLookupService, CountryLookupService>();
 builder.Services.AddScoped<IPersonService, PersonService>();
+builder.Services.AddScoped<ICinemaService, CinemaService>();
+builder.Services.AddScoped<IHallService, HallService>();
 
 var app = builder.Build();
 
@@ -65,17 +62,22 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// важливо для antiforgery (особливо коли десь форма не через tag-helper)
 app.UseAntiforgery();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Area route (Admin)
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
+// Default route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed Countries (safe)
+// Seed Countries
 using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Seeder");

@@ -1,0 +1,44 @@
+﻿@model Web.ViewModels.Admin.Halls.HallEditVm
+
+@{
+    ViewData["Title"] = Model.Id == null ? "Створити зал" : "Редагувати зал";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-area="Admin"
+      asp-controller="Halls"
+      asp-action="@(Model.Id == null ? "Create" : "Edit")"
+      method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    @if (Model.Id != null)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
+
+    <div class="mb-3">
+        <label for="CinemaId" class="form-label">Кінотеатр</label>
+        <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select"></select>
+        <span asp-validation-for="CinemaId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label for="Name" class="form-label">Назва</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Зберегти</button>
+    <a asp-area="Admin"
+       asp-controller="Halls"
+       asp-action="Index"
+       asp-route-cinemaId="@Model.CinemaId"
+       class="btn btn-secondary">Назад</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

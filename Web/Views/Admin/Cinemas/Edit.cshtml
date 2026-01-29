@@ -1,0 +1,40 @@
+﻿@model Web.ViewModels.Admin.Cinemas.CinemaEditVm
+
+@{
+    ViewData["Title"] = "Редагувати кінотеатр";
+}
+
+<h2>Редагувати кінотеатр</h2>
+
+<form asp-area="Admin" asp-controller="Cinemas" asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label for="Name" class="form-label">Назва</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label for="Address" class="form-label">Адреса</label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label for="City" class="form-label">Місто</label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Зберегти</button>
+    <a asp-area="Admin" asp-controller="Cinemas" asp-action="Index" class="btn btn-secondary">Назад</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

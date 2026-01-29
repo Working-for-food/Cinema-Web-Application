@@ -1,0 +1,220 @@
+﻿@using Application.DTOs
+@model GenerateSeatsDto
+
+@{
+    ViewData["Title"] = $"Місця: {Model.HallName}";
+
+    var error = ViewBag.SeatsError as string;
+
+    var grouped = (Model.Seats ?? new List<SeatDto>())
+        .GroupBy(s => s.RowNumber)
+        .OrderBy(g => g.Key)
+        .ToList();
+
+    var maxSeats = grouped.Count == 0 ? 0 : grouped.Max(g => g.Count());
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <div class="alert alert-danger mb-3">@error</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.LockReason))
+{
+    <div class="alert alert-warning mb-3">
+        <strong>Заблоковано:</strong> @Model.LockReason
+    </div>
+}
+
+<div class="mb-3">
+    <a asp-area="Admin" asp-controller="Halls" asp-action="Index" class="btn btn-secondary">
+        Назад до залів
+    </a>
+</div>
+
+@if (!Model.AlreadyGenerated)
+{
+    <div class="card mb-3">
+        <div class="card-header">1) Налаштування рядів</div>
+        <div class="card-body">
+            <form method="post" asp-area="Admin" asp-controller="Halls" asp-action="ConfigureSeats">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="hallId" value="@Model.HallId" />
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Кількість рядів</label>
+                        <input type="number" name="rows" min="1" value="@Model.Rows"
+                               class="form-control"
+                               @(Model.CanEditSeats ? "" : "disabled") />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Місць у ряду за замовчуванням</label>
+                        <input type="number" name="seatsPerRow" min="1" value="@Model.SeatsPerRow"
+                               class="form-control"
+                               @(Model.CanEditSeats ? "" : "disabled") />
+                    </div>
+
+                    <div class="col-md-5 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary"
+                                @(Model.CanEditSeats ? "" : "disabled")>
+                            Побудувати таблицю
+                        </button>
+                    </div>
+                </div>
+
+                @if (!Model.CanEditSeats)
+                {
+                    <div class="mt-3 text-muted">
+                        Редагування місць вимкнено.
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">2) Редагування місць у кожному ряду</div>
+        <div class="card-body">
+            @if (!Model.CanEditSeats)
+            {
+                <div class="alert alert-secondary mb-0">
+                    Редагування місць вимкнено.
+                </div>
+            }
+            else
+            {
+                <form method="post" asp-area="Admin" asp-controller="Halls" asp-action="GenerateSeats">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="hallId" value="@Model.HallId" />
+
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 140px;">Ряд</th>
+                                    <th style="width: 220px;">Кількість місць</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.RowConfigs.Count; i++)
+                                {
+                                    <tr>
+                                        <td>
+                                            @Model.RowConfigs[i].RowNumber
+                                            <input type="hidden" name="rowConfigs[@i].RowNumber" value="@Model.RowConfigs[i].RowNumber" />
+                                        </td>
+                                        <td>
+                                            <input type="number"
+                                                   name="rowConfigs[@i].SeatsCount"
+                                                   min="1"
+                                                   value="@Model.RowConfigs[i].SeatsCount"
+                                                   class="form-control" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Згенерувати місця</button>
+                </form>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">Місця вже згенеровані</div>
+        <div class="card-body">
+            <form method="post"
+                  asp-area="Admin" asp-controller="Halls" asp-action="GenerateSeats"
+                  onsubmit="return confirmRegenerate();">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="hallId" value="@Model.HallId" />
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="allowRegenerate"
+                           name="allowRegenerate"
+                           value="true"
+                           @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled") />
+                    <label class="form-check-label" for="allowRegenerate">
+                        Створити місця заново (без зміни схеми) — видалить поточні записи місць
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-danger"
+                        @(string.IsNullOrWhiteSpace(Model.LockReason) ? "" : "disabled")>
+                    Створити місця заново
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (grouped.Count == 0)
+    {
+        <div class="alert alert-secondary">Місця не знайдено.</div>
+    }
+    else
+    {
+        <h4 class="mt-3">Сітка місць</h4>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center">
+                <thead>
+                    <tr>
+                        <th class="text-start" style="min-width: 80px;">Ряд</th>
+                        @for (int i = 1; i <= maxSeats; i++)
+                        {
+                            <th style="min-width: 44px;">@i</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in grouped)
+                    {
+                        var seatsInRow = row.OrderBy(x => x.SeatNumber).ToList();
+
+                        <tr>
+                            <td class="text-start fw-semibold">@row.Key</td>
+
+                            @for (int s = 1; s <= maxSeats; s++)
+                            {
+                                var exists = seatsInRow.Any(x => x.SeatNumber == s);
+                                <td>
+                                    @if (exists)
+                                    {
+                                        <span class="badge text-bg-light border">@s</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        function confirmRegenerate() {
+            const allow = document.querySelector('#allowRegenerate');
+            if (allow && allow.checked) {
+                return confirm("Створення заново видалить існуючі місця. Продовжити?");
+            }
+            alert("Щоб створити місця заново, спочатку поставте галочку.");
+            return false;
+        }
+    </script>
+}

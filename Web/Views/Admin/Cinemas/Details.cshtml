@@ -1,0 +1,43 @@
+﻿@model Application.DTOs.CinemaDetailsDto
+
+@{
+    ViewData["Title"] = "Деталі кінотеатру";
+}
+
+<h2>Деталі кінотеатру</h2>
+
+<dl class="row">
+    <dt class="col-sm-2">Назва</dt>
+    <dd class="col-sm-10">@Model.Name</dd>
+
+    <dt class="col-sm-2">Адреса</dt>
+    <dd class="col-sm-10">@Model.Address</dd>
+
+    <dt class="col-sm-2">Місто</dt>
+    <dd class="col-sm-10">@Model.City</dd>
+</dl>
+
+<div class="d-flex gap-2">
+    <a asp-area="Admin"
+       asp-controller="Cinemas"
+       asp-action="Edit"
+       asp-route-id="@Model.Id"
+       class="btn btn-warning">
+        Редагувати
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Halls"
+       asp-action="Index"
+       asp-route-cinemaId="@Model.Id"
+       class="btn btn-primary">
+        Зали
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Cinemas"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Назад
+    </a>
+</div>

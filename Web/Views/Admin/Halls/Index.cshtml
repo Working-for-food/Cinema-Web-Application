@@ -1,0 +1,81 @@
+﻿@model Web.ViewModels.Admin.Halls.HallsIndexVm
+
+@{
+    ViewData["Title"] = "Зали";
+}
+
+<h2>Зали</h2>
+
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<form method="get" asp-area="Admin" asp-controller="Halls" asp-action="Index" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Кінотеатр</label>
+        <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select" onchange="this.form.submit()">
+            <option value="">Усі</option>
+        </select>
+        <noscript>
+            <button type="submit" class="btn btn-outline-primary mt-2">Фільтрувати</button>
+        </noscript>
+    </div>
+
+    <div class="col-md-8 text-md-end">
+        <a asp-area="Admin"
+           asp-controller="Halls"
+           asp-action="Create"
+           asp-route-cinemaId="@Model.CinemaId"
+           class="btn btn-primary">
+            Створити зал
+        </a>
+    </div>
+</form>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Кінотеатр</th>
+            <th>Зал</th>
+            <th class="text-end">Місця</th>
+            <th class="text-end"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var h in Model.Halls)
+        {
+            <tr>
+                <td>@h.CinemaName</td>
+                <td>@h.HallName</td>
+                <td class="text-end">@h.SeatsCount</td>
+                <td class="text-end">
+                    <a asp-area="Admin" asp-controller="Halls" asp-action="Edit" asp-route-id="@h.HallId" class="btn btn-sm btn-outline-secondary">
+                        Редагувати
+                    </a>
+                    <a asp-area="Admin" asp-controller="Halls" asp-action="Seats" asp-route-id="@h.HallId" class="btn btn-sm btn-outline-primary">
+                        Місця
+                    </a>
+
+                    <form method="post"
+                          asp-area="Admin"
+                          asp-controller="Halls"
+                          asp-action="Delete"
+                          asp-route-id="@h.HallId"
+                          asp-route-cinemaId="@Model.CinemaId"
+                          class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Видалити цей зал?');">
+                            Видалити
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
