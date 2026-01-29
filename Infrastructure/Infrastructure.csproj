@@ -16,4 +16,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+		<None Include="Data\Seed\allcountry.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
