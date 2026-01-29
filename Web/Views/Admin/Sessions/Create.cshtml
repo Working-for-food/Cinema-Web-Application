@@ -77,6 +77,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Початок</label>
                     <input class="form-control"
+                           id="StartTime"
                            name="StartTime"
                            type="datetime-local"
                            value="@FormatDt(Model.StartTime)" />
@@ -86,9 +87,12 @@
                 <div class="col-md-6">
                     <label class="form-label">Кінець</label>
                     <input class="form-control"
+                           id="EndTime"
                            name="EndTime"
                            type="datetime-local"
                            value="@FormatDt(Model.EndTime)" />
+
+                    <div class="form-text" id="movieDurationText">Тривалість: —</div>
                     <span class="text-danger" asp-validation-for="EndTime"></span>
                 </div>
 
@@ -114,21 +118,84 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
         (function () {
-          const input = document.getElementById('movieTitleInput');
-          const hidden = document.getElementById('movieIdHidden');
-          const list = document.getElementById('movieList');
+            const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                            (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
+                    ));
 
-          function syncHidden() {
-            const value = (input.value || '').trim();
-            const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
+        const titleInput = document.getElementById('movieTitleInput');
+        const hidden = document.getElementById('movieIdHidden');
+        const list = document.getElementById('movieList');
 
-            hidden.value = option ? (option.dataset.id || "0") : "0";
-          }
+            const startInput = document.getElementById('StartTime');
+            const endInput = document.getElementById('EndTime');
 
-          input.addEventListener('input', syncHidden);
-          syncHidden();
+            const durationText = document.getElementById('movieDurationText');
+
+            if (!titleInput || !hidden || !list || !startInput || !endInput) return;
+
+            let endTouched = false;
+            endInput.addEventListener('input', () => endTouched = true);
+
+            function pad(n) { return String(n).padStart(2, "0"); }
+
+            function parseDt(v) {
+                if (!v) return null;
+                const d = new Date(v);
+                return isNaN(d) ? null : d;
+            }
+
+            function fmtDt(d) {
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
+
+            function findSelectedMovieIdByTitle() {
+                const value = (titleInput.value || '').trim();
+                const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
+                return option ? (option.dataset.id || "0") : "0";
+            }
+
+            function updateDurationLabel(movieId) {
+                if (!durationText) return;
+
+                const dur = movieDurations[Number(movieId || 0)];
+                durationText.textContent = (dur && dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
+            }
+
+            function recalcEnd(movieId) {
+                const dur = movieDurations[Number(movieId || 0)];
+                if (!dur || dur <= 0) return;
+                if (endTouched) return;
+
+                const start = parseDt(startInput.value);
+                if (!start) return;
+
+                const end = new Date(start.getTime() + dur * 60000);
+                endInput.value = fmtDt(end);
+            }
+
+            function syncMovieIdAndUpdate() {
+                const newId = findSelectedMovieIdByTitle();
+                const oldId = hidden.value;
+
+                hidden.value = newId;
+
+                if (newId !== oldId) endTouched = false;
+
+                updateDurationLabel(newId);
+                recalcEnd(newId);
+            }
+
+            titleInput.addEventListener('input', syncMovieIdAndUpdate);
+
+            startInput.addEventListener('change', () => {
+                endTouched = false;
+                syncMovieIdAndUpdate();
+            });
+
+            syncMovieIdAndUpdate();
         })();
     </script>
 }

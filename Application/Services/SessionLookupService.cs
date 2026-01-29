@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
 using Infrastructure.Interfaces;
+using System.Linq;
 
 namespace Application.Services;
 
@@ -18,17 +19,12 @@ public class SessionLookupService : ISessionLookupService
     public async Task<List<LookupItemDto>> GetMoviesAsync(string? query, CancellationToken ct)
     {
         var list = await _movies.SearchAsync(query, take: 50, ct);
-        return list.Select(m => new LookupItemDto(m.Id, m.Title)).ToList();
+        return list.Select(m => new LookupItemDto(m.Id, m.Title, m.Duration)).ToList();
     }
 
     public async Task<List<LookupItemDto>> GetHallsAsync(CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
-
         var list = await _halls.GetAllWithCinemaAsync();
-
-        ct.ThrowIfCancellationRequested();
-
         return list.Select(h => new LookupItemDto(h.Id, $"{h.Cinema.Name} — {h.Name}")).ToList();
     }
 }

@@ -145,4 +145,40 @@
           if ((input.value || '').trim().length > 0) syncHidden();
         })();
     </script>
+    <script>
+            const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                                            (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
+                            ));
+
+    const movieSelect = document.getElementById("MovieId");
+    const startInput = document.getElementById("StartTime");
+    const endInput = document.getElementById("EndTime");
+
+            if (movieSelect && startInput && endInput) {
+                let endTouched = false;
+                endInput.addEventListener("input", () => endTouched = true);
+
+                function parseDt(v) { if (!v) return null; const d = new Date(v); return isNaN(d) ? null : d; }
+                function pad(n) { return String(n).padStart(2, "0"); }
+                function fmtDt(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+
+                function recalcEnd() {
+                    const movieId = Number(movieSelect.value || 0);
+                    const duration = movieDurations[movieId];
+                    if (!duration || duration <= 0) return;
+                    if (endTouched) return;
+
+                    const start = parseDt(startInput.value);
+                    if (!start) return;
+
+                    const end = new Date(start.getTime() + duration * 60000);
+                    endInput.value = fmtDt(end);
+                }
+
+                movieSelect.addEventListener("change", () => { endTouched = false; recalcEnd(); });
+                startInput.addEventListener("change", () => { endTouched = false; recalcEnd(); });
+
+                recalcEnd();
+            }
+    </script>
 }

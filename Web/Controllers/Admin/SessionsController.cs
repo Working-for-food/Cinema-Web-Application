@@ -63,8 +63,13 @@ namespace Web.Controllers.Admin
             var movies = await _lookups.GetMoviesAsync(query: null, ct);
             vm.Movies = ToSelectList(movies, vm.MovieId == 0 ? null : vm.MovieId);
 
+            ViewBag.MovieDurations = movies
+                .Where(x => x.DurationMinutes.HasValue && x.DurationMinutes.Value > 0)
+                .ToDictionary(x => x.Id, x => x.DurationMinutes!.Value);
+
             vm.PresentationTypes = BuildPresentationTypes(vm.PresentationType);
         }
+
 
         private async Task FillIndexLookupsAsync(SessionsIndexVm vm, CancellationToken ct)
         {
