@@ -5,6 +5,9 @@
     ViewData["Title"] = "Редагувати сеанс";
     string FormatDt(DateTime dt) => dt.ToString("yyyy-MM-ddTHH:mm");
 
+    var selectedMovieText = Model.Movies
+        .FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text ?? "";
+
     var movieTitleFromPost = Context.Request.HasFormContentType
         ? Context.Request.Form["movieTitle"].ToString()
         : "";
@@ -13,7 +16,9 @@
 
     var movieTitleValue = !string.IsNullOrWhiteSpace(movieTitleFromPost)
         ? movieTitleFromPost
-        : movieTitleFromQuery;
+        : (!string.IsNullOrWhiteSpace(movieTitleFromQuery)
+            ? movieTitleFromQuery
+            : selectedMovieText);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -45,18 +50,6 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Фільм</label>
-
-                    @{
-                        var selectedMovieText = Model.Movies
-                        .FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text;
-                    }
-
-                    @if (!string.IsNullOrWhiteSpace(selectedMovieText))
-                    {
-                        <div class="mb-2 text-muted">
-                            Поточний фільм: <strong>@selectedMovieText</strong>
-                        </div>
-                    }
 
                     <input class="form-control"
                            list="movieList"
@@ -91,6 +84,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Початок</label>
                     <input class="form-control"
+                           id="StartTime"
                            name="StartTime"
                            type="datetime-local"
                            value="@FormatDt(Model.StartTime)" />
@@ -100,9 +94,12 @@
                 <div class="col-md-6">
                     <label class="form-label">Кінець</label>
                     <input class="form-control"
+                           id="EndTime"
                            name="EndTime"
                            type="datetime-local"
                            value="@FormatDt(Model.EndTime)" />
+
+                    <div class="form-text" id="movieDurationText">Тривалість: —</div>
                     <span class="text-danger" asp-validation-for="EndTime"></span>
                 </div>
 
@@ -128,57 +125,84 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
         (function () {
-          const input = document.getElementById('movieTitleInput');
-          const hidden = document.getElementById('movieIdHidden');
-          const list = document.getElementById('movieList');
-
-          function syncHidden() {
-            const value = (input.value || '').trim();
-            const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
-            hidden.value = option ? (option.dataset.id || "0") : "0";
-          }
-
-          input.addEventListener('input', syncHidden);
-
-          if ((input.value || '').trim().length > 0) syncHidden();
-        })();
-    </script>
-    <script>
             const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                            (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
-                            ));
+                            (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
+                    ));
 
-    const movieSelect = document.getElementById("MovieId");
-    const startInput = document.getElementById("StartTime");
-    const endInput = document.getElementById("EndTime");
+        const titleInput = document.getElementById('movieTitleInput');
+        const hidden = document.getElementById('movieIdHidden');
+        const list = document.getElementById('movieList');
 
-            if (movieSelect && startInput && endInput) {
-                let endTouched = false;
-                endInput.addEventListener("input", () => endTouched = true);
+            const startInput = document.getElementById('StartTime');
+            const endInput = document.getElementById('EndTime');
 
-                function parseDt(v) { if (!v) return null; const d = new Date(v); return isNaN(d) ? null : d; }
-                function pad(n) { return String(n).padStart(2, "0"); }
-                function fmtDt(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+            const durationText = document.getElementById('movieDurationText');
 
-                function recalcEnd() {
-                    const movieId = Number(movieSelect.value || 0);
-                    const duration = movieDurations[movieId];
-                    if (!duration || duration <= 0) return;
-                    if (endTouched) return;
+            if (!titleInput || !hidden || !list || !startInput || !endInput) return;
 
-                    const start = parseDt(startInput.value);
-                    if (!start) return;
+            let endTouched = false;
+            endInput.addEventListener('input', () => endTouched = true);
 
-                    const end = new Date(start.getTime() + duration * 60000);
-                    endInput.value = fmtDt(end);
-                }
+            function pad(n) { return String(n).padStart(2, "0"); }
 
-                movieSelect.addEventListener("change", () => { endTouched = false; recalcEnd(); });
-                startInput.addEventListener("change", () => { endTouched = false; recalcEnd(); });
-
-                recalcEnd();
+            function parseDt(v) {
+                if (!v) return null;
+                const d = new Date(v);
+                return isNaN(d) ? null : d;
             }
+
+            function fmtDt(d) {
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
+
+            function findSelectedMovieIdByTitle() {
+                const value = (titleInput.value || '').trim();
+                const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
+                return option ? (option.dataset.id || "0") : "0";
+            }
+
+            function updateDurationLabel(movieId) {
+                if (!durationText) return;
+
+                const dur = movieDurations[Number(movieId || 0)];
+                durationText.textContent = (dur && dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
+            }
+
+            function recalcEnd(movieId) {
+                const dur = movieDurations[Number(movieId || 0)];
+                if (!dur || dur <= 0) return;
+                if (endTouched) return;
+
+                const start = parseDt(startInput.value);
+                if (!start) return;
+
+                const end = new Date(start.getTime() + dur * 60000);
+                endInput.value = fmtDt(end);
+            }
+
+            function syncMovieIdAndUpdate() {
+                const newId = findSelectedMovieIdByTitle();
+                const oldId = hidden.value;
+
+                hidden.value = newId;
+
+                if (newId !== oldId) endTouched = false;
+
+                updateDurationLabel(newId);
+                recalcEnd(newId);
+            }
+
+            titleInput.addEventListener('input', syncMovieIdAndUpdate);
+
+            startInput.addEventListener('change', () => {
+                endTouched = false;
+                syncMovieIdAndUpdate();
+            });
+
+            syncMovieIdAndUpdate();
+        })();
     </script>
 }
