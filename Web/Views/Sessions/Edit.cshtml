@@ -1,14 +1,19 @@
-﻿@using Application.DTOs
-@using Infrastructure.Entities
-@using Microsoft.AspNetCore.Mvc.Rendering
-@model SessionEditDto
+﻿@using Infrastructure.Entities
+@model Web.ViewModels.Admin.Sessions.SessionEditVm
 
 @{
     ViewData["Title"] = "Редагувати сеанс";
     string FormatDt(DateTime dt) => dt.ToString("yyyy-MM-ddTHH:mm");
 
-    var movies = ViewBag.Movies as List<LookupItemDto> ?? new();
-    var movieTitle = ViewBag.MovieTitle as string ?? "";
+    var movieTitleFromPost = Context.Request.HasFormContentType
+        ? Context.Request.Form["movieTitle"].ToString()
+        : "";
+
+    var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
+
+    var movieTitleValue = !string.IsNullOrWhiteSpace(movieTitleFromPost)
+        ? movieTitleFromPost
+        : movieTitleFromQuery;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -16,19 +21,42 @@
     <a class="btn btn-outline-secondary" asp-action="Index">До списку</a>
 </div>
 
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success mb-3" role="alert">@ok</div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger mb-3" role="alert">@err</div>
+}
+
 <div class="card shadow-sm">
     <div class="card-body">
         @if (!ViewData.ModelState.IsValid)
         {
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+            <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
         }
 
-        <form asp-action="Edit" method="post">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
             @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="Id" />
 
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Фільм</label>
+
+                    @{
+                        var selectedMovieText = Model.Movies
+                        .FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text;
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(selectedMovieText))
+                    {
+                        <div class="mb-2 text-muted">
+                            Поточний фільм: <strong>@selectedMovieText</strong>
+                        </div>
+                    }
 
                     <input class="form-control"
                            list="movieList"
@@ -36,17 +64,16 @@
                            name="movieTitle"
                            placeholder="Почніть вводити назву..."
                            autocomplete="off"
-                           value="@movieTitle" />
+                           value="@movieTitleValue" />
 
                     <datalist id="movieList">
-                        @foreach (var m in movies)
+                        @foreach (var m in Model.Movies)
                         {
-                            <option value="@m.Title" data-id="@m.Id"></option>
+                            <option value="@m.Text" data-id="@m.Value"></option>
                         }
                     </datalist>
 
                     <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-
                     <div class="form-text">Показано до 50 підказок.</div>
                     <span class="text-danger" asp-validation-for="MovieId"></span>
                 </div>
@@ -54,10 +81,8 @@
                 <div class="col-md-6">
                     <label class="form-label">Зал</label>
 
-                    <select class="form-select"
-                            asp-for="HallId"
-                            asp-items="(IEnumerable<SelectListItem>)ViewBag.Halls">
-                        <option value="">— Оберіть зал —</option>
+                    <select class="form-select" asp-for="HallId" asp-items="Model.Halls">
+                        <option value="0">— Оберіть зал —</option>
                     </select>
 
                     <span class="text-danger" asp-validation-for="HallId"></span>
@@ -85,7 +110,8 @@
                     <label class="form-label">Тип показу</label>
                     <select class="form-select"
                             asp-for="PresentationType"
-                            asp-items="Html.GetEnumSelectList<PresentationType>()"></select>
+                            asp-items="Model.PresentationTypes">
+                    </select>
                     <span class="text-danger" asp-validation-for="PresentationType"></span>
                 </div>
             </div>
@@ -94,7 +120,7 @@
 
             <div class="d-flex gap-2">
                 <button class="btn btn-primary" type="submit">Зберегти</button>
-                <a class="btn btn-outline-secondary" asp-action="Index">Скасувати</a>
+                <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Скасувати</a>
             </div>
         </form>
     </div>
@@ -102,7 +128,6 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script>
         (function () {
           const input = document.getElementById('movieTitleInput');
@@ -111,16 +136,13 @@
 
           function syncHidden() {
             const value = (input.value || '').trim();
-            const option = Array.from(list.options).find(o => o.value === value);
-
-            hidden.value = option ? option.dataset.id : '';
+            const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
+            hidden.value = option ? (option.dataset.id || "0") : "0";
           }
 
           input.addEventListener('input', syncHidden);
 
-          if (input.value && input.value.trim().length > 0) {
-            syncHidden();
-          }
+          if ((input.value || '').trim().length > 0) syncHidden();
         })();
     </script>
 }

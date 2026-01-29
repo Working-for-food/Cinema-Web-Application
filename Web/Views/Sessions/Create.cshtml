@@ -1,7 +1,5 @@
-﻿@using Application.DTOs
-@using Microsoft.AspNetCore.Mvc.Rendering
-@using Infrastructure.Entities
-@model SessionEditDto
+﻿@using Infrastructure.Entities
+@model Web.ViewModels.Admin.Sessions.SessionEditVm
 
 @{
     ViewData["Title"] = "Створити сеанс";
@@ -9,8 +7,6 @@
     string FormatDt(DateTime dt) => dt == default
         ? ""
         : dt.ToString("yyyy-MM-ddTHH:mm");
-
-    var movies = ViewBag.Movies as List<LookupItemDto> ?? new();
 
     var movieTitleFromPost = Context.Request.HasFormContentType
         ? Context.Request.Form["movieTitle"].ToString()
@@ -28,7 +24,7 @@
     <a class="btn btn-outline-secondary" asp-action="Index">До списку</a>
 </div>
 
-@if (TempData["Success"] is string ok)
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
 {
     <div class="alert alert-success mb-3" role="alert">@ok</div>
 }
@@ -56,32 +52,32 @@
                            value="@movieTitleValue" />
 
                     <datalist id="movieList">
-                        @foreach (var m in movies)
+                        @foreach (var m in Model.Movies)
                         {
-                            <option value="@m.Title" data-id="@m.Id" data-duration="@m.DurationMinutes"></option>
+                            <option value="@m.Text" data-id="@m.Value"></option>
                         }
                     </datalist>
 
                     <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-                    <div class="form-text">Показано до 50 підказок. Кінець може заповнюватися автоматично.</div>
+
+                    <div class="form-text">Показано до 50 підказок.</div>
                     <span class="text-danger" asp-validation-for="MovieId"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Зал</label>
-                    <select class="form-select"
-                            asp-for="HallId"
-                            asp-items="(IEnumerable<SelectListItem>)ViewBag.Halls">
-                        <option value="">— Оберіть зал —</option>
+
+                    <select class="form-select" asp-for="HallId" asp-items="Model.Halls">
+                        <option value="0">— Оберіть зал —</option>
                     </select>
+
                     <span class="text-danger" asp-validation-for="HallId"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Початок</label>
                     <input class="form-control"
-                           id="startTimeInput"
-                           asp-for="StartTime"
+                           name="StartTime"
                            type="datetime-local"
                            value="@FormatDt(Model.StartTime)" />
                     <span class="text-danger" asp-validation-for="StartTime"></span>
@@ -90,11 +86,9 @@
                 <div class="col-md-6">
                     <label class="form-label">Кінець</label>
                     <input class="form-control"
-                           id="endTimeInput"
-                           asp-for="EndTime"
+                           name="EndTime"
                            type="datetime-local"
                            value="@FormatDt(Model.EndTime)" />
-                    <div class="form-text">Можна змінити вручну.</div>
                     <span class="text-danger" asp-validation-for="EndTime"></span>
                 </div>
 
@@ -102,7 +96,7 @@
                     <label class="form-label">Тип показу</label>
                     <select class="form-select"
                             asp-for="PresentationType"
-                            asp-items="Html.GetEnumSelectList<PresentationType>()">
+                            asp-items="Model.PresentationTypes">
                     </select>
                     <span class="text-danger" asp-validation-for="PresentationType"></span>
                 </div>
@@ -122,71 +116,19 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-          const movieInput = document.getElementById('movieTitleInput');
-          const movieHidden = document.getElementById('movieIdHidden');
+          const input = document.getElementById('movieTitleInput');
+          const hidden = document.getElementById('movieIdHidden');
           const list = document.getElementById('movieList');
 
-          const startInput = document.getElementById('startTimeInput');
-          const endInput = document.getElementById('endTimeInput');
+          function syncHidden() {
+            const value = (input.value || '').trim();
+            const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
 
-          let endManuallyEdited = false;
-          endInput.addEventListener('input', () => { endManuallyEdited = true; });
-
-          function parseLocalDateTime(value) {
-            return value ? new Date(value) : null;
+            hidden.value = option ? (option.dataset.id || "0") : "0";
           }
 
-          function formatLocalDateTime(dt) {
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-          }
-
-          function getSelectedMovieOption() {
-            const value = (movieInput.value || '').trim().toLowerCase();
-            if (!value) return null;
-
-            return Array.from(list.options).find(o =>
-              (o.value || '').trim().toLowerCase() === value
-            ) || null;
-          }
-
-          function recalcEndTimeIfAllowed(opt) {
-            if (!opt) return;
-            if (endManuallyEdited) return;
-
-            if (endInput.value) return;
-
-            const duration = parseInt(opt.dataset.duration || '', 10);
-            if (!Number.isFinite(duration) || duration <= 0) return;
-
-            const start = parseLocalDateTime(startInput.value);
-            if (!start) return;
-
-            const end = new Date(start.getTime() + duration * 60000);
-            endInput.value = formatLocalDateTime(end);
-          }
-
-          function syncMovieId() {
-            const opt = getSelectedMovieOption();
-            movieHidden.value = opt ? (opt.dataset.id || '') : '';
-            return opt;
-          }
-
-          function onMovieInput() {
-            const opt = syncMovieId();
-            recalcEndTimeIfAllowed(opt);
-          }
-
-          function onStartInput() {
-            const opt = getSelectedMovieOption();
-            recalcEndTimeIfAllowed(opt);
-          }
-
-          movieInput.addEventListener('input', onMovieInput);
-          startInput.addEventListener('input', onStartInput);
-
-          const opt0 = syncMovieId();
-          recalcEndTimeIfAllowed(opt0);
+          input.addEventListener('input', syncHidden);
+          syncHidden();
         })();
     </script>
 }

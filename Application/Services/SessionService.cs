@@ -9,15 +9,15 @@ public class SessionService : ISessionService
 {
     private readonly ISessionRepository _repo;
 
-    public SessionService(ISessionRepository repo)
-    {
-        _repo = repo;
-    }
+    public SessionService(ISessionRepository repo) => _repo = repo;
 
     public async Task<SessionDetailsDto?> GetByIdAsync(int id, CancellationToken ct)
     {
         var s = await _repo.GetByIdAsync(id, ct);
         if (s is null) return null;
+
+        var cinemaName = s.Hall?.Cinema?.Name ?? "";
+        var hallName = s.Hall?.Name ?? "";
 
         return new SessionDetailsDto
         {
@@ -26,9 +26,9 @@ public class SessionService : ISessionService
             MovieTitle = s.Movie?.Title ?? "",
 
             HallId = s.HallId,
-            HallTitle = s.Hall?.Cinema != null
-                ? $"{s.Hall.Cinema.Name} — {s.Hall.Name}"
-                : (s.Hall?.Name ?? ""),
+            HallTitle = !string.IsNullOrWhiteSpace(cinemaName)
+                ? $"{cinemaName} — {hallName}"
+                : hallName,
 
             StartTime = s.StartTime,
             EndTime = s.EndTime,
@@ -36,6 +36,21 @@ public class SessionService : ISessionService
             IsCancelled = s.IsCancelled,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt
+        };
+    }
+
+    public async Task<SessionEditDto?> GetForEditAsync(int id, CancellationToken ct)
+    {
+        var s = await _repo.GetByIdAsync(id, ct);
+        if (s is null) return null;
+
+        return new SessionEditDto
+        {
+            MovieId = s.MovieId,
+            HallId = s.HallId,
+            StartTime = s.StartTime,
+            EndTime = s.EndTime,
+            PresentationType = s.PresentationType
         };
     }
 
@@ -49,21 +64,26 @@ public class SessionService : ISessionService
     {
         var list = await _repo.GetAllAsync(from, to, hallId, movieId, includeCancelled, ct);
 
-        return list.Select(s => new SessionListDto
+        return list.Select(s =>
         {
-            Id = s.Id,
-            MovieId = s.MovieId,
-            MovieTitle = s.Movie?.Title ?? "",
+            var cinemaName = s.Hall?.Cinema?.Name ?? "";
+            var hallName = s.Hall?.Name ?? "";
 
-            HallId = s.HallId,
-            HallName = s.Hall?.Cinema != null
-                ? $"{s.Hall.Cinema.Name} — {s.Hall.Name}"
-                : (s.Hall?.Name ?? ""),
+            return new SessionListDto
+            {
+                Id = s.Id,
+                MovieId = s.MovieId,
+                MovieTitle = s.Movie?.Title ?? "",
 
-            StartTime = s.StartTime,
-            EndTime = s.EndTime,
-            PresentationType = s.PresentationType,
-            IsCancelled = s.IsCancelled
+                HallId = s.HallId,
+                CinemaName = cinemaName,
+                HallName = hallName,
+
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                PresentationType = s.PresentationType,
+                IsCancelled = s.IsCancelled
+            };
         }).ToList();
     }
 
@@ -142,7 +162,7 @@ public class SessionService : ISessionService
         {
             var hasOverlap = await _repo.HasOverlapAsync(entity.HallId, entity.StartTime, entity.EndTime, ignoreSessionId: id, ct);
             if (hasOverlap)
-                throw new InvalidOperationException("Неможливо відновити: у цьому залі вже є інший сеанс, що перетинається.");
+                throw new InvalidOperationException("Неможливо відновити сеанс: у цьому залі вже є інший сеанс, що перетинається за часом.");
 
             entity.IsCancelled = false;
             entity.UpdatedAt = DateTime.UtcNow;

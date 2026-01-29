@@ -1,7 +1,9 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Infrastructure.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Web.ViewModels.Admin.Sessions;
 
 namespace Web.Controllers.Admin
 {
@@ -17,85 +19,162 @@ namespace Web.Controllers.Admin
             _lookups = lookups;
         }
 
-        private async Task FillLookupsAsync(int? selectedHallId, CancellationToken ct)
+        private static SessionEditDto ToDto(SessionEditVm vm) => new()
         {
-            var halls = await _lookups.GetHallsAsync(ct);
+            MovieId = vm.MovieId,
+            HallId = vm.HallId,
+            StartTime = vm.StartTime,
+            EndTime = vm.EndTime,
+            PresentationType = vm.PresentationType
+        };
 
-            ViewBag.Halls = halls.Select(h => new SelectListItem
+        private static List<SelectListItem> ToSelectList(IEnumerable<LookupItemDto> items, int? selectedId = null)
+            => items.Select(x => new SelectListItem
             {
-                Value = h.Id.ToString(),
-                Text = h.Title,
-                Selected = selectedHallId.HasValue && h.Id == selectedHallId.Value
+                Value = x.Id.ToString(),
+                Text = x.Title,
+                Selected = selectedId.HasValue && x.Id == selectedId.Value
             }).ToList();
 
-            ViewBag.Movies = await _lookups.GetMoviesAsync(null, ct);
+        private static List<SelectListItem> BuildPresentationTypes(PresentationType selected)
+            => Enum.GetValues<PresentationType>()
+                .Select(p => new SelectListItem
+                {
+                    Value = p.ToString(),
+                    Text = p switch
+                    {
+                        PresentationType.TwoD => "2D",
+                        PresentationType.ThreeD => "3D",
+                        _ => p.ToString()
+                    },
+                    Selected = p == selected
+                }).ToList();
+
+        private async Task FillEditLookupsAsync(SessionEditVm vm, CancellationToken ct)
+        {
+            var halls = await _lookups.GetHallsAsync(ct);
+            vm.Halls = ToSelectList(halls, vm.HallId == 0 ? null : vm.HallId);
+
+            var movies = await _lookups.GetMoviesAsync(query: null, ct);
+            vm.Movies = ToSelectList(movies, vm.MovieId == 0 ? null : vm.MovieId);
+
+            vm.PresentationTypes = BuildPresentationTypes(vm.PresentationType);
+        }
+
+        private async Task FillIndexLookupsAsync(SessionsIndexVm vm, CancellationToken ct)
+        {
+            var halls = await _lookups.GetHallsAsync(ct);
+            vm.Halls = ToSelectList(halls, vm.HallId);
+
+            var movies = await _lookups.GetMoviesAsync(vm.MovieTitle, ct);
+            vm.Movies = ToSelectList(movies, vm.MovieId);
         }
 
         // GET: /Admin/Sessions/Index
         [HttpGet]
-        public async Task<IActionResult> Index(
-            DateTime? from,
-            DateTime? to,
-            int? hallId,
-            int? movieId,
-            bool includeCancelled = true,
-            CancellationToken ct = default)
+        public async Task<IActionResult> Index(SessionsIndexVm vm, CancellationToken ct = default)
         {
-            var list = await _sessions.GetAllAsync(from, to, hallId, movieId, includeCancelled, ct);
-            await FillLookupsAsync(hallId, ct);
-            return View(list);
+            vm.Sessions = await _sessions.GetAllAsync(
+                vm.From,
+                vm.To,
+                vm.HallId,
+                vm.MovieId,
+                vm.IncludeCancelled,
+                ct);
+
+            await FillIndexLookupsAsync(vm, ct);
+            return View(vm);
         }
 
         // GET: /Admin/Sessions/Details/5
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Details(int id, CancellationToken ct)
         {
             var dto = await _sessions.GetByIdAsync(id, ct);
             if (dto is null) return NotFound();
-            return View(dto);
+
+            // dto.HallTitle у тебе формату "Cinema — Hall"
+            // а VM хоче окремо CinemaName і HallName
+            var cinemaName = "";
+            var hallName = "";
+
+            if (!string.IsNullOrWhiteSpace(dto.HallTitle))
+            {
+                var parts = dto.HallTitle.Split('—', 2, StringSplitOptions.TrimEntries);
+                if (parts.Length == 2)
+                {
+                    cinemaName = parts[0];
+                    hallName = parts[1];
+                }
+                else
+                {
+                    // якщо раптом у dto тільки назва залу
+                    hallName = dto.HallTitle.Trim();
+                }
+            }
+
+            var vm = new SessionDetailsVm
+            {
+                Id = dto.Id,
+                MovieTitle = dto.MovieTitle,
+                CinemaName = cinemaName,
+                HallName = hallName,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                PresentationType = dto.PresentationType,
+                IsCancelled = dto.IsCancelled,
+                CreatedAt = dto.CreatedAt,
+                UpdatedAt = dto.UpdatedAt
+            };
+
+            return View(vm);
         }
 
         // GET: /Admin/Sessions/Create
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken ct)
         {
-            await FillLookupsAsync(selectedHallId: null, ct);
-
             var now = DateTime.Now;
             now = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute / 5 * 5, 0);
 
-            var dto = new SessionEditDto
+            var vm = new SessionEditVm
             {
                 StartTime = now,
                 EndTime = now.AddHours(2),
-                PresentationType = Infrastructure.Entities.PresentationType.TwoD
+                PresentationType = PresentationType.TwoD
             };
 
-            return View(dto);
+            await FillEditLookupsAsync(vm, ct);
+            return View(vm);
         }
 
         // POST: /Admin/Sessions/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(SessionEditDto dto, CancellationToken ct)
+        public async Task<IActionResult> Create(SessionEditVm vm, CancellationToken ct)
         {
             if (!ModelState.IsValid)
             {
-                await FillLookupsAsync(dto.HallId, ct);
-                return View(dto);
+                await FillEditLookupsAsync(vm, ct);
+                return View(vm);
             }
 
             try
             {
-                var id = await _sessions.CreateAsync(dto, ct);
+                await _sessions.CreateAsync(ToDto(vm), ct);
                 TempData["Success"] = "Сеанс успішно створено.";
-                return View(dto);
+
+                vm.Id = null;
+
+                await FillEditLookupsAsync(vm, ct);
+                return View(vm);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await FillLookupsAsync(dto.HallId, ct);
-                return View(dto);
+                await FillEditLookupsAsync(vm, ct);
+                return View(vm);
             }
         }
 
@@ -106,13 +185,9 @@ namespace Web.Controllers.Admin
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
 
-            await FillLookupsAsync(s.HallId, ct);
-
-            // щоб у полі пошуку фільму підставити назву
-            // ViewBag.MovieTitle = s.MovieTitle;
-
-            var dto = new SessionEditDto
+            var vm = new SessionEditVm
             {
+                Id = s.Id,
                 MovieId = s.MovieId,
                 HallId = s.HallId,
                 StartTime = s.StartTime,
@@ -120,32 +195,41 @@ namespace Web.Controllers.Admin
                 PresentationType = s.PresentationType
             };
 
-            return View(dto);
+            await FillEditLookupsAsync(vm, ct);
+
+            ViewBag.MovieTitle = s.MovieTitle;
+            return View(vm);
         }
 
         // POST: /Admin/Sessions/Edit/5
         [HttpPost("{id:int}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, SessionEditDto dto, CancellationToken ct)
+        public async Task<IActionResult> Edit(int id, SessionEditVm vm, CancellationToken ct)
         {
+            vm.Id = id;
+
             if (!ModelState.IsValid)
             {
-                await FillLookupsAsync(dto.HallId, ct);
-                return View(dto);
+                await FillEditLookupsAsync(vm, ct);
+                return View(vm);
             }
 
             try
             {
-                var ok = await _sessions.UpdateAsync(id, dto, ct);
+                var ok = await _sessions.UpdateAsync(id, ToDto(vm), ct);
                 if (!ok) return NotFound();
 
-                return RedirectToAction(nameof(Details), new { id });
+                TempData["Success"] = "Сеанс успішно оновлено.";
+
+                await FillEditLookupsAsync(vm, ct);
+
+                return View(vm);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await FillLookupsAsync(dto.HallId, ct);
-                return View(dto);
+                await FillEditLookupsAsync(vm, ct);
+                return View(vm);
             }
         }
 
@@ -157,6 +241,7 @@ namespace Web.Controllers.Admin
             var ok = await _sessions.CancelAsync(id, ct);
             if (!ok) return NotFound();
 
+            TempData["Success"] = "Сеанс скасовано.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -169,6 +254,8 @@ namespace Web.Controllers.Admin
             {
                 var ok = await _sessions.RestoreAsync(id, ct);
                 if (!ok) return NotFound();
+
+                TempData["Success"] = "Сеанс відновлено.";
             }
             catch (Exception ex)
             {

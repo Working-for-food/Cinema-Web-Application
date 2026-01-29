@@ -1,13 +1,17 @@
-﻿@using Microsoft.AspNetCore.Mvc.Rendering
-@using Application.DTOs
-@model List<SessionListDto>
+﻿@using Application.DTOs
+@model Web.ViewModels.Admin.Sessions.SessionsIndexVm
 
 @{
     ViewData["Title"] = "Сеанси (адмін)";
+    string FormatDt(DateTime? dt) => dt?.ToString("yyyy-MM-ddTHH:mm") ?? "";
 }
 
 <h1>Сеанси</h1>
 
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success">@ok</div>
+}
 @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
 {
     <div class="alert alert-danger">@err</div>
@@ -17,28 +21,20 @@
     <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
 </p>
 
-@{
-    var movies = ViewBag.Movies as List<LookupItemDto> ?? new();
-    var movieIdFromQuery = Context.Request.Query["movieId"].ToString();
-    var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
-}
-
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-2">
         <label class="form-label">З</label>
-        <input class="form-control" type="datetime-local" name="from"
-               value="@(Context.Request.Query["from"])" />
+        <input class="form-control" type="datetime-local" asp-for="From" value="@FormatDt(Model.From)" />
     </div>
 
     <div class="col-md-2">
         <label class="form-label">До</label>
-        <input class="form-control" type="datetime-local" name="to"
-               value="@(Context.Request.Query["to"])" />
+        <input class="form-control" type="datetime-local" asp-for="To" value="@FormatDt(Model.To)" />
     </div>
 
     <div class="col-md-3">
         <label class="form-label">Зал</label>
-        <select class="form-select" name="hallId" asp-items="(IEnumerable<SelectListItem>)ViewBag.Halls">
+        <select class="form-select" asp-for="HallId" asp-items="Model.Halls">
             <option value="">— Усі —</option>
         </select>
     </div>
@@ -49,26 +45,24 @@
         <input class="form-control"
                list="movieList"
                id="movieTitleInput"
-               name="movieTitle"
-               placeholder="Почніть вводити назву..."
-               value="@movieTitleFromQuery" />
+               asp-for="MovieTitle"
+               placeholder="Почніть вводити назву..." />
 
         <datalist id="movieList">
-            @foreach (var m in movies)
+            @foreach (var m in Model.Movies)
             {
-                <option value="@m.Title" data-id="@m.Id"></option>
+                <option value="@m.Text" data-id="@m.Value"></option>
             }
         </datalist>
 
-        <input type="hidden" id="movieIdHidden" name="movieId" value="@movieIdFromQuery" />
+        <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
         <div class="form-text">Показано до 50 підказок.</div>
     </div>
 
     <div class="col-md-2 d-flex align-items-end">
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="includeCancelled" value="true"
-                   @(Context.Request.Query["includeCancelled"] == "true" ? "checked" : "") />
-            <label class="form-check-label">Показувати скасовані</label>
+            <input class="form-check-input" asp-for="IncludeCancelled" />
+            <label class="form-check-label" asp-for="IncludeCancelled">Показувати скасовані</label>
         </div>
     </div>
 
@@ -92,7 +86,7 @@
         </tr>
     </thead>
     <tbody>
-        @if (Model is null || Model.Count == 0)
+        @if (Model.Sessions == null || Model.Sessions.Count == 0)
         {
             <tr>
                 <td colspan="8">Сеансів не знайдено.</td>
@@ -100,17 +94,21 @@
         }
         else
         {
-            foreach (var s in Model)
+            foreach (var s in Model.Sessions)
             {
                 <tr>
                     <td>@s.Id</td>
+                    <td>@(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)</td>
 
                     <td>
-                        @(s.MovieTitle ?? $"#{s.MovieId}")
-                    </td>
-
-                    <td>
-                        @(s.HallName ?? s.HallName ?? $"#{s.HallId}")
+                        @if (!string.IsNullOrWhiteSpace(s.CinemaName))
+                        {
+                            @($"{s.CinemaName} — {s.HallName}")
+                        }
+                        else
+                        {
+                            @(string.IsNullOrWhiteSpace(s.HallName) ? $"#{s.HallId}" : s.HallName)
+                        }
                     </td>
 
                     <td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
@@ -136,7 +134,10 @@
                             <form asp-action="Cancel"
                                   asp-route-id="@s.Id"
                                   method="post"
-                                  class="d-inline">
+                                  class="d-inline js-cancel-form"
+                                  data-session-id="@s.Id"
+                                  data-movie="@(s.MovieTitle ?? "")"
+                                  data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
                                 @Html.AntiForgeryToken()
                                 <button class="btn btn-sm btn-outline-danger" type="submit">
                                     Скасувати
@@ -162,19 +163,39 @@
     </tbody>
 </table>
 
-<script>
-    (function () {
-      const input = document.getElementById('movieTitleInput');
-      const hidden = document.getElementById('movieIdHidden');
-      const list = document.getElementById('movieList');
+@section Scripts {
+    <script>
+        (function () {
+          const input = document.getElementById('movieTitleInput');
+          const hidden = document.getElementById('movieIdHidden');
+          const list = document.getElementById('movieList');
 
-      function syncHidden() {
-        const value = input.value.trim();
-        const option = Array.from(list.options).find(o => o.value === value);
-        hidden.value = option ? option.dataset.id : '';
-      }
+          function syncHidden() {
+            const value = (input.value || "").trim();
+            const option = Array.from(list.options).find(o => o.value === value);
+            hidden.value = option ? option.dataset.id : '';
+          }
 
-      input.addEventListener('input', syncHidden);
-      syncHidden();
-    })();
-</script>
+          if (input && hidden && list) {
+            input.addEventListener('input', syncHidden);
+            syncHidden();
+          }
+
+          document.querySelectorAll('form.js-cancel-form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+              const id = form.dataset.sessionId || '';
+              const movie = (form.dataset.movie || '').trim();
+              const start = (form.dataset.start || '').trim();
+
+              const msg =
+                `Скасувати сеанс №${id}` +
+                (movie ? `\nФільм: ${movie}` : '') +
+                (start ? `\nПочаток: ${start}` : '') +
+                `\n\nПідтвердити дію?`;
+
+              if (!confirm(msg)) e.preventDefault();
+            });
+          });
+        })();
+    </script>
+}
