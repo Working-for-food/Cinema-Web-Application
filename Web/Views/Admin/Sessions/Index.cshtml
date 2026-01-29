@@ -3,7 +3,36 @@
 
 @{
     ViewData["Title"] = "Сеанси (адмін)";
-    string FormatDt(DateTime? dt) => dt?.ToString("yyyy-MM-ddTHH:mm") ?? "";
+    string FormatDate(DateTime? dt) => dt?.ToString("yyyy-MM-dd") ?? "";
+
+    var today = DateTime.Today;
+
+    var weekStart = today.AddDays(-((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1));
+    var weekEnd = weekStart.AddDays(6);
+
+    IDictionary<string, string> RouteWithDates(DateTime from, DateTime to)
+    {
+        var dict = new Dictionary<string, string>
+        {
+            ["From"] = from.ToString("yyyy-MM-dd"),
+            ["To"] = to.ToString("yyyy-MM-dd"),
+            ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant()
+        };
+
+        if (Model.HallId.HasValue)
+            dict["HallId"] = Model.HallId.Value.ToString();
+
+        if (Model.MovieId.HasValue)
+            dict["MovieId"] = Model.MovieId.Value.ToString();
+
+        if (!string.IsNullOrWhiteSpace(Model.MovieTitle))
+            dict["MovieTitle"] = Model.MovieTitle!;
+
+        if (!string.IsNullOrWhiteSpace(Model.Sort))
+            dict["Sort"] = Model.Sort!;
+
+        return dict;
+    }
 }
 
 <h1>Сеанси</h1>
@@ -17,19 +46,39 @@
     <div class="alert alert-danger">@err</div>
 }
 
-<p>
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
     <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
-</p>
+
+    <div class="btn-group" role="group" aria-label="Швидкі фільтри за датою">
+        <a class="btn btn-outline-secondary"
+           asp-action="Index"
+           asp-all-route-data="RouteWithDates(today, today)">
+            Сьогодні
+        </a>
+
+        <a class="btn btn-outline-secondary"
+           asp-action="Index"
+           asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">
+            Завтра
+        </a>
+
+        <a class="btn btn-outline-secondary"
+           asp-action="Index"
+           asp-all-route-data="RouteWithDates(weekStart, weekEnd)">
+            Цей тиждень
+        </a>
+    </div>
+</div>
 
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-2">
         <label class="form-label">З</label>
-        <input class="form-control" type="datetime-local" asp-for="From" value="@FormatDt(Model.From)" />
+        <input class="form-control" type="date" asp-for="From" value="@FormatDate(Model.From)" />
     </div>
 
     <div class="col-md-2">
         <label class="form-label">До</label>
-        <input class="form-control" type="datetime-local" asp-for="To" value="@FormatDt(Model.To)" />
+        <input class="form-control" type="date" asp-for="To" value="@FormatDate(Model.To)" />
     </div>
 
     <div class="col-md-3">
@@ -59,6 +108,11 @@
         <div class="form-text">Показано до 50 підказок.</div>
     </div>
 
+    <div class="col-md-2">
+        <label class="form-label">Сортування</label>
+        <select class="form-select" asp-for="Sort" asp-items="Model.SortOptions"></select>
+    </div>
+
     <div class="col-md-2 d-flex align-items-end">
         <div class="form-check">
             <input class="form-check-input" asp-for="IncludeCancelled" />
@@ -67,12 +121,12 @@
     </div>
 
     <div class="col-md-2 d-flex align-items-end gap-2">
-        <button class="btn btn-secondary w-100" type="submit">Фільтрувати</button>
+        <button class="btn btn-secondary w-100" type="submit">Застосувати</button>
         <a class="btn btn-outline-secondary w-100" asp-action="Index">Очистити</a>
     </div>
 </form>
 
-<table class="table table-striped">
+<table class="table table-striped align-middle">
     <thead>
         <tr>
             <th>ID</th>
@@ -81,7 +135,7 @@
             <th>Початок</th>
             <th>Кінець</th>
             <th>Тип показу</th>
-            <th>Скасований</th>
+            <th>Статус</th>
             <th></th>
         </tr>
     </thead>
@@ -98,6 +152,7 @@
             {
                 <tr>
                     <td>@s.Id</td>
+
                     <td>@(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)</td>
 
                     <td>
@@ -113,8 +168,21 @@
 
                     <td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>@s.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>@s.PresentationType</td>
-                    <td>@(s.IsCancelled ? "Так" : "Ні")</td>
+
+                    <td>
+                        <span class="badge text-bg-secondary">@s.PresentationType</span>
+                    </td>
+
+                    <td>
+                        @if (s.IsCancelled)
+                        {
+                            <span class="badge text-bg-danger">Скасовано</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-success">Активний</span>
+                        }
+                    </td>
 
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-primary"
@@ -128,6 +196,15 @@
                            asp-route-id="@s.Id">
                             Редагувати
                         </a>
+
+                        @* Кнопку "Місця" додамо *@
+                        @*
+                        <a class="btn btn-sm btn-outline-dark"
+                           asp-action="Seats"
+                           asp-route-id="@s.Id">
+                            Місця
+                        </a>
+                        *@
 
                         @if (!s.IsCancelled)
                         {

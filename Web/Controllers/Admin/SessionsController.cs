@@ -18,6 +18,34 @@ namespace Web.Controllers.Admin
         private const string EditViewPath = "~/Views/Admin/Sessions/Edit.cshtml";
         private const string DetailsViewPath = "~/Views/Admin/Sessions/Details.cshtml";
 
+        private static List<SelectListItem> BuildSortOptions(string? selected)
+        {
+            var items = new[]
+            {
+                ("start_asc",  "Початок ↑"),
+                ("start_desc", "Початок ↓"),
+                ("end_asc",    "Кінець ↑"),
+                ("end_desc",   "Кінець ↓"),
+            };
+
+            return items.Select(x => new SelectListItem
+            {
+                Value = x.Item1,
+                Text = x.Item2,
+                Selected = string.Equals(selected, x.Item1, StringComparison.OrdinalIgnoreCase)
+            }).ToList();
+        }
+        private static List<SessionListDto> ApplySort(List<SessionListDto> list, string? sort)
+        {
+            return (sort ?? "start_asc").ToLowerInvariant() switch
+            {
+                "start_desc" => list.OrderByDescending(x => x.StartTime).ThenByDescending(x => x.EndTime).ToList(),
+                "end_asc" => list.OrderBy(x => x.EndTime).ThenBy(x => x.StartTime).ToList(),
+                "end_desc" => list.OrderByDescending(x => x.EndTime).ThenByDescending(x => x.StartTime).ToList(),
+                _ => list.OrderBy(x => x.StartTime).ThenBy(x => x.EndTime).ToList(),
+            };
+        }
+
         public SessionsController(ISessionService sessions, ISessionLookupService lookups)
         {
             _sessions = sessions;
@@ -70,7 +98,6 @@ namespace Web.Controllers.Admin
             vm.PresentationTypes = BuildPresentationTypes(vm.PresentationType);
         }
 
-
         private async Task FillIndexLookupsAsync(SessionsIndexVm vm, CancellationToken ct)
         {
             var halls = await _lookups.GetHallsAsync(ct);
@@ -78,19 +105,27 @@ namespace Web.Controllers.Admin
 
             var movies = await _lookups.GetMoviesAsync(vm.MovieTitle, ct);
             vm.Movies = ToSelectList(movies, vm.MovieId);
+
+            vm.SortOptions = BuildSortOptions(vm.Sort);
         }
 
         // GET: /Admin/Sessions/Index
         [HttpGet]
         public async Task<IActionResult> Index(SessionsIndexVm vm, CancellationToken ct = default)
         {
+            var from = vm.From?.Date;
+
+            var toExclusive = vm.To?.Date.AddDays(1);
+
             vm.Sessions = await _sessions.GetAllAsync(
-                vm.From,
-                vm.To,
+                from,
+                toExclusive,
                 vm.HallId,
                 vm.MovieId,
                 vm.IncludeCancelled,
                 ct);
+
+            vm.Sessions = ApplySort(vm.Sessions, vm.Sort);
 
             await FillIndexLookupsAsync(vm, ct);
             return View(IndexViewPath, vm);
