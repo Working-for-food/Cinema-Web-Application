@@ -1,12 +1,7 @@
 ﻿using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace Infrastructure.Data.Seed;
 
@@ -20,11 +15,10 @@ public static class CountrySeeder
         [JsonPropertyName("alpha-2")]
         public string? Alpha2 { get; set; }
     }
+
     public static async Task SeedAsync(CinemaDbContext db, CancellationToken ct = default)
     {
-        if (await db.Countries.AsNoTracking().AnyAsync(ct))
-            return;
-
+        
         var path = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "allcountry.json");
         if (!File.Exists(path))
             throw new FileNotFoundException("allcountry.json not found", path);
@@ -50,9 +44,37 @@ public static class CountrySeeder
         if (dupCodes.Count > 0)
             throw new InvalidOperationException($"Duplicate country codes in seed: {string.Join(", ", dupCodes)}");
 
-        var entities = mapped.Select(x => new Country { Code = x.Code, Name = x.Name }).ToList();
+        
+        var existing = await db.Countries.AsNoTracking().ToListAsync(ct);
+        var existingByCode = existing.ToDictionary(x => x.Code, x => x, StringComparer.OrdinalIgnoreCase);
 
-        await db.Countries.AddRangeAsync(entities, ct);
+        
+        var toAdd = new List<Country>();
+        var toUpdate = new List<Country>();
+
+        foreach (var c in mapped)
+        {
+            if (!existingByCode.TryGetValue(c.Code, out var ex))
+            {
+                toAdd.Add(new Country { Code = c.Code, Name = c.Name });
+                continue;
+            }
+
+            if (!string.Equals(ex.Name, c.Name, StringComparison.Ordinal))
+            {
+                toUpdate.Add(new Country { Code = ex.Code, Name = c.Name });
+            }
+        }
+
+        if (toAdd.Count == 0 && toUpdate.Count == 0)
+            return;
+
+        if (toAdd.Count > 0)
+            await db.Countries.AddRangeAsync(toAdd, ct);
+
+        if (toUpdate.Count > 0)
+            db.Countries.UpdateRange(toUpdate);
+
         await db.SaveChangesAsync(ct);
     }
 }

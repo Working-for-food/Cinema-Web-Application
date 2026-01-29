@@ -1,6 +1,6 @@
 ﻿using Infrastructure.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.Interfaces;
 
 public interface IGenreRepository
 {

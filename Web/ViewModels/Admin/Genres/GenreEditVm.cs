@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Web.ViewModels.Genres;
+namespace Web.ViewModels.Admin.Genres;
 
 public class GenreEditVm
 {

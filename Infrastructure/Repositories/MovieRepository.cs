@@ -53,33 +53,67 @@ public class MovieRepository : IMovieRepository
     }
 
     public Task<Movie?> GetByIdAsync(int id, CancellationToken ct = default) =>
-        _db.Movies
-            .AsNoTracking()
-            .Include(m => m.MovieGenres)
-            .FirstOrDefaultAsync(m => m.Id == id, ct);
+    _db.Movies
+        .AsNoTracking()
+        .Include(m => m.MovieGenres)
+        .Include(m => m.MovieActors)
+        .Include(m => m.MovieCountries)
+        .FirstOrDefaultAsync(m => m.Id == id, ct);
+
 
     public Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default) =>
-        _db.Movies
-            .AsNoTracking()
-            .Include(m => m.MovieGenres)
-                .ThenInclude(mg => mg.Genre)
-            .Include(m => m.Sessions)
-            .FirstOrDefaultAsync(m => m.Id == id, ct);
+    _db.Movies
+        .AsNoTracking()
+        .Include(m => m.Director)
+        .Include(m => m.ProductionCountry)
+        .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
+        .Include(m => m.MovieActors).ThenInclude(ma => ma.Actor)
+        .Include(m => m.MovieCountries).ThenInclude(mc => mc.Country)
+        .Include(m => m.Sessions)
+        .FirstOrDefaultAsync(m => m.Id == id, ct);
 
-    public async Task AddAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default)
+
+    public async Task AddAsync(
+    Movie movie,
+    IEnumerable<int> genreIds,
+    IEnumerable<int> actorIds,
+    IEnumerable<string> countryCodes,
+    CancellationToken ct = default)
     {
-        var ids = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-        foreach (var gId in ids)
+        var gIds = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        foreach (var gId in gIds)
             movie.MovieGenres.Add(new MovieGenre { GenreId = gId });
+
+        var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        short order = 1;
+        foreach (var aId in aIds)
+            movie.MovieActors.Add(new MovieActor { ActorId = aId, CustOrder = order++ });
+
+        var codes = (countryCodes ?? Array.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim().ToUpperInvariant())
+            .Where(x => x.Length == 2)
+            .Distinct()
+            .ToList();
+
+        foreach (var code in codes)
+            movie.MovieCountries.Add(new MovieCountry { CountryCode = code });
 
         await _db.Movies.AddAsync(movie, ct);
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task UpdateAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default)
+    public async Task UpdateAsync(
+    Movie movie,
+    IEnumerable<int> genreIds,
+    IEnumerable<int> actorIds,
+    IEnumerable<string> countryCodes,
+    CancellationToken ct = default)
     {
         var existing = await _db.Movies
             .Include(m => m.MovieGenres)
+            .Include(m => m.MovieActors)
+            .Include(m => m.MovieCountries)
             .FirstOrDefaultAsync(m => m.Id == movie.Id, ct);
 
         if (existing == null)
@@ -90,11 +124,32 @@ public class MovieRepository : IMovieRepository
         existing.ReleaseDate = movie.ReleaseDate;
         existing.Duration = movie.Duration;
         existing.ProductionCountryCode = movie.ProductionCountryCode;
+        existing.DirectorId = movie.DirectorId;
 
+        // genres
         existing.MovieGenres.Clear();
-        var ids = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-        foreach (var gId in ids)
+        var gIds = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        foreach (var gId in gIds)
             existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
+
+        // actors
+        existing.MovieActors.Clear();
+        var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        short order = 1;
+        foreach (var aId in aIds)
+            existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = order++ });
+
+        // countries
+        existing.MovieCountries.Clear();
+        var codes = (countryCodes ?? Array.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim().ToUpperInvariant())
+            .Where(x => x.Length == 2)
+            .Distinct()
+            .ToList();
+
+        foreach (var code in codes)
+            existing.MovieCountries.Add(new MovieCountry { MovieId = existing.Id, CountryCode = code });
 
         await _db.SaveChangesAsync(ct);
     }

@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Movie details";
     var genres = Model.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
+    var countries = Model.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).ToList() ?? new();
+    var actors = Model.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).ToList() ?? new();
 }
 
 <div class="container mt-4">
@@ -38,6 +40,30 @@
                         {
                             <span class="badge bg-info text-dark me-1">@g</span>
                         }
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Countries</dt>
+                <dd class="col-sm-9">
+                    @if (countries.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        @string.Join(", ", countries)
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Actors</dt>
+                <dd class="col-sm-9">
+                    @if (actors.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        @string.Join(", ", actors)
                     }
                 </dd>
 

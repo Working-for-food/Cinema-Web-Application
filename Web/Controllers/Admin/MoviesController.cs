@@ -1,5 +1,5 @@
 ﻿using Application.DTOs;
-using Application.Services;
+using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Web.ViewModels.Admin;
@@ -10,9 +10,9 @@ namespace Web.Controllers.Admin;
 public class MoviesController : Controller
 {
     private const string ViewsRoot = "~/Views/Admin/Movies";
-    private readonly MovieService _service;
+    private readonly IMovieService _service;
 
-    public MoviesController(MovieService service) => _service = service;
+    public MoviesController(IMovieService service) => _service = service;
 
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, string? sortBy = "title", int page = 1, CancellationToken ct = default)
@@ -42,110 +42,105 @@ public class MoviesController : Controller
     [HttpGet("create")]
     public async Task<IActionResult> Create(CancellationToken ct)
     {
-        var genres = await _service.GetGenresAsync(ct);
-        var vm = new MovieEditVm
-        {
-            GenreList = new MultiSelectList(genres, "Id", "Name")
-        };
-
+        var vm = new MovieEditVm();
+        await FillLookupsAsync(vm, ct);
         return View($"{ViewsRoot}/Create.cshtml", vm);
     }
 
     [HttpPost("create")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(MovieEditVm model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
-            await FillGenresAsync(model, ct);
+            await FillLookupsAsync(model, ct);
             return View($"{ViewsRoot}/Create.cshtml", model);
         }
 
-        try
+        var dto = MapToDto(model);
+        var (ok, error) = await _service.CreateAsync(dto, ct);
+
+        if (!ok)
         {
-            var dto = MapToDto(model);
-            await _service.CreateMovieAsync(dto, ct);
-            TempData["Success"] = "Фільм створено.";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError(string.Empty, ex.Message);
-            await FillGenresAsync(model, ct);
+            ModelState.AddModelError(string.Empty, error!);
+            await FillLookupsAsync(model, ct);
             return View($"{ViewsRoot}/Create.cshtml", model);
         }
+
+        TempData["Success"] = "Фільм створено.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet("edit/{id:int}")]
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
-        try
-        {
-            var dto = await _service.GetMovieForEditAsync(id, ct);
-            var genres = await _service.GetGenresAsync(ct);
+        var dto = await _service.GetMovieForEditAsync(id, ct);
+        if (dto == null) return NotFound();
 
-            var vm = new MovieEditVm
-            {
-                Id = dto.Id,
-                Title = dto.Title,
-                Description = dto.Description,
-                Duration = dto.Duration,
-                ReleaseDate = dto.ReleaseDate,
-                ProductionCountryCode = dto.ProductionCountryCode,
-                SelectedGenreIds = dto.GenreIds,
-                GenreList = new MultiSelectList(genres, "Id", "Name", dto.GenreIds)
-            };
-
-            return View($"{ViewsRoot}/Edit.cshtml", vm);
-        }
-        catch
+        var vm = new MovieEditVm
         {
-            return NotFound();
-        }
+            Id = dto.Id,
+            Title = dto.Title,
+            Description = dto.Description,
+            Duration = dto.Duration,
+            ReleaseDate = dto.ReleaseDate,
+            ProductionCountryCode = dto.ProductionCountryCode,
+            DirectorId = dto.DirectorId,
+            SelectedGenreIds = dto.GenreIds,
+            SelectedActorIds = dto.ActorIds,
+            SelectedCountryCodes = dto.CountryCodes
+        };
+
+        await FillLookupsAsync(vm, ct);
+        return View($"{ViewsRoot}/Edit.cshtml", vm);
     }
 
     [HttpPost("edit/{id:int}")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, MovieEditVm model, CancellationToken ct)
     {
         model.Id = id;
 
         if (!ModelState.IsValid)
         {
-            await FillGenresAsync(model, ct);
+            await FillLookupsAsync(model, ct);
             return View($"{ViewsRoot}/Edit.cshtml", model);
         }
 
-        try
+        var dto = MapToDto(model);
+        var (ok, error) = await _service.UpdateAsync(dto, ct);
+
+        if (!ok)
         {
-            var dto = MapToDto(model);
-            await _service.UpdateMovieAsync(dto, ct);
-            TempData["Success"] = "Фільм оновлено.";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError(string.Empty, ex.Message);
-            await FillGenresAsync(model, ct);
+            ModelState.AddModelError(string.Empty, error!);
+            await FillLookupsAsync(model, ct);
             return View($"{ViewsRoot}/Edit.cshtml", model);
         }
+
+        TempData["Success"] = "Фільм оновлено.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost("delete/{id:int}")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        try
-        {
-            await _service.DeleteMovieAsync(id, ct);
-            TempData["Success"] = "Фільм видалено.";
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = ex.Message;
-        }
-
+        var (ok, error) = await _service.DeleteAsync(id, ct);
+        TempData[ok ? "Success" : "Error"] = ok ? "Фільм видалено." : error;
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task FillLookupsAsync(MovieEditVm vm, CancellationToken ct)
+    {
+        var genres = await _service.GetGenresAsync(ct);
+        vm.GenreList = new MultiSelectList(genres, "Id", "Name", vm.SelectedGenreIds);
+
+        var countries = await _service.GetCountriesAsync(ct);
+        vm.CountryList = new SelectList(countries, "Code", "Name", vm.ProductionCountryCode);
+        vm.CountryMultiList = new MultiSelectList(countries, "Code", "Name", vm.SelectedCountryCodes);
+
+        var directors = await _service.GetDirectorsAsync(ct);
+        vm.DirectorList = new SelectList(directors, "Id", "FullName", vm.DirectorId);
+
+        var actors = await _service.GetActorsAsync(ct);
+        vm.ActorList = new MultiSelectList(actors, "Id", "FullName", vm.SelectedActorIds);
     }
 
     private static MovieFormDto MapToDto(MovieEditVm vm) => new()
@@ -156,12 +151,9 @@ public class MoviesController : Controller
         Duration = vm.Duration,
         ReleaseDate = vm.ReleaseDate,
         ProductionCountryCode = vm.ProductionCountryCode,
-        GenreIds = vm.SelectedGenreIds
+        DirectorId = vm.DirectorId,
+        GenreIds = vm.SelectedGenreIds,
+        ActorIds = vm.SelectedActorIds,
+        CountryCodes = vm.SelectedCountryCodes
     };
-
-    private async Task FillGenresAsync(MovieEditVm vm, CancellationToken ct)
-    {
-        var genres = await _service.GetGenresAsync(ct);
-        vm.GenreList = new MultiSelectList(genres, "Id", "Name", vm.SelectedGenreIds);
-    }
 }

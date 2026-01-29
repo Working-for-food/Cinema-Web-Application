@@ -1,65 +1,94 @@
+using Application.Interfaces;
+using Application.Services;
 using Infrastructure.Data;
-using Infrastructure.Entities;
-using Infrastructure.Repositories;
-using Infrastructure.Interfaces;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data.Seed;
-
-using Application.Services;       
-using Infrastructure.Interfaces;  
+using Infrastructure.Entities;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// MVC + auto antiforgery for unsafe HTTP methods
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
+
 builder.Services.AddDbContext<CinemaDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<ICountryRepository, CountryRepository>();
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        x => x.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+    );
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        // НЕ вмикаємо EnableSensitiveDataLogging у “ідеальній” версії
+    }
+});
+
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
 
-
-
+// Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
-builder.Services.AddScoped<MovieService>();
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
-builder.Services.AddScoped<Infrastructure.Repositories.IGenreRepository, Infrastructure.Repositories.GenreRepository>();
-builder.Services.AddScoped<Application.Interfaces.IGenreService, Application.Services.GenreService>();
+// Services
+builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<ICountryLookupService, CountryLookupService>();
+builder.Services.AddScoped<IPersonService, PersonService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
-    var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
-    await CountrySeeder.SeedAsync(db);
+    app.UseDeveloperExceptionPage();
 }
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 app.UseRouting();
+
+// важливо для antiforgery (особливо коли десь форма не через tag-helper)
+app.UseAntiforgery();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-
+// Seed Countries (safe)
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Seeder");
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+        await CountrySeeder.SeedAsync(db);
+        logger.LogInformation("Countries seeded/updated.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Countries seeding failed.");
+    }
+}
 
 app.Run();

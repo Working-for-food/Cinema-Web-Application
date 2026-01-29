@@ -21,8 +21,8 @@ namespace Infrastructure.Interfaces
         // for details screen (includes genres + sessions)
         Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
 
-        Task AddAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default);
-        Task UpdateAsync(Movie movie, IEnumerable<int> genreIds, CancellationToken ct = default);
+        Task AddAsync(Movie movie, IEnumerable<int> genreIds, IEnumerable<int> actorIds, IEnumerable<string> countryCodes, CancellationToken ct = default);
+        Task UpdateAsync(Movie movie, IEnumerable<int> genreIds, IEnumerable<int> actorIds, IEnumerable<string> countryCodes, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
 
         // "status" check: is this movie used in sessions?

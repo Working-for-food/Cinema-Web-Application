@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Web.ViewModels.Genres;
+using Web.ViewModels.Admin.Genres;
 
 namespace Web.Controllers.Admin;
 

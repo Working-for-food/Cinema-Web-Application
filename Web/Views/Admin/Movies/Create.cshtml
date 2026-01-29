@@ -12,7 +12,7 @@
                     <h3 class="mb-0">Add new movie</h3>
                 </div>
                 <div class="card-body">
-                    <form asp-action="Create" method="post">
+                    <form asp-controller="Movies" asp-action="Create" method="post" asp-antiforgery="true">
 
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -43,8 +43,33 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="ProductionCountryCode" class="form-label">Country Code (e.g. UA, US)</label>
-                            <input asp-for="ProductionCountryCode" class="form-control" maxlength="2" style="text-transform: uppercase" />
+                            <label asp-for="ProductionCountryCode" class="form-label">Production country</label>
+                            <select asp-for="ProductionCountryCode" asp-items="Model.CountryList" class="form-select">
+                                <option value="">-- none --</option>
+                            </select>
+                            <span asp-validation-for="ProductionCountryCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DirectorId" class="form-label">Director</label>
+                            <select asp-for="DirectorId" asp-items="Model.DirectorList" class="form-select">
+                                <option value="">-- none --</option>
+                            </select>
+                            <span asp-validation-for="DirectorId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="SelectedCountryCodes" class="form-label">Countries (MovieCountries)</label>
+                            <select asp-for="SelectedCountryCodes" asp-items="Model.CountryMultiList" class="form-control" multiple size="6"></select>
+                            <span asp-validation-for="SelectedCountryCodes" class="text-danger"></span>
+                            <div class="form-text">Ctrl/Command для множинного вибору.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="SelectedActorIds" class="form-label">Actors</label>
+                            <select asp-for="SelectedActorIds" asp-items="Model.ActorList" class="form-control" multiple size="6"></select>
+                            <span asp-validation-for="SelectedActorIds" class="text-danger"></span>
+                            <div class="form-text">Ctrl/Command для множинного вибору.</div>
                         </div>
 
                         <div class="mb-4">

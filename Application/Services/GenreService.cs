@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
 using Infrastructure.Entities;
-using Infrastructure.Repositories;
+using Infrastructure.Interfaces;
 
 namespace Application.Services;
 

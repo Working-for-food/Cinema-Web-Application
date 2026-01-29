@@ -1,8 +1,8 @@
 ﻿using Infrastructure.Entities;
 
-namespace Infrastructure.Interfaces;
+namespace Application.Interfaces;
 
-public interface ICountryRepository
+public interface ICountryLookupService
 {
     Task<IReadOnlyList<Country>> GetAllAsync(CancellationToken ct = default);
     Task<Country?> GetByCodeAsync(string code, CancellationToken ct = default);
