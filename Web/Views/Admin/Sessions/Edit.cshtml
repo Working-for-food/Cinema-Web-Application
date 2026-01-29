@@ -100,6 +100,11 @@
                            value="@FormatDt(Model.EndTime)" />
 
                     <div class="form-text" id="movieDurationText">Тривалість: —</div>
+
+                    <div class="alert alert-warning mt-2 py-2 d-none" id="shortDurationWarn" role="alert">
+                        Увага: тривалість сеансу менша за тривалість фільму.
+                    </div>
+
                     <span class="text-danger" asp-validation-for="EndTime"></span>
                 </div>
 
@@ -140,6 +145,7 @@
             const endInput = document.getElementById('EndTime');
 
             const durationText = document.getElementById('movieDurationText');
+            const warn = document.getElementById('shortDurationWarn');
 
             if (!titleInput || !hidden || !list || !startInput || !endInput) return;
 
@@ -183,6 +189,28 @@
                 endInput.value = fmtDt(end);
             }
 
+            function checkShortDuration(movieId) {
+                if (!warn) return;
+
+                const dur = movieDurations[Number(movieId || 0)];
+                const start = parseDt(startInput.value);
+                const end = parseDt(endInput.value);
+
+                if (!dur || dur <= 0 || !start || !end) {
+                    warn.classList.add('d-none');
+                    return;
+                }
+
+                const sessionMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
+
+                if (sessionMinutes < dur) {
+                    warn.classList.remove('d-none');
+                    warn.textContent = `Увага: тривалість сеансу (${sessionMinutes} хв) менша за тривалість фільму (${dur} хв).`;
+                } else {
+                    warn.classList.add('d-none');
+                }
+            }
+
             function syncMovieIdAndUpdate() {
                 const newId = findSelectedMovieIdByTitle();
                 const oldId = hidden.value;
@@ -193,6 +221,7 @@
 
                 updateDurationLabel(newId);
                 recalcEnd(newId);
+                checkShortDuration(newId);
             }
 
             titleInput.addEventListener('input', syncMovieIdAndUpdate);
@@ -200,6 +229,10 @@
             startInput.addEventListener('change', () => {
                 endTouched = false;
                 syncMovieIdAndUpdate();
+            });
+
+            endInput.addEventListener('change', () => {
+                checkShortDuration(hidden.value);
             });
 
             syncMovieIdAndUpdate();
