@@ -27,4 +27,9 @@ public class SessionLookupService : ISessionLookupService
         var list = await _halls.GetAllWithCinemaAsync();
         return list.Select(h => new LookupItemDto(h.Id, $"{h.Cinema.Name} — {h.Name}")).ToList();
     }
+
+    public async Task<string?> GetMovieTitleByIdAsync(int movieId, CancellationToken ct)
+    {
+        return await _movies.GetTitleByIdAsync(movieId, ct);
+    }
 }

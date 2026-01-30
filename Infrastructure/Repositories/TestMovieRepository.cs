@@ -21,4 +21,12 @@ public class TestMovieRepository : ITestMovieRepository
                 .Take(take)
                 .ToListAsync(ct);
     }
+
+    public async Task<string?> GetTitleByIdAsync(int id, CancellationToken ct)
+    {
+        return await _db.Movies
+            .Where(m => m.Id == id)
+            .Select(m => m.Title)
+            .FirstOrDefaultAsync(ct);
+    }
 }

@@ -248,7 +248,9 @@ namespace Web.Controllers.Admin
                 TempData["Success"] = "Сеанс успішно оновлено.";
 
                 await FillEditLookupsAsync(vm, ct);
-                ViewBag.MovieTitle = vm.Movies.FirstOrDefault(x => x.Value == vm.MovieId.ToString())?.Text ?? "";
+                ViewBag.MovieTitle = vm.MovieId > 0
+                            ? await _lookups.GetMovieTitleByIdAsync(vm.MovieId, ct) ?? ""
+                            : "";
 
                 return View(EditViewPath, vm);
             }
