@@ -10,6 +10,8 @@
     var weekStart = today.AddDays(-((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1));
     var weekEnd = weekStart.AddDays(6);
 
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+
     IDictionary<string, string> RouteWithDates(DateTime from, DateTime to)
     {
         var dict = new Dictionary<string, string>
@@ -246,6 +248,9 @@
                                   data-movie="@(s.MovieTitle ?? "")"
                                   data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
                                 @Html.AntiForgeryToken()
+
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+
                                 <button class="btn btn-sm btn-outline-danger" type="submit">
                                     Скасувати
                                 </button>
@@ -258,6 +263,9 @@
                                   method="post"
                                   class="d-inline">
                                 @Html.AntiForgeryToken()
+
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+
                                 <button class="btn btn-sm btn-outline-success" type="submit">
                                     Відновити
                                 </button>

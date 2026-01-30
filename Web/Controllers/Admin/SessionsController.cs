@@ -257,19 +257,23 @@ namespace Web.Controllers.Admin
         // POST: /Admin/Sessions/Cancel/5
         [HttpPost("{id:int}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Cancel(int id, CancellationToken ct)
+        public async Task<IActionResult> Cancel(int id, string? returnUrl, CancellationToken ct)
         {
             var ok = await _sessions.CancelAsync(id, ct);
             if (!ok) return NotFound();
 
             TempData["Success"] = "Сеанс скасовано.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return LocalRedirect(returnUrl);
+
             return RedirectToAction(nameof(Index));
         }
 
         // POST: /Admin/Sessions/Restore/5
         [HttpPost("{id:int}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Restore(int id, CancellationToken ct)
+        public async Task<IActionResult> Restore(int id, string? returnUrl, CancellationToken ct)
         {
             try
             {
@@ -282,6 +286,9 @@ namespace Web.Controllers.Admin
             {
                 TempData["Error"] = ex.Message;
             }
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return LocalRedirect(returnUrl);
 
             return RedirectToAction(nameof(Index));
         }
