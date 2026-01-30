@@ -21,6 +21,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));
+builder.Services.AddScoped<IImportMovieFromTmdb, ImportMovieFromTmdb>();
+builder.Services.AddScoped<IMovieImportRepository, MovieImportRepository>();
 builder.Services.AddHttpClient<ITmdbClient, TmdbClient>((sp, http) =>
 {
     var opt = sp.GetRequiredService<IOptions<TmdbOptions>>().Value;

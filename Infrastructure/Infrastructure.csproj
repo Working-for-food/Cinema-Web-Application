@@ -18,11 +18,5 @@
   <ItemGroup>
 		<None Include="Data\Seed\allcountry.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Application\Application.csproj" />
-  </ItemGroup>
 
 </Project>
