@@ -72,6 +72,13 @@ public class MovieRepository : IMovieRepository
         .Include(m => m.Sessions)
         .FirstOrDefaultAsync(m => m.Id == id, ct);
 
+    public async Task<string?> GetTitleByIdAsync(int id, CancellationToken ct)
+    {
+        return await _db.Movies
+            .Where(m => m.Id == id)
+            .Select(m => m.Title)
+            .FirstOrDefaultAsync(ct);
+    }
 
     public async Task AddAsync(
     Movie movie,
@@ -165,4 +172,16 @@ public class MovieRepository : IMovieRepository
 
     public Task<bool> AnySessionsAsync(int movieId, CancellationToken ct = default) =>
         _db.Sessions.AsNoTracking().AnyAsync(s => s.MovieId == movieId, ct);
+
+    public Task<List<Movie>> SearchAsync(string? query, int take, CancellationToken ct)
+    {
+        var q = _db.Movies.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+            q = q.Where(m => m.Title.Contains(query));
+
+        return q.OrderBy(m => m.Title)
+                .Take(take)
+                .ToListAsync(ct);
+    }
 }

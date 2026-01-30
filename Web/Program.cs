@@ -36,7 +36,6 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
-builder.Services.AddScoped<ITestMovieRepository, TestMovieRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 
 // Services

@@ -7,10 +7,10 @@ namespace Application.Services;
 
 public class SessionLookupService : ISessionLookupService
 {
-    private readonly ITestMovieRepository _movies;
+    private readonly IMovieRepository _movies;
     private readonly IHallRepository _halls;
 
-    public SessionLookupService(ITestMovieRepository movies, IHallRepository halls)
+    public SessionLookupService(IMovieRepository movies, IHallRepository halls)
     {
         _movies = movies;
         _halls = halls;
