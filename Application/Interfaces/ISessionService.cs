@@ -11,12 +11,14 @@ namespace Application.Interfaces
     {
         Task<SessionDetailsDto?> GetByIdAsync(int id, CancellationToken ct);
 
-        Task<List<SessionListDto>> GetAllAsync(
+        Task<PagedResult<SessionListDto>> GetAllPagedAsync(
             DateTime? from,
             DateTime? to,
             int? hallId,
             int? movieId,
             bool includeCancelled,
+            string? sort,
+            int page,
             CancellationToken ct);
 
         Task<int> CreateAsync(SessionEditDto dto, CancellationToken ct);

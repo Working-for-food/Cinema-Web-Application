@@ -16,8 +16,38 @@
         {
             ["From"] = from.ToString("yyyy-MM-dd"),
             ["To"] = to.ToString("yyyy-MM-dd"),
+            ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant(),
+            ["Page"] = "1"
+        };
+
+        if (Model.HallId.HasValue)
+            dict["HallId"] = Model.HallId.Value.ToString();
+
+        if (Model.MovieId.HasValue)
+            dict["MovieId"] = Model.MovieId.Value.ToString();
+
+        if (!string.IsNullOrWhiteSpace(Model.MovieTitle))
+            dict["MovieTitle"] = Model.MovieTitle!;
+
+        if (!string.IsNullOrWhiteSpace(Model.Sort))
+            dict["Sort"] = Model.Sort!;
+
+        return dict;
+    }
+
+    IDictionary<string, string> RouteForPage(int page)
+    {
+        var dict = new Dictionary<string, string>
+        {
+            ["Page"] = page.ToString(),
             ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant()
         };
+
+        if (Model.From.HasValue)
+            dict["From"] = Model.From.Value.ToString("yyyy-MM-dd");
+
+        if (Model.To.HasValue)
+            dict["To"] = Model.To.Value.ToString("yyyy-MM-dd");
 
         if (Model.HallId.HasValue)
             dict["HallId"] = Model.HallId.Value.ToString();
@@ -71,6 +101,8 @@
 </div>
 
 <form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="Page" value="1" />
+
     <div class="col-md-2">
         <label class="form-label">З</label>
         <input class="form-control" type="date" asp-for="From" value="@FormatDate(Model.From)" />
@@ -125,6 +157,13 @@
         <a class="btn btn-outline-secondary w-100" asp-action="Index">Очистити</a>
     </div>
 </form>
+
+@if (Model.TotalCount > 0)
+{
+    <div class="text-muted mb-2">
+        Знайдено: @Model.TotalCount
+    </div>
+}
 
 <table class="table table-striped align-middle">
     <thead>
@@ -197,15 +236,6 @@
                             Редагувати
                         </a>
 
-                        @* Кнопку "Місця" додамо *@
-                        @*
-                        <a class="btn btn-sm btn-outline-dark"
-                           asp-action="Seats"
-                           asp-route-id="@s.Id">
-                            Місця
-                        </a>
-                        *@
-
                         @if (!s.IsCancelled)
                         {
                             <form asp-action="Cancel"
@@ -239,6 +269,37 @@
         }
     </tbody>
 </table>
+
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Пагінація сеансів" class="mt-3">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-all-route-data="RouteForPage(Model.Page - 1)">
+                    Назад
+                </a>
+            </li>
+
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Сторінка @Model.Page з @Model.TotalPages
+                </span>
+            </li>
+
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-all-route-data="RouteForPage(Model.Page + 1)">
+                    Вперед
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+}
 
 @section Scripts {
     <script>

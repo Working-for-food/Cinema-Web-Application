@@ -8,6 +8,7 @@ namespace Application.Services;
 public class SessionService : ISessionService
 {
     private readonly ISessionRepository _repo;
+    private const int PageSize = 20;
 
     public SessionService(ISessionRepository repo) => _repo = repo;
 
@@ -50,34 +51,55 @@ public class SessionService : ISessionService
         };
     }
 
-    public async Task<List<SessionListDto>> GetAllAsync(
+    public async Task<PagedResult<SessionListDto>> GetAllPagedAsync(
         DateTime? from,
         DateTime? to,
         int? hallId,
         int? movieId,
         bool includeCancelled,
+        string? sort,
+        int page,
         CancellationToken ct)
     {
-        var list = await _repo.GetAllAsync(from, to, hallId, movieId, includeCancelled, ct);
+        if (page < 1) page = 1;
 
-        return list.Select(s =>
+        var fromNorm = from?.Date;
+        var toExclusive = to?.Date.AddDays(1);
+
+        var (items, totalCount) = await _repo.GetAllPagedAsync(
+            fromNorm,
+            toExclusive,
+            hallId,
+            movieId,
+            includeCancelled,
+            sort,
+            page,
+            PageSize,
+            ct);
+
+        var dtos = items.Select(s => new SessionListDto
         {
-            return new SessionListDto
-            {
-                Id = s.Id,
-                MovieId = s.MovieId,
-                MovieTitle = s.Movie?.Title ?? "",
+            Id = s.Id,
+            MovieId = s.MovieId,
+            HallId = s.HallId,
 
-                HallId = s.HallId,
-                CinemaName = s.Hall?.Cinema?.Name ?? "",
-                HallName = s.Hall?.Name ?? "",
+            MovieTitle = s.Movie?.Title,
+            HallName = s.Hall?.Name,
+            CinemaName = s.Hall?.Cinema?.Name,
 
-                StartTime = s.StartTime,
-                EndTime = s.EndTime,
-                PresentationType = s.PresentationType,
-                IsCancelled = s.IsCancelled
-            };
+            StartTime = s.StartTime,
+            EndTime = s.EndTime,
+            PresentationType = s.PresentationType,
+            IsCancelled = s.IsCancelled
         }).ToList();
+
+        return new PagedResult<SessionListDto>
+        {
+            Items = dtos,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = PageSize
+        };
     }
 
     public async Task<int> CreateAsync(SessionEditDto dto, CancellationToken ct)

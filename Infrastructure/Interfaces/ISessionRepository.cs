@@ -10,7 +10,17 @@ namespace Infrastructure.Interfaces
     public interface ISessionRepository
     {
         Task<Session?> GetByIdAsync(int id, CancellationToken ct);
-        Task<List<Session>> GetAllAsync(DateTime? from, DateTime? to, int? hallId, int? movieId, bool includeCancelled, CancellationToken ct);
+
+        Task<(List<Session> Items, int TotalCount)> GetAllPagedAsync(
+            DateTime? from,
+            DateTime? toExclusive,
+            int? hallId,
+            int? movieId,
+            bool includeCancelled,
+            string? sort,
+            int page,
+            int pageSize,
+            CancellationToken ct);
 
         Task AddAsync (Session session, CancellationToken ct);
         Task UpdateAsync(Session session, CancellationToken ct);

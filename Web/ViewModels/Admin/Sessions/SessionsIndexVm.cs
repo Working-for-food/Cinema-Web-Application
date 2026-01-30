@@ -17,6 +17,10 @@ public class SessionsIndexVm
     public bool IncludeCancelled { get; set; }
     public string? Sort { get; set; }
 
+    public int Page { get; set; } = 1;
+    public int TotalPages { get; set; }
+    public int TotalCount { get; set; }
+
     public List<SelectListItem> Cinemas { get; set; } = new();
     public List<SelectListItem> Halls { get; set; } = new();
     public List<SelectListItem> Movies { get; set; } = new();

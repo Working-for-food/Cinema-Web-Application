@@ -35,16 +35,6 @@ namespace Web.Controllers.Admin
                 Selected = string.Equals(selected, x.Item1, StringComparison.OrdinalIgnoreCase)
             }).ToList();
         }
-        private static List<SessionListDto> ApplySort(List<SessionListDto> list, string? sort)
-        {
-            return (sort ?? "start_asc").ToLowerInvariant() switch
-            {
-                "start_desc" => list.OrderByDescending(x => x.StartTime).ThenByDescending(x => x.EndTime).ToList(),
-                "end_asc" => list.OrderBy(x => x.EndTime).ThenBy(x => x.StartTime).ToList(),
-                "end_desc" => list.OrderByDescending(x => x.EndTime).ThenByDescending(x => x.StartTime).ToList(),
-                _ => list.OrderBy(x => x.StartTime).ThenBy(x => x.EndTime).ToList(),
-            };
-        }
 
         public SessionsController(ISessionService sessions, ISessionLookupService lookups)
         {
@@ -113,19 +103,21 @@ namespace Web.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> Index(SessionsIndexVm vm, CancellationToken ct = default)
         {
-            var from = vm.From?.Date;
+            if (vm.Page < 1) vm.Page = 1;
 
-            var toExclusive = vm.To?.Date.AddDays(1);
-
-            vm.Sessions = await _sessions.GetAllAsync(
-                from,
-                toExclusive,
+            var paged = await _sessions.GetAllPagedAsync(
+                vm.From,
+                vm.To,
                 vm.HallId,
                 vm.MovieId,
                 vm.IncludeCancelled,
+                vm.Sort,
+                vm.Page,
                 ct);
 
-            vm.Sessions = ApplySort(vm.Sessions, vm.Sort);
+            vm.Sessions = paged.Items;
+            vm.TotalCount = paged.TotalCount;
+            vm.TotalPages = paged.TotalPages;
 
             await FillIndexLookupsAsync(vm, ct);
             return View(IndexViewPath, vm);

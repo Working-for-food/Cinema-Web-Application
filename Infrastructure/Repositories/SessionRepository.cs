@@ -22,18 +22,24 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
-        public async Task<List<Session>> GetAllAsync(
+        public async Task<(List<Session> Items, int TotalCount)> GetAllPagedAsync(
             DateTime? from,
-            DateTime? to,
+            DateTime? toExclusive,
             int? hallId,
             int? movieId,
             bool includeCancelled,
+            string? sort,
+            int page,
+            int pageSize,
             CancellationToken ct)
         {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+
             IQueryable<Session> query = _context.Sessions
                 .AsNoTracking()
-                .Include(x => x.Movie)
-                .Include(x => x.Hall)
+                .Include(s => s.Movie)
+                .Include(s => s.Hall)
                     .ThenInclude(h => h.Cinema);
 
             if (!includeCancelled)
@@ -42,8 +48,8 @@ namespace Infrastructure.Repositories
             if (from.HasValue)
                 query = query.Where(x => x.StartTime >= from.Value);
 
-            if (to.HasValue)
-                query = query.Where(x => x.EndTime <= to.Value);
+            if (toExclusive.HasValue)
+                query = query.Where(x => x.StartTime < toExclusive.Value);
 
             if (hallId.HasValue)
                 query = query.Where(x => x.HallId == hallId.Value);
@@ -51,7 +57,29 @@ namespace Infrastructure.Repositories
             if (movieId.HasValue)
                 query = query.Where(x => x.MovieId == movieId.Value);
 
-            return await query.OrderBy(x => x.StartTime).ToListAsync(ct);
+            var totalCount = await query.CountAsync(ct);
+
+            query = ApplySort(query, sort);
+
+            var skip = (page - 1) * pageSize;
+
+            var items = await query
+                .Skip(skip)
+                .Take(pageSize)
+                .ToListAsync(ct);
+
+            return (items, totalCount);
+        }
+
+        private static IQueryable<Session> ApplySort(IQueryable<Session> query, string? sort)
+        {
+            return (sort ?? "start_asc").ToLowerInvariant() switch
+            {
+                "start_desc" => query.OrderByDescending(x => x.StartTime).ThenByDescending(x => x.EndTime).ThenByDescending(x => x.Id),
+                "end_asc" => query.OrderBy(x => x.EndTime).ThenBy(x => x.StartTime).ThenBy(x => x.Id),
+                "end_desc" => query.OrderByDescending(x => x.EndTime).ThenByDescending(x => x.StartTime).ThenByDescending(x => x.Id),
+                _ => query.OrderBy(x => x.StartTime).ThenBy(x => x.EndTime).ThenBy(x => x.Id),
+            };
         }
 
         public async Task AddAsync(Session session, CancellationToken ct)
