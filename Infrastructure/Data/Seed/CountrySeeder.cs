@@ -1,12 +1,7 @@
 ﻿using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
 using System.Text.Json;
 using System.Text.Json.Serialization;
-=======
-using System.Text.Json.Serialization;
-using System.Text.Json;
->>>>>>> origin/A4-A5-countries-people-admin
 
 namespace Infrastructure.Data.Seed;
 

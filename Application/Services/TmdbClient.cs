@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+﻿using Application.DTOs.TmdbDtos;
 using Application.Interfaces;
 using Application.Options;
 using Microsoft.Extensions.Options;

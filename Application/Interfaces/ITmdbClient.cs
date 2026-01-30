@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+﻿using Application.DTOs.TmdbDtos;
 
 namespace Application.Interfaces;
 public interface ITmdbClient

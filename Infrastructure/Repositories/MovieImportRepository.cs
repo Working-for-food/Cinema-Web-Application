@@ -91,14 +91,15 @@ public sealed class MovieImportRepository : IMovieImportRepository
     {
         var old = await _db.MovieActors.Where(x => x.MovieId == movieId).ToListAsync(ct);
         _db.MovieActors.RemoveRange(old);
-
+        var sorted = actors.OrderBy(a => a.order).ToList();
+        short cust = 1;
         foreach (var a in actors)
         {
             _db.MovieActors.Add(new MovieActor
             {
                 MovieId = movieId,
-                Actor = a.person,
-                CustOrder = a.order,
+                ActorId = a.person.Id,
+                CustOrder = cust++,
                 CharacterName = a.character
             });
         }
