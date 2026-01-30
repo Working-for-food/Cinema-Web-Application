@@ -1,0 +1,71 @@
+﻿@{
+  ViewData["Title"] = "Add from TMDB";
+}
+
+<h2>Додати фільм</h2>
+
+<div style="display:flex; gap:12px; align-items:end;">
+  <div>
+    <label>Назва</label>
+    <input id="q" class="form-control" style="min-width:320px" />
+  </div>
+  <button id="btnSearch" class="btn btn-primary" type="button">Пошук</button>
+</div>
+
+<hr />
+
+<div id="results"></div>
+
+@section Scripts {
+<script>
+  const btn = document.getElementById("btnSearch");
+  const q = document.getElementById("q");
+  const results = document.getElementById("results");
+
+  btn.addEventListener("click", async () => {
+    const query = (q.value || "").trim();
+    if (!query) return;
+
+    results.innerHTML = "Loading...";
+
+    const r = await fetch(`/admin/movies/add/search?query=${encodeURIComponent(query)}`);
+    if (!r.ok) { results.innerHTML = "Search failed"; return; }
+
+    const items = await r.json();
+    if (!items.length) { results.innerHTML = "Немає результатів"; return; }
+
+    results.innerHTML = `
+      <table class="table table-bordered">
+        <thead>
+          <tr><th>Постер</th><th>Назва</th><th>Дата виходу</th><th></th></tr>
+        </thead>
+        <tbody>
+          ${items.map(x => `
+            <tr>
+              <td style="width:90px">
+                ${x.posterPath ? `<img src="https://image.tmdb.org/t/p/w92${x.posterPath}" />` : ""}
+              </td>
+              <td>${x.title ?? ""}</td>
+              <td>${x.releaseDate ?? ""}</td>
+              <td style="white-space:nowrap">
+                <form method="post" action="/admin/movies/add/import">
+                  <input name="tmdbId" type="hidden" value="${x.tmdbId}" />
+                  <input name="__RequestVerificationToken" type="hidden" value="${getAntiforgeryToken()}" />
+                  <button class="btn btn-sm btn-success" type="submit">Import</button>
+                </form>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  });
+
+  function getAntiforgeryToken() {
+    const el = document.querySelector('input[name="__RequestVerificationToken"]');
+    return el ? el.value : "";
+  }
+</script>
+
+@Html.AntiForgeryToken()
+}

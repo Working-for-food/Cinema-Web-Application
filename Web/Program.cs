@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Seed;
+<<<<<<< HEAD
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
@@ -12,6 +13,12 @@ using Application.Interfaces;
 using Application.Services;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
+=======
+using Application.Interfaces;
+using Application.Services;
+using Application.Options;
+using Microsoft.Extensions.Options;
+>>>>>>> origin/A4-A5-countries-people-admin
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +34,7 @@ builder.Services.AddDbContext<CinemaDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>()
     .AddDefaultTokenProviders();
+<<<<<<< HEAD
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -45,6 +53,17 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<ICinemaService, CinemaService>();
 builder.Services.AddScoped<IHallService, HallService>();
 
+=======
+builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));
+builder.Services.AddScoped<IImportMovieFromTmdb, ImportMovieFromTmdb>();
+builder.Services.AddScoped<IMovieImportRepository, MovieImportRepository>();
+builder.Services.AddHttpClient<ITmdbClient, TmdbClient>((sp, http) =>
+{
+    var opt = sp.GetRequiredService<IOptions<TmdbOptions>>().Value;
+    http.BaseAddress = new Uri(opt.BaseUrl);
+    http.Timeout = TimeSpan.FromSeconds(15);
+});
+>>>>>>> origin/A4-A5-countries-people-admin
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

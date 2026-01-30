@@ -1,0 +1,90 @@
+﻿@model Infrastructure.Entities.Movie
+
+<h2>Редагувати інформацію про фільм: @Model.Title</h2>
+
+<form method="post" action="/admin/movies/edit/@Model.Id">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-2">
+        <label>Назва</label>
+        <input class="form-control" name="Title" value="@Model.Title" required maxlength="255" />
+    </div>
+
+    <div class="mb-2">
+        <label>Оригінальна назва</label>
+        <input class="form-control" name="OriginalTitle" value="@Model.OriginalTitle" maxlength="255" />
+    </div>
+
+    <div class="mb-2">
+        <label>Опис</label>
+        <textarea class="form-control" name="Description" rows="6" maxlength="4000">@Model.Description</textarea>
+    </div>
+
+    <div class="mb-2">
+        <label>Дата виходу</label>
+        <input class="form-control"
+               type="date"
+               name="ReleaseDate"
+               value="@(Model.ReleaseDate?.ToString("yyyy-MM-dd") ?? "")" />
+    </div>
+
+    <div class="mb-2">
+        <label>Тривалість (хв)</label>
+        <input class="form-control"
+               type="number"
+               name="Duration"
+               value="@(Model.Duration?.ToString() ?? "")"
+               min="1"
+               max="1000"
+               step="1"
+               inputmode="numeric" />
+    </div>
+
+    <div class="mb-2">
+        <label>Мова показу</label>
+        <input class="form-control" name="Language" value="@Model.Language" maxlength="50" />
+    </div>
+
+    <div class="mb-2">
+        <label>Трейлер</label>
+        <input class="form-control"
+               type="url"
+               name="TrailerUrl"
+               value="@Model.TrailerUrl"
+               maxlength="700"
+               placeholder="https://..." />
+    </div>
+
+    <div class="mb-2">
+        <label>Рейтинг</label>
+        <input class="form-control"
+               type="number"
+               name="Rating"
+               value="@(Model.Rating?.ToString("0.0") ?? "")"
+               min="0"
+               max="10"
+               step="0.1"
+               inputmode="decimal" />
+    </div>
+
+    <div class="mb-2">
+        <label>Постер (path)</label>
+        <input class="form-control"
+               name="PosterPath"
+               value="@Model.PosterPath"
+               maxlength="200"
+               placeholder="/abc123.jpg" />
+    </div>
+
+    <div class="mb-3">
+        <label>Фон (path)</label>
+        <input class="form-control"
+               name="BackdropPath"
+               value="@Model.BackdropPath"
+               maxlength="200"
+               placeholder="/xyz987.jpg" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Зберегти</button>
+    <a class="btn btn-secondary" href="/admin/movies">Назад</a>
+</form>

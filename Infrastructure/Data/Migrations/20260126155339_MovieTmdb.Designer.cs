@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Data.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    partial class CinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260126155339_MovieTmdb")]
+    partial class MovieTmdb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,7 +129,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("Id", "SessionId")
                         .IsUnique();
 
-                    b.ToTable("Bookings", (string)null);
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Cinema", b =>
@@ -147,18 +150,13 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cinemas", (string)null);
+                    b.ToTable("Cinemas");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Country", b =>
@@ -178,7 +176,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Countries", (string)null);
+                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Genre", b =>
@@ -202,15 +200,11 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-<<<<<<< HEAD
-                    b.ToTable("Genres", (string)null);
-=======
                     b.HasIndex("TmdbId")
                         .IsUnique()
                         .HasFilter("[TmdbId] IS NOT NULL");
 
                     b.ToTable("Genres");
->>>>>>> origin/A4-A5-countries-people-admin
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Hall", b =>
@@ -232,7 +226,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("CinemaId");
 
-                    b.ToTable("Halls", (string)null);
+                    b.ToTable("Halls");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
@@ -256,11 +250,6 @@ namespace Infrastructure.Data.Migrations
 
                     b.Property<int?>("Duration")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
 
                     b.Property<string>("Language")
                         .HasMaxLength(50)
@@ -304,7 +293,7 @@ namespace Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("[TmdbId] IS NOT NULL");
 
-                    b.ToTable("Movies", (string)null);
+                    b.ToTable("Movies");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>
@@ -328,7 +317,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "CustOrder")
                         .IsUnique();
 
-                    b.ToTable("MovieActors", (string)null);
+                    b.ToTable("MovieActors");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieCountry", b =>
@@ -348,7 +337,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "CountryCode")
                         .IsUnique();
 
-                    b.ToTable("MovieCountries", (string)null);
+                    b.ToTable("MovieCountries");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieDirector", b =>
@@ -369,14 +358,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "BillingOrder")
                         .IsUnique();
 
-<<<<<<< HEAD
-                    b.HasIndex("MovieId", "DirectorId")
-                        .IsUnique();
-
-                    b.ToTable("MovieDirectors", (string)null);
-=======
                     b.ToTable("MovieDirectors");
->>>>>>> origin/A4-A5-countries-people-admin
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieGenre", b =>
@@ -393,14 +375,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("MovieId");
 
-<<<<<<< HEAD
-                    b.HasIndex("MovieId", "GenreId")
-                        .IsUnique();
-
-                    b.ToTable("MovieGenres", (string)null);
-=======
                     b.ToTable("MovieGenres");
->>>>>>> origin/A4-A5-countries-people-admin
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Person", b =>
@@ -424,15 +399,15 @@ namespace Infrastructure.Data.Migrations
                         .IsFixedLength();
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
@@ -454,15 +429,11 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("CountryCode");
 
-<<<<<<< HEAD
-                    b.ToTable("People", (string)null);
-=======
                     b.HasIndex("TmdbId")
                         .IsUnique()
                         .HasFilter("[TmdbId] IS NOT NULL");
 
                     b.ToTable("People");
->>>>>>> origin/A4-A5-countries-people-admin
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
@@ -490,7 +461,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("HallId", "RowNumber", "SeatNumber")
                         .IsUnique();
 
-                    b.ToTable("Seats", (string)null);
+                    b.ToTable("Seats");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Session", b =>
@@ -535,7 +506,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Sessions", (string)null);
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.SessionSeat", b =>
@@ -568,7 +539,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("SessionId", "SeatId")
                         .IsUnique();
 
-                    b.ToTable("SessionSeats", (string)null);
+                    b.ToTable("SessionSeats");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

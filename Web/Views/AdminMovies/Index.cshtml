@@ -1,0 +1,51 @@
+﻿@model List<Infrastructure.Entities.Movie>
+
+@{
+    const string posterBase = "https://image.tmdb.org/t/p/w92";
+}
+
+<h2>Фільми</h2>
+
+<p>
+    <a class="btn btn-primary" href="/admin/movies/add">Додати з TMDB</a>
+</p>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Постер</th>
+            <th>Назва</th>
+            <th>Дата релізу</th>
+            <th>Рейтинг</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(m.PosterPath))
+                    {
+                        <img src="@(posterBase + m.PosterPath)" alt="Постер" />
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </td>
+
+                <td>@m.Title</td>
+
+                <td>@(m.ReleaseDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+
+                <td>@(m.Rating is null ? "-" : m.Rating.Value.ToString("0.0"))</td>
+
+                <td style="white-space:nowrap">
+                    <a class="btn btn-sm btn-secondary" href="/admin/movies/edit/@m.Id">Редагувати</a>
+                    <a class="btn btn-sm btn-danger" href="/admin/movies/delete/@m.Id">Видалити</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
