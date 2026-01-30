@@ -5,7 +5,7 @@
     ViewData["Title"] = "Місця";
     var error = ViewBag.SeatsError as string;
 
-    var grouped = Model.Seats
+    var grouped = (Model.Seats ?? new List<SeatDto>())
         .GroupBy(s => s.RowNumber)
         .OrderBy(g => g.Key)
         .ToList();

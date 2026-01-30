@@ -1,9 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
-using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Web.ViewModels.Admin.Halls;
 
 namespace Web.Controllers.Admin;
@@ -12,40 +10,40 @@ namespace Web.Controllers.Admin;
 public class HallsController : Controller
 {
     private readonly IHallService _hallService;
-    private readonly CinemaDbContext _db;
+    private readonly ICinemaService _cinemaService;
 
     private const string IndexViewPath = "~/Views/Admin/Halls/Index.cshtml";
     private const string EditViewPath = "~/Views/Admin/Halls/Edit.cshtml";
     private const string SeatsViewPath = "~/Views/Admin/Halls/Seats.cshtml";
 
-    public HallsController(IHallService hallService, CinemaDbContext db)
+    public HallsController(IHallService hallService, ICinemaService cinemaService)
     {
         _hallService = hallService;
-        _db = db;
+        _cinemaService = cinemaService;
     }
 
     // GET: /Admin/Halls?cinemaId=1
     public async Task<IActionResult> Index(int? cinemaId)
     {
-        var cinemas = await _db.Cinemas
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new { c.Id, c.Name })
-            .ToListAsync();
+        var cinemaItems = await GetCinemaSelectListAsync(selectedId: cinemaId);
 
-        var halls = cinemaId.HasValue
-            ? await _hallService.GetByCinemaAsync(cinemaId.Value)
-            : await _hallService.GetAllAsync();
+        List<HallListDto> halls;
+        try
+        {
+            halls = cinemaId.HasValue
+                ? await _hallService.GetByCinemaAsync(cinemaId.Value)
+                : await _hallService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            halls = new List<HallListDto>();
+        }
 
         var vm = new HallsIndexVm
         {
             CinemaId = cinemaId,
-            Cinemas = cinemas.Select(c => new SelectListItem
-            {
-                Value = c.Id.ToString(),
-                Text = c.Name,
-                Selected = cinemaId.HasValue && cinemaId.Value == c.Id
-            }).ToList(),
+            Cinemas = cinemaItems,
             Halls = halls
         };
 
@@ -56,16 +54,23 @@ public class HallsController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int? cinemaId)
     {
-        var cinemas = await _db.Cinemas
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new { c.Id, c.Name })
-            .ToListAsync();
+        var cinemas = await _cinemaService.GetAllAsync();
+
+        if (cinemas.Count == 0)
+        {
+            TempData["Error"] = "Спочатку створіть кінотеатр.";
+            return RedirectToAction("Create", "Cinemas", new { area = "Admin" });
+        }
+
+        var selected = cinemaId ?? cinemas[0].Id;
 
         var vm = new HallEditVm
         {
-            CinemaId = cinemaId ?? (cinemas.FirstOrDefault()?.Id ?? 0),
-            Cinemas = cinemas.Select(c => new SelectListItem(c.Name, c.Id.ToString())).ToList()
+            CinemaId = selected,
+            Cinemas = cinemas
+                .OrderBy(c => c.Name)
+                .Select(c => new SelectListItem(c.Name, c.Id.ToString(), c.Id == selected))
+                .ToList()
         };
 
         return View(EditViewPath, vm);
@@ -84,17 +89,14 @@ public class HallsController : Controller
 
         try
         {
-            await _hallService.CreateAsync(new HallEditDto
-            {
-                CinemaId = vm.CinemaId,
-                Name = vm.Name
-            });
+            await _hallService.CreateAsync(ToDto(vm));
+            TempData["Success"] = "Зал успішно створено.";
 
             return RedirectToAction(nameof(Index), new { cinemaId = vm.CinemaId });
         }
         catch (Exception ex)
         {
-            ModelState.AddModelError("", ex.Message);
+            ModelState.AddModelError(string.Empty, ex.Message);
             await FillCinemasAsync(vm);
             return View(EditViewPath, vm);
         }
@@ -107,14 +109,9 @@ public class HallsController : Controller
         var dto = await _hallService.GetForEditAsync(id);
         if (dto == null) return NotFound();
 
-        var vm = new HallEditVm
-        {
-            Id = dto.Id,
-            CinemaId = dto.CinemaId,
-            Name = dto.Name
-        };
-
+        var vm = ToVm(dto);
         await FillCinemasAsync(vm);
+
         return View(EditViewPath, vm);
     }
 
@@ -131,18 +128,14 @@ public class HallsController : Controller
 
         try
         {
-            await _hallService.UpdateAsync(new HallEditDto
-            {
-                Id = vm.Id,
-                CinemaId = vm.CinemaId,
-                Name = vm.Name
-            });
+            await _hallService.UpdateAsync(ToDto(vm));
+            TempData["Success"] = "Зал успішно оновлено.";
 
             return RedirectToAction(nameof(Index), new { cinemaId = vm.CinemaId });
         }
         catch (Exception ex)
         {
-            ModelState.AddModelError("", ex.Message);
+            ModelState.AddModelError(string.Empty, ex.Message);
             await FillCinemasAsync(vm);
             return View(EditViewPath, vm);
         }
@@ -153,7 +146,16 @@ public class HallsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, int? cinemaId)
     {
-        await _hallService.DeleteAsync(id);
+        try
+        {
+            await _hallService.DeleteAsync(id);
+            TempData["Success"] = "Зал успішно видалено.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToAction(nameof(Index), new { cinemaId });
     }
 
@@ -165,6 +167,9 @@ public class HallsController : Controller
         if (dto == null) return NotFound();
 
         ViewBag.SeatsError = TempData["SeatsError"] as string;
+        ViewBag.Success = TempData["Success"] as string;
+        ViewBag.Error = TempData["Error"] as string;
+
         return View(SeatsViewPath, dto);
     }
 
@@ -172,9 +177,7 @@ public class HallsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult ConfigureSeats(int hallId, int rows, int seatsPerRow)
-    {
-        return RedirectToAction(nameof(Seats), new { id = hallId, rows, seatsPerRow });
-    }
+        => RedirectToAction(nameof(Seats), new { id = hallId, rows, seatsPerRow });
 
     // POST: /Admin/Halls/GenerateSeats
     [HttpPost]
@@ -184,25 +187,52 @@ public class HallsController : Controller
         try
         {
             await _hallService.GenerateSeatsByConfigAsync(hallId, rowConfigs, allowRegenerate);
-            return RedirectToAction(nameof(Seats), new { id = hallId });
+            TempData["Success"] = "Місця успішно згенеровано.";
         }
         catch (Exception ex)
         {
             TempData["SeatsError"] = ex.Message;
-            return RedirectToAction(nameof(Seats), new { id = hallId });
         }
+
+        return RedirectToAction(nameof(Seats), new { id = hallId });
     }
+
+    private static HallEditDto ToDto(HallEditVm vm) => new()
+    {
+        Id = vm.Id,
+        CinemaId = vm.CinemaId,
+        Name = vm.Name
+    };
+
+    private static HallEditVm ToVm(HallEditDto dto) => new()
+    {
+        Id = dto.Id,
+        CinemaId = dto.CinemaId,
+        Name = dto.Name
+    };
 
     private async Task FillCinemasAsync(HallEditVm vm)
     {
-        var cinemas = await _db.Cinemas
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new { c.Id, c.Name })
-            .ToListAsync();
+        var cinemas = await _cinemaService.GetAllAsync();
 
         vm.Cinemas = cinemas
+            .OrderBy(c => c.Name)
             .Select(c => new SelectListItem(c.Name, c.Id.ToString(), c.Id == vm.CinemaId))
+            .ToList();
+    }
+
+    private async Task<List<SelectListItem>> GetCinemaSelectListAsync(int? selectedId)
+    {
+        var cinemas = await _cinemaService.GetAllAsync();
+
+        return cinemas
+            .OrderBy(c => c.Name)
+            .Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name,
+                Selected = selectedId.HasValue && selectedId.Value == c.Id
+            })
             .ToList();
     }
 }

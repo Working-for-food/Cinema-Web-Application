@@ -4,13 +4,13 @@ namespace Application.Interfaces;
 
 public interface ICinemaService
 {
-    Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null);
-    Task<List<string>> GetCitiesAsync();
+    Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null, CancellationToken ct = default);
+    Task<List<string>> GetCitiesAsync(CancellationToken ct = default);
 
-    Task<CinemaEditDto?> GetForEditAsync(int id);
-    Task<CinemaDetailsDto?> GetDetailsAsync(int id);
+    Task<CinemaEditDto?> GetForEditAsync(int id, CancellationToken ct = default);
+    Task<CinemaDetailsDto?> GetDetailsAsync(int id, CancellationToken ct = default);
 
-    Task<int> CreateAsync(CinemaEditDto dto);
-    Task UpdateAsync(CinemaEditDto dto);
-    Task DeleteAsync(int id);
+    Task<int> CreateAsync(CinemaEditDto dto, CancellationToken ct = default);
+    Task UpdateAsync(CinemaEditDto dto, CancellationToken ct = default);
+    Task DeleteAsync(int id, CancellationToken ct = default);
 }
