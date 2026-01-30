@@ -8,10 +8,8 @@ using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Application.Interfaces;
-using Application.Services;
-using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +34,9 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+builder.Services.AddScoped<IAfishaRepository, AfishaRepository>();
+builder.Services.AddScoped<IUserMovieRepository, UserMovieRepository>();
+
 
 // Services
 builder.Services.AddScoped<IMovieService, MovieService>();
@@ -85,6 +86,8 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
         await CountrySeeder.SeedAsync(db);
+        await MovieSessionSeeder.SeedAsync(db);
+
         logger.LogInformation("Countries seeded/updated.");
     }
     catch (Exception ex)

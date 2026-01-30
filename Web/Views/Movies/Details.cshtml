@@ -1,0 +1,58 @@
+﻿@model Web.ViewModels.Movies.MovieDetailsVm
+
+<link rel="stylesheet" href="~/css/afisha.css" />
+
+<div class="movie-details">
+    <div class="movie-details-card">
+        <div class="movie-details-poster">
+            <img src="@Model.PosterUrl" onerror="this.onerror=null;this.src='/images/no-poster.png';" alt="@Model.Title" />
+        </div>
+
+        <div class="movie-details-info">
+            <div class="movie-details-title">@Model.Title</div>
+
+            <div class="movie-details-meta">
+                @if (Model.ReleaseDate is not null)
+                {
+                    <div><span class="meta-label">Дата виходу:</span> @Model.ReleaseDate</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.OriginalName))
+                {
+                    <div><span class="meta-label">Оригінальна назва:</span> @Model.OriginalName</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.DirectorName))
+                {
+                    <div><span class="meta-label">Режисер:</span> @Model.DirectorName</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Language))
+                {
+                    <div><span class="meta-label">Мова:</span> @Model.Language</div>
+                }
+                @if (Model.Duration is not null)
+                {
+                    <div><span class="meta-label">Тривалість:</span> @Model.Duration хв</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Country))
+                {
+                    <div><span class="meta-label">Країна:</span> @Model.Country</div>
+                }
+                @if (Model.Rating is not null)
+                {
+                    <div><span class="meta-label">Рейтинг:</span> @Model.Rating</div>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <div class="movie-details-desc">@Model.Description</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
+            {
+                <a class="btn-secondary" href="@Model.TrailerUrl" target="_blank" rel="noopener noreferrer">Дивитися трейлер</a>
+            }
+
+            <a class="btn-details" asp-controller="Afisha" asp-action="Index">Назад до афіші</a>
+        </div>
+    </div>
+</div>

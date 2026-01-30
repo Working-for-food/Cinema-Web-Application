@@ -1,0 +1,42 @@
+﻿@model Web.ViewModels.Afisha.AfishaIndexVm
+
+<link rel="stylesheet" href="~/css/afisha.css" />
+
+<div class="afisha-page">
+    <div class="afisha-title">Афіша</div>
+
+    <div class="afisha-section">
+        <div class="afisha-section-title">Зараз у прокаті</div>
+
+        <div class="afisha-row">
+            @foreach (var m in Model.NowShowing)
+            {
+                <div class="movie-card">
+                    <div class="movie-poster">
+                        <img src="@m.PosterUrl" onerror="this.onerror=null;this.src='/images/no-poster.png';" alt="@m.Title" />
+                    </div>
+                    <div class="movie-name">@m.Title</div>
+                    <a class="btn-details" asp-controller="Movies" asp-action="Details" asp-route-id="@m.Id">Показати деталі</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="afisha-section">
+        <div class="afisha-section-title">Скоро у прокаті</div>
+
+        <div class="afisha-row">
+            @foreach (var m in Model.ComingSoon)
+            {
+                <div class="movie-card movie-card-soon">
+                    <div class="movie-poster">
+                        <img src="@m.PosterUrl" onerror="this.onerror=null;this.src='/images/no-poster.png';" alt="@m.Title" />
+                        <div class="soon-badge">СКОРО</div>
+                    </div>
+                    <div class="movie-name">@m.Title</div>
+                    <a class="btn-details" asp-controller="Movies" asp-action="Details" asp-route-id="@m.Id">Показати деталі</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
