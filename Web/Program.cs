@@ -8,10 +8,8 @@ using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Application.Interfaces;
-using Application.Services;
-using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
+using Application.Options;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +46,15 @@ builder.Services.AddScoped<IHallService, HallService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ISessionLookupService, SessionLookupService>();
 
+builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));
+builder.Services.AddScoped<IImportMovieFromTmdb, ImportMovieFromTmdb>();
+builder.Services.AddScoped<IMovieImportRepository, MovieImportRepository>();
+builder.Services.AddHttpClient<ITmdbClient, TmdbClient>((sp, http) =>
+{
+    var opt = sp.GetRequiredService<IOptions<TmdbOptions>>().Value;
+    http.BaseAddress = new Uri(opt.BaseUrl);
+    http.Timeout = TimeSpan.FromSeconds(15);
+});
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

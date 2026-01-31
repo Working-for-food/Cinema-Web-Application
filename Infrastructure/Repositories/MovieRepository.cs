@@ -139,13 +139,22 @@ public class MovieRepository : IMovieRepository
         foreach (var gId in gIds)
             existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
 
-        // actors
-        existing.MovieActors.Clear();
-        var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-        short order = 1;
-        foreach (var aId in aIds)
-            existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = order++ });
 
+        // actors
+        var incomingSet = new HashSet<int>((actorIds ?? Array.Empty<int>()).Where(x => x > 0));
+
+        var existingActorIds = existing.MovieActors
+            .Select(ma => ma.ActorId)
+            .ToHashSet();
+
+        if (!incomingSet.SetEquals(existingActorIds))
+        {
+            existing.MovieActors.Clear();
+            var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+            short order = 1;
+            foreach (var aId in aIds)
+                existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = order++ });
+        }
         // countries
         existing.MovieCountries.Clear();
         var codes = (countryCodes ?? Array.Empty<string>())

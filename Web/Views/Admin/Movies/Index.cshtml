@@ -16,9 +16,14 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Movies</h2>
-        <a asp-action="Create" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Add a movie
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add a movie
+            </a>
+            <a asp-action="AddFromTmdb" class="btn btn-outline-primary">
+                <i class="bi bi-cloud-download"></i> Import a movie
+            </a>
+        </div>
     </div>
 
     <form method="get" asp-action="Index" class="mb-4">

@@ -10,4 +10,5 @@ public interface IPersonService
     Task<(bool ok, string? error)> CreateAsync(Person person, CancellationToken ct = default);
     Task<(bool ok, string? error)> UpdateAsync(Person person, CancellationToken ct = default);
     Task<(bool ok, string? error)> DeleteAsync(int id, CancellationToken ct = default);
+    Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default);
 }
