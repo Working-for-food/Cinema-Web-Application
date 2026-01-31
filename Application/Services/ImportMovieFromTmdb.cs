@@ -42,7 +42,7 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         }
 
         movie.Title = details.Title ?? "(no title)";
-        movie.OriginalTitle = details.OriginalTitle;
+        movie.OriginalName = details.OriginalTitle;
         movie.Description = details.Overview;
         movie.ReleaseDate = releaseDate;
         movie.Duration = details.Runtime;

@@ -10,7 +10,7 @@ public class Movie
     public string? BackdropPath { get; set; }
     public string Title { get; set; } = null!;
     public DateOnly? ReleaseDate { get; set; }
-    public string? OriginalTitle { get; set; }
+    public string? OriginalName { get; set; }
     public string? Description { get; set; }
     public string? Language { get; set; }
     public int? Duration { get; set; }
