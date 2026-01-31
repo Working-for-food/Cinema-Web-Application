@@ -23,13 +23,17 @@ public class AfishaController : Controller
             {
                 Id = x.Id,
                 Title = x.Title,
-                PosterUrl = string.IsNullOrWhiteSpace(x.PosterUrl) ? "/images/no-poster.png" : x.PosterUrl
+                PosterUrl = string.IsNullOrWhiteSpace(x.PosterUrl) ? "/images/no-poster.png" : x.PosterUrl,
+                Year = x.Year,
+                AgeLabel = x.AgeLabel
             }).ToList(),
             ComingSoon = dto.ComingSoon.Select(x => new MovieCardVm
             {
                 Id = x.Id,
                 Title = x.Title,
-                PosterUrl = string.IsNullOrWhiteSpace(x.PosterUrl) ? "/images/no-poster.png" : x.PosterUrl
+                PosterUrl = string.IsNullOrWhiteSpace(x.PosterUrl) ? "/images/no-poster.png" : x.PosterUrl,
+                Year = x.Year,
+                AgeLabel = x.AgeLabel
             }).ToList()
         };
 

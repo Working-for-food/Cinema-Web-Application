@@ -3,40 +3,89 @@
 <link rel="stylesheet" href="~/css/afisha.css" />
 
 <div class="afisha-page">
-    <div class="afisha-title">Афіша</div>
+    <h1 class="afisha-title">Афіша</h1>
 
-    <div class="afisha-section">
-        <div class="afisha-section-title">Зараз у прокаті</div>
+    <section class="afisha-section">
+        <h2 class="afisha-section-title">ЗАРАЗ У ПРОКАТІ</h2>
 
         <div class="afisha-row">
             @foreach (var m in Model.NowShowing)
             {
-                <div class="movie-card">
-                    <div class="movie-poster">
-                        <img src="@m.PosterUrl" onerror="this.onerror=null;this.src='/images/no-poster.png';" alt="@m.Title" />
+                <a asp-area=""
+                   asp-controller="Movies"
+                   asp-action="Details"
+                   asp-route-id="@m.Id"
+                   class="movie-card movie-card-link">
+
+                    <div class="movie-poster-wrap">
+                        @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
+                        {
+                            <div class="badge badge-age">@m.AgeLabel</div>
+                        }
+                        @if (m.Year is not null)
+                        {
+                            <div class="badge badge-year">@m.Year</div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(m.PosterUrl) &&
+                       (m.PosterUrl.StartsWith("http://") || m.PosterUrl.StartsWith("https://")))
+                        {
+                            <img class="afisha-poster" src="@m.PosterUrl" alt="" />
+                        }
+                        else
+                        {
+                            <div class="afisha-poster afisha-poster-placeholder"></div>
+                        }
                     </div>
+
                     <div class="movie-name">@m.Title</div>
-                    <a class="btn-details" asp-controller="Movies" asp-action="Details" asp-route-id="@m.Id">Показати деталі</a>
-                </div>
+
+                    <div class="btn-details">Показати деталі</div>
+                </a>
             }
         </div>
-    </div>
+    </section>
 
-    <div class="afisha-section">
-        <div class="afisha-section-title">Скоро у прокаті</div>
+    <section class="afisha-section">
+        <h2 class="afisha-section-title">СКОРО У ПРОКАТІ</h2>
 
         <div class="afisha-row">
             @foreach (var m in Model.ComingSoon)
             {
-                <div class="movie-card movie-card-soon">
-                    <div class="movie-poster">
-                        <img src="@m.PosterUrl" onerror="this.onerror=null;this.src='/images/no-poster.png';" alt="@m.Title" />
+                <a asp-area=""
+                   asp-controller="Movies"
+                   asp-action="Details"
+                   asp-route-id="@m.Id"
+                   class="movie-card movie-card-soon movie-card-link">
+
+                    <div class="movie-poster-wrap">
                         <div class="soon-badge">СКОРО</div>
+
+                        @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
+                        {
+                            <div class="badge badge-age">@m.AgeLabel</div>
+                        }
+                        @if (m.Year is not null)
+                        {
+                            <div class="badge badge-year">@m.Year</div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(m.PosterUrl) &&
+                       (m.PosterUrl.StartsWith("http://") || m.PosterUrl.StartsWith("https://")))
+                        {
+                            <img class="afisha-poster" src="@m.PosterUrl" alt="" />
+                        }
+                        else
+                        {
+                            <div class="afisha-poster afisha-poster-placeholder"></div>
+                        }
                     </div>
+
                     <div class="movie-name">@m.Title</div>
-                    <a class="btn-details" asp-controller="Movies" asp-action="Details" asp-route-id="@m.Id">Показати деталі</a>
-                </div>
+
+                    <div class="btn-details">Показати деталі</div>
+                </a>
             }
         </div>
-    </div>
+    </section>
 </div>

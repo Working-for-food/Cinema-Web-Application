@@ -23,6 +23,7 @@ public class Movie
 
     public string? TrailerUrl { get; set; }
     public decimal? Rating { get; set; } // decimal(4,1)
+    public int? AgeRating { get; set; }
 
     // navs
     public Person? Director { get; set; }

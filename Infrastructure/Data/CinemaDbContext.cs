@@ -67,6 +67,7 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.Property(x => x.TrailerUrl).HasMaxLength(700);
             e.Property(x => x.Language).HasMaxLength(50);
             e.Property(x => x.PosterPath).HasMaxLength(200);
+            e.Property(x => x.AgeRating).HasColumnType("smallint");
 
             e.HasOne(x => x.Director)
                 .WithMany(p => p.DirectedMoviesMain)

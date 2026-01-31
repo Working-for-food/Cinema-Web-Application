@@ -21,6 +21,7 @@ public class AfishaService : IAfishaService
 
         string BuildPosterUrl(string? posterPath)
             => string.IsNullOrWhiteSpace(posterPath) ? "" : $"{TmdbBase}{posterPath}";
+        string AgeLabel(int? age) => age is null ? "" : $"{age}+";
 
         return new AfishaIndexDto
         {
@@ -28,13 +29,17 @@ public class AfishaService : IAfishaService
             {
                 Id = m.Id,
                 Title = m.Title,
-                PosterUrl = BuildPosterUrl(m.PosterPath)
+                PosterUrl = BuildPosterUrl(m.PosterPath),
+                Year = m.ReleaseDate?.Year,
+                AgeLabel = AgeLabel(m.AgeRating)
             }).ToList(),
             ComingSoon = soon.Select(m => new MovieCardDto
             {
                 Id = m.Id,
                 Title = m.Title,
-                PosterUrl = BuildPosterUrl(m.PosterPath)
+                PosterUrl = BuildPosterUrl(m.PosterPath),
+                Year = m.ReleaseDate?.Year,
+                AgeLabel = AgeLabel(m.AgeRating)
             }).ToList()
         };
     }

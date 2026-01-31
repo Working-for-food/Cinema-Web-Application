@@ -1,161 +1,145 @@
 ﻿.afisha-page {
-    padding: 24px 0;
+    padding: 20px 0;
 }
 
 .afisha-title {
-    font-size: 44px;
+    font-size: 64px;
     font-weight: 800;
-    margin-bottom: 18px;
+    margin: 10px 0 20px;
 }
 
 .afisha-section {
-    margin-top: 26px;
+    margin-top: 28px;
 }
 
 .afisha-section-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 14px;
-    text-transform: uppercase;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
 }
 
 .afisha-row {
     display: flex;
-    gap: 18px;
-    overflow-x: auto;
-    padding-bottom: 10px;
+    gap: 28px;
+    flex-wrap: wrap;
 }
 
 .movie-card {
-    width: 240px;
-    flex: 0 0 auto;
-    border-radius: 14px;
-    background: #1e1e1e;
-    padding: 12px;
+    width: 340px;
+    height: 600px;
+    background: #171717;
+    border-radius: 16px;
+    padding: 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.movie-poster {
+.movie-poster-wrap {
     position: relative;
-    width: 100%;
-    height: 320px;
+    margin: -16px -16px 0 -16px;
+    border-radius: 16px 16px 12px 12px;
     overflow: hidden;
-    border-radius: 12px;
-    background: #2a2a2a;
+    background: #0f0f0f;
+    height: 440px;
 }
 
-    .movie-poster img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+.poster-link {
+    display: block;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.afisha-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.afisha-poster-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #0b0b0b;
+}
+
+.movie-name {
+    color: #fff;
+    font-size: 20px;
+    margin-top: 6px;
+    font-weight: 800;
+    line-height: 1.2;
+    min-height: 48px;
+}
+
+
+.btn-details {
+    margin-top: auto;
+    display: block;
+    width: 100%;
+    background: #1d8cf8;
+    color: #fff;
+    text-align: center;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+    .btn-details:hover {
+        filter: brightness(0.95);
     }
+
+.movie-poster-wrap {
+    position: relative;
+}
+
+.badge {
+    position: absolute !important;
+    top: 8px !important;
+    padding: 4px 8px;
+    font-weight: 800;
+    font-size: 13px;
+    line-height: 1;
+    color: #fff;
+    z-index: 2;
+}
+
+.badge-age {
+    left: 8px !important;
+    right: auto !important;
+    background: #e11d48;
+    border-radius: 0 10px 10px 0;
+}
+
+.badge-year {
+    right: 8px !important;
+    left: auto !important;
+    background: rgba(0,0,0,0.65);
+    border-radius: 10px 0 0 10px;
+}
+
+
+
+.movie-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+
 
 .soon-badge {
     position: absolute;
-    left: 10px;
     bottom: 10px;
-    background: #ff9800;
+    left: 10px;
+    background: #f59e0b;
     color: #111;
     font-weight: 900;
     padding: 6px 10px;
     border-radius: 10px;
     font-size: 12px;
-}
-
-.movie-name {
-    margin-top: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    min-height: 44px;
-}
-
-.btn-details {
-    display: inline-block;
-    width: 100%;
-    text-align: center;
-    margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: #2196f3;
-    color: #fff;
-    text-decoration: none;
-    font-weight: 700;
-}
-
-    .btn-details:hover {
-        filter: brightness(1.05);
-        color: #fff;
-        text-decoration: none;
-    }
-
-.btn-secondary {
-    display: inline-block;
-    margin-right: 10px;
-    margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: #3a3a3a;
-    color: #fff;
-    text-decoration: none;
-    font-weight: 700;
-}
-
-    .btn-secondary:hover {
-        filter: brightness(1.05);
-        color: #fff;
-        text-decoration: none;
-    }
-
-.movie-details {
-    padding: 24px 0;
-}
-
-.movie-details-card {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 22px;
-    background: #1e1e1e;
-    border-radius: 16px;
-    padding: 16px;
-}
-
-.movie-details-poster {
-    width: 320px;
-    height: 450px;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #2a2a2a;
-}
-
-    .movie-details-poster img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-.movie-details-title {
-    font-size: 32px;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 12px;
-}
-
-.movie-details-meta {
-    color: #d7d7d7;
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 14px;
-}
-
-.meta-label {
-    color: #ffffff;
-    font-weight: 700;
-}
-
-.movie-details-desc {
-    color: #d7d7d7;
-    font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 18px;
+    letter-spacing: 0.8px;
 }
