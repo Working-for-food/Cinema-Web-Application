@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Data.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    partial class CinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127165310_AddMovieIsDeleted")]
+    partial class AddMovieIsDeleted
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,11 +150,6 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -243,12 +241,12 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("nchar(2)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
-
-                    b.Property<int?>("DirectorId")
-                        .HasColumnType("int");
 
                     b.Property<int?>("Duration")
                         .HasColumnType("int");
@@ -262,15 +260,15 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("OriginalName")
+                    b.Property<string>("OriginalTitle")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PersonId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PosterPath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ProductionCountryCode")
-                        .HasColumnType("nchar(2)");
 
                     b.Property<decimal?>("Rating")
                         .HasPrecision(4, 1)
@@ -292,9 +290,9 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DirectorId");
+                    b.HasIndex("CountryCode");
 
-                    b.HasIndex("ProductionCountryCode");
+                    b.HasIndex("PersonId");
 
                     b.HasIndex("TmdbId")
                         .IsUnique()
@@ -714,19 +712,13 @@ namespace Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
                 {
-                    b.HasOne("Infrastructure.Entities.Person", "Director")
-                        .WithMany("DirectedMoviesMain")
-                        .HasForeignKey("DirectorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Infrastructure.Entities.Country", "ProductionCountry")
+                    b.HasOne("Infrastructure.Entities.Country", null)
                         .WithMany("ProducedMovies")
-                        .HasForeignKey("ProductionCountryCode")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("CountryCode");
 
-                    b.Navigation("Director");
-
-                    b.Navigation("ProductionCountry");
+                    b.HasOne("Infrastructure.Entities.Person", null)
+                        .WithMany("DirectedMoviesMain")
+                        .HasForeignKey("PersonId");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>

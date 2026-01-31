@@ -134,11 +134,8 @@ public class MovieService : IMovieService
     public Task<IReadOnlyList<Country>> GetCountriesAsync(CancellationToken ct = default) =>
         _countries.GetAllAsync(ct);
 
-    public async Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default)
-    {
-        var (items, _) = await _people.GetAllAsync(null, 1, 200, ct);
-        return items;
-    }
+    public Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default) =>
+    _people.GetDirectorsAsync(ct);
 
     public async Task<IReadOnlyList<Person>> GetActorsAsync(CancellationToken ct = default)
     {

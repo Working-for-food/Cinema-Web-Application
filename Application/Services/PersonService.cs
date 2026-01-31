@@ -96,4 +96,7 @@ public class PersonService : IPersonService
 
         return null;
     }
+    public Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default) =>
+    _people.GetDirectorsAsync(ct);
+
 }
