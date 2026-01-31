@@ -14,6 +14,6 @@ public interface IPersonRepository
     Task AddAsync(Person person, CancellationToken ct = default);
     Task UpdateAsync(Person person, CancellationToken ct = default);
     Task DeleteAsync(Person person, CancellationToken ct = default);
-
+    Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default);
     Task<bool> IsUsedAsync(int personId, CancellationToken ct = default);
 }

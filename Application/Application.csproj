@@ -9,12 +9,11 @@
   <ItemGroup>
     <Folder Include="Interfaces\" />
     <Folder Include="Services\" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.12" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
-
-
 
 </Project>

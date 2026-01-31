@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Web.ViewModels.Admin;
 
 namespace Web.Controllers.Admin;
@@ -11,8 +12,15 @@ public class MoviesController : Controller
 {
     private const string ViewsRoot = "~/Views/Admin/Movies";
     private readonly IMovieService _service;
+    private readonly ITmdbClient _tmdb;
+    private readonly IImportMovieFromTmdb _import;
 
-    public MoviesController(IMovieService service) => _service = service;
+    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import)
+    {
+        _service = service;
+        _tmdb = tmdb;
+        _import = import;
+    }
 
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, string? sortBy = "title", int page = 1, CancellationToken ct = default)
@@ -126,7 +134,53 @@ public class MoviesController : Controller
         TempData[ok ? "Success" : "Error"] = ok ? "Фільм видалено." : error;
         return RedirectToAction(nameof(Index));
     }
+    [HttpGet("tmdb/add")]
+    public IActionResult AddFromTmdb()
+    {
+        return View($"{ViewsRoot}/AddFromTmdb.cshtml");
+    }
+    [HttpGet("tmdb/search")]
+    public async Task<IActionResult> SearchTmdb([FromQuery] string query, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return Ok(Array.Empty<object>());
 
+        var items = await _tmdb.SearchMovieAsync(query, page: 1, ct);
+
+        var result = items
+            .Select(x =>
+            {
+                DateTime? parsed = null;
+                if (DateTime.TryParse(x.ReleaseDate, out var dt))
+                    parsed = dt;
+
+                return new
+                {
+                    tmdbId = x.Id,
+                    title = x.Title,
+                    releaseDate = x.ReleaseDate,
+                    posterPath = x.PosterPath,
+                    releaseDateParsed = parsed
+                };
+            })
+            .OrderByDescending(x => x.releaseDateParsed ?? DateTime.MinValue)
+            .Select(x => new
+            {
+                x.tmdbId,
+                x.title,
+                x.releaseDate,
+                x.posterPath
+            });
+
+        return Ok(result);
+    }
+    [HttpPost("tmdb/import")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportFromTmdb([FromForm] int tmdbId, CancellationToken ct)
+    {
+        var movieId = await _import.ImportAsync(tmdbId, ct);
+        return RedirectToAction(nameof(Edit), new { id = movieId });
+    }
     private async Task FillLookupsAsync(MovieEditVm vm, CancellationToken ct)
     {
         var genres = await _service.GetGenresAsync(ct);
