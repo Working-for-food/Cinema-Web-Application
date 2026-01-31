@@ -1,62 +1,172 @@
 ﻿@model IReadOnlyList<Infrastructure.Entities.Person>
 
 @{
-    var pages = (int)(ViewBag.Page ?? 1);
+    ViewData["Title"] = "Персони";
+
+    var currentPage = (int)(ViewBag.Page ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var search = (string?)ViewBag.Search;
 }
 
-<div class="container mt-4">
-    <h2>People</h2>
+<section class="sessions-section py-4 pb-6 gray-bg">
+    <div class="container-fluid">
 
-    @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
-    @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+        <h1 class="section-title text-center mb-5">Персони</h1>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <form method="get" class="d-flex gap-2">
-            <input class="form-control" name="search" value="@search" placeholder="Search..." />
-            <button class="btn btn-primary">Search</button>
-        </form>
-        <a class="btn btn-success" asp-action="Create">Add person</a>
-    </div>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Country</th>
-                <th>BirthDate</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var p in Model)
+        @if (TempData["Success"] != null)
         {
-            <tr>
-                <td>@(p.FullName ?? (p.FirstName + " " + p.LastName))</td>
-                <td>@(p.Country?.Name ?? "-")</td>
-                <td>@(p.BirthDate?.ToString("dd.MM.yyyy") ?? "-")</td>
-                <td class="text-end">
-                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@p.Id">Edit</a>
-                    <form class="d-inline" asp-action="Delete" asp-route-id="@p.Id" method="post"
-                          onsubmit="return confirm('Delete this person?');">
-                        <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
+            <div class="alert alert-success mb-3">@TempData["Success"]</div>
         }
-        </tbody>
-    </table>
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger mb-3">@TempData["Error"]</div>
+        }
 
-    <nav>
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(pages == 1 ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(pages-1)" asp-route-search="@search">Prev</a>
-            </li>
-            <li class="page-item disabled"><span class="page-link">Page @pages / @totalPages</span></li>
-            <li class="page-item @(pages >= totalPages ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(pages+1)" asp-route-search="@search">Next</a>
-            </li>
-        </ul>
-    </nav>
-</div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+            <form method="get" class="d-flex gap-2 align-items-end">
+                <div>
+                    <label class="form-label">Пошук</label>
+                    <input class="form-control"
+                           name="search"
+                           value="@search"
+                           placeholder="Імʼя або прізвище" />
+                </div>
+
+                <div>
+                    <label class="form-label invisible">.</label>
+                    <button type="submit" class="btn btn-secondary w-100">
+                        <i class="fas fa-search me-1"></i>ЗНАЙТИ
+                    </button>
+                </div>
+            </form>
+
+            <a class="btn btn-maroon mb-1" asp-action="Create">
+                <i class="fas fa-plus me-2"></i>Додати персону
+            </a>
+        </div>
+
+        <div class="card shadow-sm rounded">
+            <div class="card-header bg-maroon text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Список персон
+                </h5>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 people-table">
+                        <thead class="people-thead">
+                            <tr>
+                                <th style="width:90px;">Фото</th>
+                                <th>ПІБ</th>
+                                <th>Країна</th>
+                                <th>Дата народження</th>
+                                <th class="text-end">Дії з персоною</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Персон не знайдено
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var p in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="person-avatar">
+                                                @if (!string.IsNullOrWhiteSpace(p.PhotoUrl))
+                                                {
+                                                    <img src="@p.PhotoUrl"
+                                                         alt="Фото"
+                                                         loading="lazy"
+                                                         onerror="this.style.display='none'; this.parentElement.classList.add('no-photo');" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="person-avatar__placeholder">
+                                                        <i class="fas fa-user"></i>
+                                                    </span>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td class="fw-semibold">
+                                            @(p.FullName ?? $"{p.FirstName} {p.LastName}")
+                                        </td>
+
+                                        <td>
+                                            @(p.Country?.Name ?? "—")
+                                        </td>
+
+                                        <td>
+                                            @(p.BirthDate?.ToString("dd.MM.yyyy") ?? "—")
+                                        </td>
+
+                                        <td class="text-end people-actions">
+                                            <a asp-action="Edit"
+                                               asp-route-id="@p.Id"
+                                               class="btn btn-sm btn-maroon me-1"
+                                               title="Редагувати">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <form method="post"
+                                                  asp-action="Delete"
+                                                  asp-route-id="@p.Id"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Видалити цю персону?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-danger"
+                                                        title="Видалити">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(currentPage - 1)"
+                           asp-route-search="@search">
+                            ← Назад
+                        </a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <span class="page-link">Сторінка @currentPage з @totalPages</span>
+                    </li>
+
+                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(currentPage + 1)"
+                           asp-route-search="@search">
+                            Далі →
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+
+    </div>
+</section>
