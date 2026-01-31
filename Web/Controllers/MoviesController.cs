@@ -1,38 +1,37 @@
-﻿using Infrastructure.Interfaces;
+﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels.Movies;
 
 namespace Web.Controllers;
 
-
 public class MoviesController : Controller
 {
-    private readonly IUserMovieRepository _movieRepository;
+    private readonly IMoviePublicService _moviePublicService;
 
-    public MoviesController(IUserMovieRepository movieRepository)
+    public MoviesController(IMoviePublicService moviePublicService)
     {
-        _movieRepository = movieRepository;
+        _moviePublicService = moviePublicService;
     }
 
     public async Task<IActionResult> Details(int id, CancellationToken ct)
     {
-        var movie = await _movieRepository.GetByIdAsync(id, ct);
-        if (movie is null) return NotFound();
+        var dto = await _moviePublicService.GetDetailsAsync(id, ct);
+        if (dto is null) return NotFound();
 
         var vm = new MovieDetailsVm
         {
-            Id = movie.Id,
-            Title = movie.Title,
-            ReleaseDate = movie.ReleaseDate,
-            OriginalName = movie.OriginalName,
-            DirectorName = movie.Director is null ? null : $"{movie.Director.FirstName} {movie.Director.LastName}",
-            Description = movie.Description,
-            Language = movie.Language,
-            Duration = movie.Duration,
-            Country = movie.ProductionCountry?.Name,
-            TrailerUrl = movie.TrailerUrl,
-            Rating = movie.Rating,
-            PosterUrl = $"/posters/{movie.Id}.jpg"
+            Id = dto.Id,
+            Title = dto.Title,
+            ReleaseDate = dto.ReleaseDate,
+            OriginalName = dto.OriginalName,
+            DirectorName = dto.DirectorName,
+            Description = dto.Description,
+            Language = dto.Language,
+            Duration = dto.Duration,
+            Country = dto.Country,
+            TrailerUrl = dto.TrailerUrl,
+            Rating = dto.Rating,
+            PosterUrl = string.IsNullOrWhiteSpace(dto.PosterUrl) ? "/images/no-poster.png" : dto.PosterUrl
         };
 
         return View(vm);

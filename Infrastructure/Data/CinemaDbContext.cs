@@ -66,6 +66,8 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.Property(x => x.ProductionCountryCode).HasMaxLength(2).IsFixedLength();
             e.Property(x => x.TrailerUrl).HasMaxLength(700);
             e.Property(x => x.Language).HasMaxLength(50);
+            e.Property(x => x.PosterPath).HasMaxLength(200);
+
             e.HasOne(x => x.Director)
                 .WithMany(p => p.DirectedMoviesMain)
                 .HasForeignKey(x => x.DirectorId)

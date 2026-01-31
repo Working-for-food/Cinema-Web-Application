@@ -5,7 +5,8 @@ namespace Infrastructure.Entities;
 public class Movie
 {
     public int Id { get; set; }
-
+    public int? TmdbId { get; set; }
+    public string? PosterPath { get; set; }
     public string Title { get; set; } = null!;
     public DateOnly? ReleaseDate { get; set; }
     public string? OriginalName { get; set; }

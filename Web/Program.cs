@@ -36,6 +36,8 @@ builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 builder.Services.AddScoped<IAfishaRepository, AfishaRepository>();
 builder.Services.AddScoped<IUserMovieRepository, UserMovieRepository>();
+builder.Services.AddScoped<IAfishaService, AfishaService>();
+builder.Services.AddScoped<IMoviePublicService, MoviePublicService>();
 
 
 // Services
