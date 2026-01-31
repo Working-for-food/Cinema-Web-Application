@@ -47,16 +47,22 @@
             {
                 <div class="card shadow-sm mb-3">
                     <div class="card-body p-4">
-                        <div class="row align-items-center g-4">
 
-                            <div class="col-12 col-md-8 col-lg-9">
-                                <div class="mb-2">
-                                    <div class="text-muted small">
-                                        <i class="fa-solid fa-tags me-1"></i>
-                                        Назва жанру
-                                    </div>
-                                    <div class="fw-semibold fs-4">@g.Name</div>
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+
+                            <!-- Назва жанру -->
+                            <div>
+                                <div class="text-muted small mb-1">
+                                    <i class="fa-solid fa-tags me-1"></i>
+                                    Назва жанру
                                 </div>
+                                <div class="fw-semibold fs-4">
+                                    @g.Name
+                                </div>
+                            </div>
+
+                            <!-- Кнопки -->
+                            <div class="d-flex gap-2 flex-wrap justify-content-md-end">
 
                                 <a asp-controller="Genres"
                                    asp-action="Details"
@@ -81,9 +87,11 @@
                                     <i class="fa-solid fa-trash me-1"></i>
                                     ВИДАЛИТИ
                                 </a>
+
                             </div>
 
                         </div>
+
                     </div>
                 </div>
             }

@@ -1,98 +1,161 @@
 ﻿@model Web.ViewModels.Admin.MovieEditVm
 
 @{
-    ViewData["Title"] = "Add a movie";
+    ViewData["Title"] = "Створення фільму";
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Add new movie</h3>
-                </div>
-                <div class="card-body">
-                    <form asp-controller="Movies" asp-action="Create" method="post" asp-antiforgery="true">
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <h1 class="section-title">Створити фільм</h1>
 
-                        <div class="mb-3">
-                            <label asp-for="Title" class="form-label">Title</label>
-                            <input asp-for="Title" class="form-control" />
-                            <span asp-validation-for="Title" class="text-danger"></span>
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success mb-3">@ok</div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger mb-3">@err</div>
+        }
+
+        <div class="card shadow-sm col-lg-8 mx-auto">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Реєстрація фільму
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+                <form asp-area="Admin"
+                      asp-controller="Movies"
+                      asp-action="Create"
+                      method="post"
+                      asp-antiforgery="true">
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label text-muted">
+                            <i class="fa-solid fa-clapperboard me-1"></i>
+                            Назва фільму
+                        </label>
+                        <input asp-for="Title" class="form-control" placeholder="Введіть назву фільму" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label text-muted">
+                            <i class="fa-solid fa-align-left me-1"></i>
+                            Опис
+                        </label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Короткий опис фільму"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ReleaseDate" class="form-label text-muted">
+                                <i class="fa-solid fa-calendar-days me-1"></i>
+                                Дата виходу
+                            </label>
+                            <input asp-for="ReleaseDate" type="date" class="form-control" />
+                            <span asp-validation-for="ReleaseDate" class="text-danger"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label">Description</label>
-                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Duration" class="form-label text-muted">
+                                <i class="fa-solid fa-clock me-1"></i>
+                                Тривалість (хв)
+                            </label>
+                            <input asp-for="Duration" type="number" class="form-control" placeholder="наприклад, 120" />
+                            <span asp-validation-for="Duration" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="ReleaseDate" class="form-label">Release Date</label>
-                                <input asp-for="ReleaseDate" type="date" class="form-control" />
-                                <span asp-validation-for="ReleaseDate" class="text-danger"></span>
-                            </div>
+                    <div class="mb-3 mt-3">
+                        <label asp-for="ProductionCountryCode" class="form-label text-muted">
+                            <i class="fa-solid fa-flag me-1"></i>
+                            Країна виробництва
+                        </label>
+                        <select asp-for="ProductionCountryCode" asp-items="Model.CountryList" class="form-select">
+                            <option value="">-- не обрано --</option>
+                        </select>
+                        <span asp-validation-for="ProductionCountryCode" class="text-danger"></span>
+                    </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Duration" class="form-label">Duration (min)</label>
-                                <input asp-for="Duration" type="number" class="form-control" />
-                                <span asp-validation-for="Duration" class="text-danger"></span>
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="DirectorId" class="form-label text-muted">
+                            <i class="fa-solid fa-video me-1"></i>
+                            Режисер
+                        </label>
+                        <select asp-for="DirectorId" asp-items="Model.DirectorList" class="form-select">
+                            <option value="">-- не обрано --</option>
+                        </select>
+                        <span asp-validation-for="DirectorId" class="text-danger"></span>
+                    </div>
 
-                        <div class="mb-3">
-                            <label asp-for="ProductionCountryCode" class="form-label">Production country</label>
-                            <select asp-for="ProductionCountryCode" asp-items="Model.CountryList" class="form-select">
-                                <option value="">-- none --</option>
-                            </select>
-                            <span asp-validation-for="ProductionCountryCode" class="text-danger"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="SelectedCountryCodes" class="form-label text-muted">
+                            <i class="fa-solid fa-globe me-1"></i>
+                            Країни (MovieCountries)
+                        </label>
+                        <select asp-for="SelectedCountryCodes"
+                                asp-items="Model.CountryMultiList"
+                                class="form-select"
+                                multiple
+                                size="6"></select>
+                        <span asp-validation-for="SelectedCountryCodes" class="text-danger"></span>
+                    </div>
 
-                        <div class="mb-3">
-                            <label asp-for="DirectorId" class="form-label">Director</label>
-                            <select asp-for="DirectorId" asp-items="Model.DirectorList" class="form-select">
-                                <option value="">-- none --</option>
-                            </select>
-                            <span asp-validation-for="DirectorId" class="text-danger"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="SelectedActorIds" class="form-label text-muted">
+                            <i class="fa-solid fa-user-group me-1"></i>
+                            Актори
+                        </label>
+                        <select asp-for="SelectedActorIds"
+                                asp-items="Model.ActorList"
+                                class="form-select"
+                                multiple
+                                size="6"></select>
+                        <span asp-validation-for="SelectedActorIds" class="text-danger"></span>
+                    </div>
 
-                        <div class="mb-4">
-                            <label asp-for="SelectedCountryCodes" class="form-label">Countries (MovieCountries)</label>
-                            <select asp-for="SelectedCountryCodes" asp-items="Model.CountryMultiList" class="form-control" multiple size="6"></select>
-                            <span asp-validation-for="SelectedCountryCodes" class="text-danger"></span>
-                            <div class="form-text">Ctrl/Command для множинного вибору.</div>
-                        </div>
+                    <div class="mb-4">
+                        <label asp-for="SelectedGenreIds" class="form-label text-muted">
+                            <i class="fa-solid fa-tags me-1"></i>
+                            Жанри
+                        </label>
+                        <select asp-for="SelectedGenreIds"
+                                asp-items="Model.GenreList"
+                                class="form-select"
+                                multiple
+                                size="6"></select>
+                        <span asp-validation-for="SelectedGenreIds" class="text-danger"></span>
+                    </div>
 
-                        <div class="mb-4">
-                            <label asp-for="SelectedActorIds" class="form-label">Actors</label>
-                            <select asp-for="SelectedActorIds" asp-items="Model.ActorList" class="form-control" multiple size="6"></select>
-                            <span asp-validation-for="SelectedActorIds" class="text-danger"></span>
-                            <div class="form-text">Ctrl/Command для множинного вибору.</div>
-                        </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a asp-area="Admin"
+                           asp-controller="Movies"
+                           asp-action="Index"
+                           class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            Назад
+                        </a>
 
-                        <div class="mb-4">
-                            <label asp-for="SelectedGenreIds" class="form-label">Choose genres (Ctrl + Click)</label>
-                            <select asp-for="SelectedGenreIds" asp-items="Model.GenreList" class="form-control" multiple size="5">
-                            </select>
-                            <span asp-validation-for="SelectedGenreIds" class="text-danger"></span>
-                            <div class="form-text">Hold Ctrl (Windows) or Command (Mac) to select multiple.</div>
-                        </div>
+                        <button type="submit" class="btn btn-maroon">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>
+                            Створити фільм
+                        </button>
+                    </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
+
     </div>
-</div>
+</section>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }
