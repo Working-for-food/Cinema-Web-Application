@@ -1,51 +1,93 @@
 ﻿@model List<Infrastructure.Entities.Genre>
-<style>
-    .container { max-width: 900px; margin: 30px auto; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 10px; border-bottom: 1px solid #ddd; }
-    th { text-align: left; }
-    .actions a { padding: 6px 10px; margin-right: 6px; text-decoration: none; border-radius: 4px; font-size: 14px; }
-    .btn-create { padding: 8px 14px; background: #4f46e5; color: white; text-decoration: none; border-radius: 6px; }
-    .btn-details { background: #e5e7eb; color: #111; }
-    .btn-edit { background: #fde68a; color: #111; }
-    .btn-delete { background: #fecaca; color: #7f1d1d; }
-    .alert-success { background: #dcfce7; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
-    .alert-error { background: #fee2e2; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
-</style>
 
-<div class="container">
-    <h2>Жанри</h2>
+@{
+    ViewData["Title"] = "Жанри";
+}
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert-error">@TempData["Error"]</div>
-    }
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-    <a class="btn-create" asp-controller="Genres" asp-action="Create">Додати жанр</a>
+        <h1 class="section-title text-center mb-4">ЖАНРИ</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Назва</th>
-                <th>Дії</th>
-            </tr>
-        </thead>
-        <tbody>
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success mb-3">@ok</div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger mb-3">@err</div>
+        }
+
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-lg-end">
+                <a asp-controller="Genres" asp-action="Create" class="btn btn-maroon">
+                    <i class="fa-solid fa-plus me-1"></i>
+                    ДОДАТИ НОВИЙ ЖАНР
+                </a>
+            </div>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="card shadow-sm col-lg-8 mx-auto">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        Немає результатів
+                    </h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="mb-0">Жанри не знайдено.</p>
+                </div>
+            </div>
+        }
+        else
+        {
             @foreach (var g in Model)
             {
-                <tr>
-                    <td>@g.Name</td>
-                    <td class="actions">
-                        <a class="btn-details" asp-controller="Genres" asp-action="Details" asp-route-id="@g.Id">Деталі</a>
-                        <a class="btn-edit" asp-controller="Genres" asp-action="Edit" asp-route-id="@g.Id">Редагувати</a>
-                        <a class="btn-delete" asp-controller="Genres" asp-action="Delete" asp-route-id="@g.Id">Видалити</a>
-                    </td>
-                </tr>
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center g-4">
+
+                            <div class="col-12 col-md-8 col-lg-9">
+                                <div class="mb-2">
+                                    <div class="text-muted small">
+                                        <i class="fa-solid fa-tags me-1"></i>
+                                        Назва жанру
+                                    </div>
+                                    <div class="fw-semibold fs-4">@g.Name</div>
+                                </div>
+
+                                <a asp-controller="Genres"
+                                   asp-action="Details"
+                                   asp-route-id="@g.Id"
+                                   class="btn btn-maroon">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    ДЕТАЛІ
+                                </a>
+
+                                <a asp-controller="Genres"
+                                   asp-action="Edit"
+                                   asp-route-id="@g.Id"
+                                   class="btn btn-secondary">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i>
+                                    РЕДАГУВАТИ
+                                </a>
+
+                                <a asp-controller="Genres"
+                                   asp-action="Delete"
+                                   asp-route-id="@g.Id"
+                                   class="btn btn-maroon">
+                                    <i class="fa-solid fa-trash me-1"></i>
+                                    ВИДАЛИТИ
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
-</div>
+        }
+
+    </div>
+</section>

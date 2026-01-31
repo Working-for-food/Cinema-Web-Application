@@ -1,37 +1,65 @@
 ﻿@model Web.ViewModels.Admin.Genres.GenreEditVm
 
-<style>
-    .container { max-width: 720px; margin: 30px auto; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
-    .field { margin-top: 12px; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; }
-    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #bbb; border-radius: 8px; }
-    .actions { margin-top: 14px; display: flex; gap: 10px; }
-    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; border: 0; cursor: pointer; }
-    .btn-primary { background: #4f46e5; color: #fff; }
-    .btn-secondary { background: #e5e7eb; color: #111; }
-    .text-danger { color: #b91c1c; margin-top: 6px; display: block; }
-</style>
+@{
+    ViewData["Title"] = "Створення жанру";
+}
 
-<div class="container">
-    <h2>Додати жанр</h2>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-    <form asp-controller="Genres" asp-action="Create" method="post" class="card">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <h1 class="section-title">Створити жанр</h1>
 
-        <div class="field">
-            <label asp-for="Name">Назва</label>
-            <input asp-for="Name" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+        <div class="card shadow-sm col-lg-6 mx-auto">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Створення жанру
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+                <form asp-area="Admin"
+                      asp-controller="Genres"
+                      asp-action="Create"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Name" class="form-label text-muted">
+                            <i class="fa-solid fa-tags me-1"></i>
+                            Назва жанру
+                        </label>
+                        <input asp-for="Name"
+                               class="form-control"
+                               placeholder="Введіть назву жанру" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a asp-area="Admin"
+                           asp-controller="Genres"
+                           asp-action="Index"
+                           class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            Назад
+                        </a>
+
+                        <button type="submit" class="btn btn-maroon">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>
+                            Створити жанр
+                        </button>
+                    </div>
+
+                </form>
+            </div>
         </div>
 
-        <div class="actions">
-            <button type="submit" class="btn btn-primary">Зберегти</button>
-            <a class="btn btn-secondary" asp-controller="Genres" asp-action="Index">Назад</a>
-        </div>
-    </form>
-</div>
+    </div>
+</section>
 
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <partial name="_ValidationScriptsPartial" />
 }
