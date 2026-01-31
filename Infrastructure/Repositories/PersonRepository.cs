@@ -70,5 +70,27 @@ public class PersonRepository : IPersonRepository
         var usedAsDirector = await _db.MovieDirectors.AsNoTracking().AnyAsync(x => x.DirectorId == personId, ct);
         return usedAsDirector;
     }
+    public async Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default)
+    {
+        var mainDirectorIds = _db.Movies
+            .AsNoTracking()
+            .Where(m => m.DirectorId != null)
+            .Select(m => m.DirectorId!.Value);
+
+        var extraDirectorIds = _db.MovieDirectors
+            .AsNoTracking()
+            .Select(md => md.DirectorId);
+
+        var directorIds = mainDirectorIds
+            .Union(extraDirectorIds)
+            .Distinct();
+
+        return await _db.People
+            .AsNoTracking()
+            .Where(p => directorIds.Contains(p.Id))
+            .OrderBy(p => p.FullName)
+            .ToListAsync(ct);
+    }
+
 
 }

@@ -42,37 +42,42 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         // People
         modelBuilder.Entity<Person>(e =>
         {
-            e.Property(x => x.FirstName)
-                .IsRequired()
-                .HasMaxLength(60);
+            e.Property(x => x.FirstName).HasMaxLength(60);
             e.Property(x => x.MiddleName).HasMaxLength(60);
-            e.Property(x => x.LastName)
+            e.Property(x => x.LastName).HasMaxLength(60);
+            e.Property(x => x.FullName)
                 .IsRequired()
-                .HasMaxLength(60);
+                .HasMaxLength(180);
             e.Property(x => x.CountryCode).HasMaxLength(2).IsFixedLength();
             e.Property(x => x.PhotoUrl).HasMaxLength(700);
+            e.Property(p => p.Bio)
+                .HasMaxLength(4000);
             e.HasOne(x => x.Country)
                 .WithMany(c => c.People)
                 .HasForeignKey(x => x.CountryCode)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(p => p.TmdbId)
+                .IsUnique()
+                .HasFilter("[TmdbId] IS NOT NULL");
         });
 
         // Movies
         modelBuilder.Entity<Movie>(e =>
         {
+            e.HasIndex(x => x.TmdbId).IsUnique().HasFilter("[TmdbId] IS NOT NULL");
             e.Property(x => x.Title).IsRequired();
             e.Property(x => x.Rating).HasPrecision(4, 1);
             e.Property(x => x.Description).HasMaxLength(4000);
-            e.Property(x => x.ProductionCountryCode).HasMaxLength(2).IsFixedLength();
             e.Property(x => x.TrailerUrl).HasMaxLength(700);
-            e.Property(x => x.Language).HasMaxLength(50);
             e.Property(x => x.PosterPath).HasMaxLength(200);
+            e.Property(x => x.BackdropPath).HasMaxLength(200);
+            e.Property(x => x.Language).HasMaxLength(50);
+            e.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
             e.Property(x => x.AgeRating).HasColumnType("smallint");
-
             e.HasOne(x => x.Director)
-                .WithMany(p => p.DirectedMoviesMain)
-                .HasForeignKey(x => x.DirectorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                 .WithMany(p => p.DirectedMoviesMain)
+                 .HasForeignKey(x => x.DirectorId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(x => x.ProductionCountry)
                 .WithMany(c => c.ProducedMovies)
@@ -83,8 +88,9 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
         // Genres
         modelBuilder.Entity<Genre>(e =>
         {
-            e.Property(x => x.Name).IsRequired();
+            e.Property(x => x.Name).IsRequired().HasMaxLength(120);
             e.HasIndex(x => x.Name).IsUnique();
+            e.HasIndex(x => x.TmdbId).IsUnique().HasFilter("[TmdbId] IS NOT NULL"); ;
         });
 
         // Cinemas
@@ -206,8 +212,6 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(p => p.MovieActors)
                 .HasForeignKey(x => x.ActorId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            e.HasIndex(x => new { x.MovieId, x.ActorId }).IsUnique();
             e.HasIndex(x => new { x.MovieId, x.CustOrder }).IsUnique();
         });
 
@@ -225,8 +229,6 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(p => p.MovieDirectors)
                 .HasForeignKey(x => x.DirectorId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            e.HasIndex(x => new { x.MovieId, x.DirectorId }).IsUnique();
             e.HasIndex(x => new { x.MovieId, x.BillingOrder }).IsUnique();
         });
 
@@ -264,8 +266,6 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(g => g.MovieGenres)
                 .HasForeignKey(x => x.GenreId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            e.HasIndex(x => new { x.MovieId, x.GenreId }).IsUnique();
             e.HasIndex(x => x.MovieId);
             e.HasIndex(x => x.GenreId);
         });
