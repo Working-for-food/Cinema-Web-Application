@@ -22,12 +22,15 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
-        public async Task<(List<Session> Items, int TotalCount)> GetAllPagedAsync(
+        public async Task<(IReadOnlyList<Session> Items, int TotalCount)> GetAllPagedAsync(
             DateTime? from,
             DateTime? toExclusive,
+            int? cinemaId,
             int? hallId,
             int? movieId,
             bool includeCancelled,
+            bool includeFinished,
+            DateTime asOf,
             string? sort,
             int page,
             int pageSize,
@@ -36,39 +39,42 @@ namespace Infrastructure.Repositories
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 20;
 
-            IQueryable<Session> query = _context.Sessions
+            IQueryable<Session> q = _context.Sessions
                 .AsNoTracking()
-                .Include(s => s.Movie)
-                .Include(s => s.Hall)
-                    .ThenInclude(h => h.Cinema);
+                .Include(x => x.Movie)
+                .Include(x => x.Hall).ThenInclude(h => h.Cinema);
 
             if (!includeCancelled)
-                query = query.Where(x => !x.IsCancelled);
+                q = q.Where(x => !x.IsCancelled);
 
             if (from.HasValue)
-                query = query.Where(x => x.StartTime >= from.Value);
+                q = q.Where(x => x.StartTime >= from.Value);
 
             if (toExclusive.HasValue)
-                query = query.Where(x => x.StartTime < toExclusive.Value);
+                q = q.Where(x => x.StartTime < toExclusive.Value);
+
+            if (cinemaId.HasValue)
+                q = q.Where(x => x.Hall.CinemaId == cinemaId.Value);
 
             if (hallId.HasValue)
-                query = query.Where(x => x.HallId == hallId.Value);
+                q = q.Where(x => x.HallId == hallId.Value);
 
             if (movieId.HasValue)
-                query = query.Where(x => x.MovieId == movieId.Value);
+                q = q.Where(x => x.MovieId == movieId.Value);
 
-            var totalCount = await query.CountAsync(ct);
+            if (!includeFinished)
+                q = q.Where(x => x.IsCancelled || x.EndTime > asOf);
 
-            query = ApplySort(query, sort);
+            q = ApplySort(q, sort);
 
-            var skip = (page - 1) * pageSize;
+            var total = await q.CountAsync(ct);
 
-            var items = await query
-                .Skip(skip)
+            var items = await q
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(ct);
 
-            return (items, totalCount);
+            return (items, total);
         }
 
         private static IQueryable<Session> ApplySort(IQueryable<Session> query, string? sort)

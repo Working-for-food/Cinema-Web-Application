@@ -11,12 +11,15 @@ namespace Infrastructure.Interfaces
     {
         Task<Session?> GetByIdAsync(int id, CancellationToken ct);
 
-        Task<(List<Session> Items, int TotalCount)> GetAllPagedAsync(
+        Task<(IReadOnlyList<Session> Items, int TotalCount)> GetAllPagedAsync(
             DateTime? from,
             DateTime? toExclusive,
+            int? cinemaId,
             int? hallId,
             int? movieId,
             bool includeCancelled,
+            bool includeFinished,
+            DateTime asOf,
             string? sort,
             int page,
             int pageSize,

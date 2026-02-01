@@ -14,9 +14,11 @@ namespace Application.Interfaces
         Task<PagedResult<SessionListDto>> GetAllPagedAsync(
             DateTime? from,
             DateTime? to,
+            int? cinemaId,
             int? hallId,
             int? movieId,
             bool includeCancelled,
+            bool includeFinished,
             string? sort,
             int page,
             CancellationToken ct);

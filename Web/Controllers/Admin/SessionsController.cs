@@ -90,8 +90,22 @@ namespace Web.Controllers.Admin
 
         private async Task FillIndexLookupsAsync(SessionsIndexVm vm, CancellationToken ct)
         {
-            var halls = await _lookups.GetHallsAsync(ct);
-            vm.Halls = ToSelectList(halls, vm.HallId);
+            var cinemas = await _lookups.GetCinemasAsync(ct);
+            vm.Cinemas = ToSelectList(cinemas, vm.CinemaId);
+
+            if (!vm.CinemaId.HasValue)
+            {
+                vm.HallId = null;
+                vm.Halls = new List<SelectListItem>();
+            }
+            else
+            {
+                var halls = await _lookups.GetHallsByCinemaAsync(vm.CinemaId.Value, ct);
+                vm.Halls = ToSelectList(halls, vm.HallId);
+
+                if (vm.HallId.HasValue && !vm.Halls.Any(h => h.Value == vm.HallId.Value.ToString()))
+                    vm.HallId = null;
+            }
 
             var movies = await _lookups.GetMoviesAsync(vm.MovieTitle, ct);
             vm.Movies = ToSelectList(movies, vm.MovieId);
@@ -105,12 +119,16 @@ namespace Web.Controllers.Admin
         {
             if (vm.Page < 1) vm.Page = 1;
 
+            await FillIndexLookupsAsync(vm, ct);
+
             var paged = await _sessions.GetAllPagedAsync(
                 vm.From,
                 vm.To,
+                vm.CinemaId,
                 vm.HallId,
                 vm.MovieId,
                 vm.IncludeCancelled,
+                vm.IncludeFinished,
                 vm.Sort,
                 vm.Page,
                 ct);
@@ -119,7 +137,6 @@ namespace Web.Controllers.Admin
             vm.TotalCount = paged.TotalCount;
             vm.TotalPages = paged.TotalPages;
 
-            await FillIndexLookupsAsync(vm, ct);
             return View(IndexViewPath, vm);
         }
 

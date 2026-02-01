@@ -12,6 +12,7 @@ namespace Application.DTOs
         public string CinemaName { get; set; } = "";
         public string HallName { get; set; } = "";
 
+        public string? PosterPath { get; set; }
 
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

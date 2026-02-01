@@ -28,6 +28,30 @@ public class SessionLookupService : ISessionLookupService
         return list.Select(h => new LookupItemDto(h.Id, $"{h.Cinema.Name} — {h.Name}")).ToList();
     }
 
+    public async Task<List<LookupItemDto>> GetCinemasAsync(CancellationToken ct)
+    {
+        var halls = await _halls.GetAllWithCinemaAsync();
+
+        return halls
+            .Where(h => h.Cinema != null)
+            .GroupBy(h => h.Cinema.Id)
+            .Select(g => g.First().Cinema)
+            .OrderBy(c => c!.Name)
+            .Select(c => new LookupItemDto(c!.Id, c!.Name))
+            .ToList();
+    }
+
+    public async Task<List<LookupItemDto>> GetHallsByCinemaAsync(int cinemaId, CancellationToken ct)
+    {
+        var halls = await _halls.GetAllWithCinemaAsync();
+
+        return halls
+            .Where(h => h.CinemaId == cinemaId)
+            .OrderBy(h => h.Name)
+            .Select(h => new LookupItemDto(h.Id, h.Name))
+            .ToList();
+    }
+
     public async Task<string?> GetMovieTitleByIdAsync(int movieId, CancellationToken ct)
     {
         return await _movies.GetTitleByIdAsync(movieId, ct);

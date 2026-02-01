@@ -6,13 +6,19 @@
     string FormatDate(DateTime? dt) => dt?.ToString("yyyy-MM-dd") ?? "";
 
     var now = DateTime.Now;
-
     var today = DateTime.Today;
 
     var weekStart = today.AddDays(-((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1));
     var weekEnd = weekStart.AddDays(6);
 
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+
+    string PosterUrl(string? posterPath)
+    {
+        if (string.IsNullOrWhiteSpace(posterPath)) return "";
+        if (posterPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return posterPath;
+        return $"https://image.tmdb.org/t/p/w92{posterPath}";
+    }
 
     IDictionary<string, string> RouteWithDates(DateTime from, DateTime to)
     {
@@ -21,8 +27,12 @@
             ["From"] = from.ToString("yyyy-MM-dd"),
             ["To"] = to.ToString("yyyy-MM-dd"),
             ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant(),
+            ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant(),
             ["Page"] = "1"
         };
+
+        if (Model.CinemaId.HasValue)
+            dict["CinemaId"] = Model.CinemaId.Value.ToString();
 
         if (Model.HallId.HasValue)
             dict["HallId"] = Model.HallId.Value.ToString();
@@ -44,7 +54,8 @@
         var dict = new Dictionary<string, string>
         {
             ["Page"] = page.ToString(),
-            ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant()
+            ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant(),
+            ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant()
         };
 
         if (Model.From.HasValue)
@@ -52,6 +63,9 @@
 
         if (Model.To.HasValue)
             dict["To"] = Model.To.Value.ToString("yyyy-MM-dd");
+
+        if (Model.CinemaId.HasValue)
+            dict["CinemaId"] = Model.CinemaId.Value.ToString();
 
         if (Model.HallId.HasValue)
             dict["HallId"] = Model.HallId.Value.ToString();
@@ -69,7 +83,10 @@
     }
 }
 
-<h1>Сеанси</h1>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h1 class="mb-0">Сеанси</h1>
+    <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
+</div>
 
 @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
 {
@@ -80,85 +97,137 @@
     <div class="alert alert-danger">@err</div>
 }
 
-<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-    <a class="btn btn-primary" asp-action="Create">Створити новий сеанс</a>
-
-    <div class="btn-group" role="group" aria-label="Швидкі фільтри за датою">
-        <a class="btn btn-outline-secondary"
-           asp-action="Index"
-           asp-all-route-data="RouteWithDates(today, today)">
-            Сьогодні
-        </a>
-
-        <a class="btn btn-outline-secondary"
-           asp-action="Index"
-           asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">
-            Завтра
-        </a>
-
-        <a class="btn btn-outline-secondary"
-           asp-action="Index"
-           asp-all-route-data="RouteWithDates(weekStart, weekEnd)">
-            Цей тиждень
-        </a>
-    </div>
-</div>
-
-<form method="get" class="row g-2 mb-3">
+<form method="get" class="mb-3" id="filtersForm">
     <input type="hidden" name="Page" value="1" />
 
-    <div class="col-md-2">
-        <label class="form-label">З</label>
-        <input class="form-control" type="date" asp-for="From" value="@FormatDate(Model.From)" />
-    </div>
+    @{
+        var isHallDisabled = !Model.CinemaId.HasValue;
+        var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Спершу оберіть кінотеатр —";
+    }
 
-    <div class="col-md-2">
-        <label class="form-label">До</label>
-        <input class="form-control" type="date" asp-for="To" value="@FormatDate(Model.To)" />
-    </div>
+    <div class="card shadow-sm">
+        <div class="card-body py-2">
 
-    <div class="col-md-3">
-        <label class="form-label">Зал</label>
-        <select class="form-select" asp-for="HallId" asp-items="Model.Halls">
-            <option value="">— Усі —</option>
-        </select>
-    </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="fw-semibold">Фільтри</div>
+                <div class="text-muted small">Кінотеатр → оновлює зали</div>
+            </div>
 
-    <div class="col-md-3">
-        <label class="form-label">Фільм</label>
+            <div class="row g-2">
 
-        <input class="form-control"
-               list="movieList"
-               id="movieTitleInput"
-               asp-for="MovieTitle"
-               placeholder="Почніть вводити назву..." />
+                @* Ряд 1: кінотеатр + зал *@
+                <div class="col-lg-6">
+                    <label class="form-label fw-semibold text-uppercase small mb-1">Кінотеатр</label>
+                    <select class="form-select form-select-sm" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
+                        <option value="">— Усі —</option>
+                    </select>
+                </div>
 
-        <datalist id="movieList">
-            @foreach (var m in Model.Movies)
-            {
-                <option value="@m.Text" data-id="@m.Value"></option>
-            }
-        </datalist>
+                <div class="col-lg-6">
+                    <label class="form-label fw-semibold text-uppercase small mb-1">Зал</label>
+                    <select class="form-select form-select-sm"
+                            asp-for="HallId"
+                            asp-items="Model.Halls"
+                            id="hallSelect"
+                            disabled="@isHallDisabled"
+                            aria-disabled="@isHallDisabled">
+                        <option value="">@hallPlaceholder</option>
+                    </select>
+                </div>
 
-        <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-        <div class="form-text">Показано до 50 підказок.</div>
-    </div>
+                @* Ряд 2: фільм + сортування *@
+                <div class="col-lg-8">
+                    <label class="form-label fw-semibold text-uppercase small mb-1">Фільм</label>
 
-    <div class="col-md-2">
-        <label class="form-label">Сортування</label>
-        <select class="form-select" asp-for="Sort" asp-items="Model.SortOptions"></select>
-    </div>
+                    <input class="form-control form-control-sm"
+                           list="movieList"
+                           id="movieTitleInput"
+                           asp-for="MovieTitle"
+                           placeholder="Почніть вводити назву..." />
 
-    <div class="col-md-2 d-flex align-items-end">
-        <div class="form-check">
-            <input class="form-check-input" asp-for="IncludeCancelled" />
-            <label class="form-check-label" asp-for="IncludeCancelled">Показувати скасовані</label>
+                    <datalist id="movieList">
+                        @foreach (var m in Model.Movies)
+                        {
+                            <option value="@m.Text" data-id="@m.Value"></option>
+                        }
+                    </datalist>
+
+                    <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label fw-semibold text-uppercase small mb-1">Сортування</label>
+                    <select class="form-select form-select-sm" asp-for="Sort" asp-items="Model.SortOptions"></select>
+                </div>
+
+                @* Ряд 3: дати + швидкі кнопки*@
+                <div class="col-12">
+                    <div class="p-2 rounded border bg-light">
+                        <div class="row g-2 align-items-end">
+
+                            <div class="col-lg-3">
+                                <label class="form-label fw-semibold text-uppercase small mb-1">З</label>
+                                <input class="form-control form-control-sm" type="date" asp-for="From" value="@FormatDate(Model.From)" />
+                            </div>
+
+                            <div class="col-lg-3">
+                                <label class="form-label fw-semibold text-uppercase small mb-1">До</label>
+                                <input class="form-control form-control-sm" type="date" asp-for="To" value="@FormatDate(Model.To)" />
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="fw-semibold text-uppercase small mb-1">Швидко</div>
+                                <div class="btn-group w-100" role="group" aria-label="Швидкі фільтри за датою">
+                                    <a class="btn btn-outline-secondary btn-sm"
+                                       asp-action="Index"
+                                       asp-all-route-data="RouteWithDates(today, today)">
+                                        Сьогодні
+                                    </a>
+
+                                    <a class="btn btn-outline-secondary btn-sm"
+                                       asp-action="Index"
+                                       asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">
+                                        Завтра
+                                    </a>
+
+                                    <a class="btn btn-outline-secondary btn-sm"
+                                       asp-action="Index"
+                                       asp-all-route-data="RouteWithDates(weekStart, weekEnd)">
+                                        Цей тиждень
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                @* Ряд 4: прапорці + кнопки *@
+                <div class="col-12">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2">
+
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="IncludeCancelled" />
+                                <label class="form-check-label" asp-for="IncludeCancelled">Скасовані</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="IncludeFinished" />
+                                <label class="form-check-label" asp-for="IncludeFinished">Завершені</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-secondary btn-sm" type="submit">Застосувати</button>
+                            <a class="btn btn-outline-secondary btn-sm" asp-action="Index">Очистити</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
-    </div>
-
-    <div class="col-md-2 d-flex align-items-end gap-2">
-        <button class="btn btn-secondary w-100" type="submit">Застосувати</button>
-        <a class="btn btn-outline-secondary w-100" asp-action="Index">Очистити</a>
     </div>
 </form>
 
@@ -172,12 +241,12 @@
 <table class="table table-striped align-middle">
     <thead>
         <tr>
-            <th>ID</th>
+            <th style="width:72px;">Постер</th>
             <th>Фільм</th>
             <th>Зал</th>
             <th>Початок</th>
             <th>Кінець</th>
-            <th>Тип показу</th>
+            <th>Тип</th>
             <th>Статус</th>
             <th></th>
         </tr>
@@ -196,8 +265,22 @@
                 var isOver = s.EndTime <= now;
                 var isFinished = !s.IsCancelled && isOver;
 
+                var posterUrl = PosterUrl(s.PosterPath);
+
                 <tr>
-                    <td>@s.Id</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(posterUrl))
+                        {
+                            <img src="@posterUrl"
+                                 alt="Poster"
+                                 style="width:56px;height:auto;border-radius:6px;object-fit:cover;"
+                                 loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="text-muted small">—</div>
+                        }
+                    </td>
 
                     <td>@(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)</td>
 
@@ -262,7 +345,7 @@
                         {
                             if (isOver)
                             {
-                                <span title="Не можна скасувати завершений сеанс ">
+                                <span title="Не можна скасувати завершений сеанс">
                                     <button class="btn btn-sm btn-outline-danger" type="button" disabled>
                                         Скасувати
                                     </button>
@@ -352,6 +435,17 @@
 @section Scripts {
     <script>
         (function () {
+          const form = document.getElementById('filtersForm');
+          const cinema = document.getElementById('cinemaSelect');
+          const hall = document.getElementById('hallSelect');
+
+          if (cinema && form) {
+            cinema.addEventListener('change', () => {
+              if (hall) hall.value = '';
+              form.submit();
+            });
+          }
+
           const input = document.getElementById('movieTitleInput');
           const hidden = document.getElementById('movieIdHidden');
           const list = document.getElementById('movieList');
@@ -367,13 +461,13 @@
             syncHidden();
           }
 
-          document.querySelectorAll('form.js-cancel-form').forEach(form => {
-            form.addEventListener('submit', (e) => {
-              if (form.querySelector('button[disabled]')) return;
+          document.querySelectorAll('form.js-cancel-form').forEach(formEl => {
+            formEl.addEventListener('submit', (e) => {
+              if (formEl.querySelector('button[disabled]')) return;
 
-              const id = form.dataset.sessionId || '';
-              const movie = (form.dataset.movie || '').trim();
-              const start = (form.dataset.start || '').trim();
+              const id = formEl.dataset.sessionId || '';
+              const movie = (formEl.dataset.movie || '').trim();
+              const start = (formEl.dataset.start || '').trim();
 
               const msg =
                 `Скасувати сеанс №${id}` +

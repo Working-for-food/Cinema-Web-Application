@@ -52,26 +52,33 @@ public class SessionService : ISessionService
     }
 
     public async Task<PagedResult<SessionListDto>> GetAllPagedAsync(
-        DateTime? from,
-        DateTime? to,
-        int? hallId,
-        int? movieId,
-        bool includeCancelled,
-        string? sort,
-        int page,
-        CancellationToken ct)
+    DateTime? from,
+    DateTime? to,
+    int? cinemaId,
+    int? hallId,
+    int? movieId,
+    bool includeCancelled,
+    bool includeFinished,
+    string? sort,
+    int page,
+    CancellationToken ct)
     {
         if (page < 1) page = 1;
 
         var fromNorm = from?.Date;
         var toExclusive = to?.Date.AddDays(1);
 
+        var asOf = DateTime.Now;
+
         var (items, totalCount) = await _repo.GetAllPagedAsync(
             fromNorm,
             toExclusive,
+            cinemaId,
             hallId,
             movieId,
             includeCancelled,
+            includeFinished,
+            asOf,
             sort,
             page,
             PageSize,
@@ -84,6 +91,7 @@ public class SessionService : ISessionService
             HallId = s.HallId,
 
             MovieTitle = s.Movie?.Title,
+            PosterPath = s.Movie?.PosterPath,
             HallName = s.Hall?.Name,
             CinemaName = s.Hall?.Cinema?.Name,
 
