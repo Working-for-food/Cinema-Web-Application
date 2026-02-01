@@ -23,9 +23,11 @@ public class SessionService : ISessionService
             MovieId = s.MovieId,
             MovieTitle = s.Movie?.Title ?? "",
 
-            HallId = s.HallId,
-            CinemaName = s.Hall?.Cinema?.Name ?? "",
             HallName = s.Hall?.Name ?? "",
+            HallId = s.HallId,
+
+            CinemaName = s.Hall?.Cinema?.Name ?? "",
+            CinemaId = s.Hall?.CinemaId ?? 0,
 
             StartTime = s.StartTime,
             EndTime = s.EndTime,

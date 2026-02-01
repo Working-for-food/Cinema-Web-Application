@@ -15,11 +15,18 @@ public class SessionLookupService : ISessionLookupService
         _movies = movies;
         _halls = halls;
     }
-
     public async Task<List<LookupItemDto>> GetMoviesAsync(string? query, CancellationToken ct)
     {
         var list = await _movies.SearchAsync(query, take: 50, ct);
-        return list.Select(m => new LookupItemDto(m.Id, m.Title, m.Duration)).ToList();
+
+        return list
+            .Select(m => new LookupItemDto(
+                m.Id,
+                m.Title,
+                m.Duration,
+                m.PosterPath
+            ))
+            .ToList();
     }
 
     public async Task<List<LookupItemDto>> GetHallsAsync(CancellationToken ct)

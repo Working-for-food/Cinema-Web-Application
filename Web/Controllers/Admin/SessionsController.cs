@@ -42,13 +42,33 @@ namespace Web.Controllers.Admin
             _lookups = lookups;
         }
 
-        private static SessionEditDto ToDto(SessionEditVm vm) => new()
+        private static SessionEditDto ToDto(SessionEditVm vm)
         {
-            MovieId = vm.MovieId,
-            HallId = vm.HallId,
-            StartTime = vm.StartTime,
-            EndTime = vm.EndTime,
-            PresentationType = vm.PresentationType
+            if (vm.StartTime is null || vm.EndTime is null)
+                throw new InvalidOperationException("Некоректно задані дата/час сеансу.");
+
+            return new SessionEditDto
+            {
+                MovieId = vm.MovieId,
+                HallId = vm.HallId,
+                StartTime = vm.StartTime.Value,
+                EndTime = vm.EndTime.Value,
+                PresentationType = vm.PresentationType
+            };
+        }
+
+        private static SessionEditVm ToEditVm(SessionDetailsDto s) => new()
+        {
+            Id = s.Id,
+
+            CinemaId = s.CinemaId,
+            HallId = s.HallId,
+            MovieId = s.MovieId,
+
+            StartTime = s.StartTime,
+            EndTime = s.EndTime,
+
+            PresentationType = s.PresentationType
         };
 
         private static List<SelectListItem> ToSelectList(IEnumerable<LookupItemDto> items, int? selectedId = null)
@@ -75,8 +95,22 @@ namespace Web.Controllers.Admin
 
         private async Task FillEditLookupsAsync(SessionEditVm vm, CancellationToken ct)
         {
-            var halls = await _lookups.GetHallsAsync(ct);
-            vm.Halls = ToSelectList(halls, vm.HallId == 0 ? null : vm.HallId);
+            var cinemas = await _lookups.GetCinemasAsync(ct);
+            vm.Cinemas = ToSelectList(cinemas, vm.CinemaId == 0 ? null : vm.CinemaId);
+
+            if (vm.CinemaId > 0)
+            {
+                var halls = await _lookups.GetHallsByCinemaAsync(vm.CinemaId, ct);
+                vm.Halls = ToSelectList(halls, vm.HallId == 0 ? null : vm.HallId);
+
+                if (vm.HallId > 0 && !vm.Halls.Any(h => h.Value == vm.HallId.ToString()))
+                    vm.HallId = 0;
+            }
+            else
+            {
+                vm.HallId = 0;
+                vm.Halls = new List<SelectListItem>();
+            }
 
             var movies = await _lookups.GetMoviesAsync(query: null, ct);
             vm.Movies = ToSelectList(movies, vm.MovieId == 0 ? null : vm.MovieId);
@@ -84,6 +118,10 @@ namespace Web.Controllers.Admin
             ViewBag.MovieDurations = movies
                 .Where(x => x.DurationMinutes.HasValue && x.DurationMinutes.Value > 0)
                 .ToDictionary(x => x.Id, x => x.DurationMinutes!.Value);
+
+            ViewBag.MoviePosters = movies
+                .Where(x => !string.IsNullOrWhiteSpace(x.PosterPath))
+                .ToDictionary(x => x.Id, x => x.PosterPath!);
 
             vm.PresentationTypes = BuildPresentationTypes(vm.PresentationType);
         }
@@ -111,6 +149,18 @@ namespace Web.Controllers.Admin
             vm.Movies = ToSelectList(movies, vm.MovieId);
 
             vm.SortOptions = BuildSortOptions(vm.Sort);
+        }
+
+        // GET: /Admin/Sessions/HallsByCinema?cinemaId=1
+        [HttpGet]
+        public async Task<IActionResult> HallsByCinema(int cinemaId, CancellationToken ct)
+        {
+            if (cinemaId < 1)
+                return Ok(Array.Empty<object>());
+
+            var halls = await _lookups.GetHallsByCinemaAsync(cinemaId, ct);
+
+            return Ok(halls.Select(h => new { id = h.Id, title = h.Title }));
         }
 
         // GET: /Admin/Sessions/Index
@@ -220,15 +270,7 @@ namespace Web.Controllers.Admin
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
 
-            var vm = new SessionEditVm
-            {
-                Id = s.Id,
-                MovieId = s.MovieId,
-                HallId = s.HallId,
-                StartTime = s.StartTime,
-                EndTime = s.EndTime,
-                PresentationType = s.PresentationType
-            };
+            var vm = ToEditVm(s);
 
             await FillEditLookupsAsync(vm, ct);
             ViewBag.MovieTitle = s.MovieTitle;

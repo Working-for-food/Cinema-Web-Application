@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.DTOs;
-
-public record LookupItemDto(int Id, string Title, int? DurationMinutes = 0);
-
-
+public record LookupItemDto(
+    int Id,
+    string Title,
+    int? DurationMinutes = null,
+    string? PosterPath = null
+);
