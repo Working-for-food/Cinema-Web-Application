@@ -18,29 +18,71 @@
             <div class="alert alert-danger mb-3">@err</div>
         }
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Movies</h2>
-        <div class="d-flex gap-2">
-            <a asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Add a movie
-            </a>
-            <a asp-action="AddFromTmdb" class="btn btn-outline-primary">
-                <i class="bi bi-cloud-download"></i> Import a movie
-            </a>
-        </div>
-    </div>
-
-                </form>
+        <!-- Actions -->
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-lg-end gap-2">
+                <a asp-action="AddFromTmdb" class="btn btn-outline-maroon">
+                    <i class="fa-solid fa-cloud-arrow-down me-1"></i>
+                    ІМПОРТУВАТИ (TMDB)
+                </a>
+                <a asp-action="Create" class="btn btn-maroon">
+                    <i class="fa-solid fa-plus me-1"></i>
+                    ДОДАТИ НОВИЙ ФІЛЬМ
+                </a>
             </div>
         </div>
 
-        <!-- Create -->
-        <div class="col-12 mb-3">
-            <div class="d-flex justify-content-lg-end">
-                <a asp-action="Create" class="btn btn-maroon">
-                    <i class="fa-solid fa-plus me-1"></i>
-                    ДОДАТИ ФІЛЬМ
-                </a>
+        <!-- Filters -->
+        <div class="card shadow-sm col-12 mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-filter me-2"></i>
+                    Фільтри
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="get" asp-action="Index" class="row g-3 align-items-end">
+
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>
+                            Пошук
+                        </label>
+                        <input name="search"
+                               value="@Model.SearchTerm"
+                               class="form-control"
+                               placeholder="Пошук за назвою..." />
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-arrow-down-a-z me-1"></i>
+                            Сортування
+                        </label>
+
+                        <select name="sortBy" class="form-select">
+                            <option value="">За замовчуванням</option>
+                            <option value="title" selected="@(Model.SortBy == "title")">Назва (А-Я)</option>
+                            <option value="title_desc" selected="@(Model.SortBy == "title_desc")">Назва (Я-А)</option>
+                            <option value="date_asc" selected="@(Model.SortBy == "date_asc")">Дата релізу (↑)</option>
+                            <option value="date_desc" selected="@(Model.SortBy == "date_desc")">Дата релізу (↓)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <div class="d-flex gap-2 justify-content-lg-end">
+                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">
+                                ЗАСТОСУВАТИ
+                            </button>
+
+                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">
+                                СКИНУТИ
+                            </a>
+                        </div>
+                    </div>
+
+                </form>
             </div>
         </div>
 
