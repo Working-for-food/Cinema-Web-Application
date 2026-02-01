@@ -29,6 +29,41 @@
                         </div>
 
                         <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="OriginalName" class="form-label">Original name</label>
+                                <input asp-for="OriginalName" class="form-control" />
+                                <span asp-validation-for="OriginalName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Language" class="form-label">Language (ISO)</label>
+                                <input asp-for="Language" class="form-control" placeholder="en" />
+                                <span asp-validation-for="Language" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TrailerUrl" class="form-label">Trailer URL</label>
+                            <input asp-for="TrailerUrl" type="url" class="form-control" placeholder="https://..." />
+                            <span asp-validation-for="TrailerUrl" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PosterPath" class="form-label">PosterPath</label>
+                                <input asp-for="PosterPath" class="form-control" />
+                                <span asp-validation-for="PosterPath" class="text-danger"></span>
+                                <div class="form-text">TMDB: /abc.jpg або повний URL.</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BackdropPath" class="form-label">BackdropPath</label>
+                                <input asp-for="BackdropPath" class="form-control" />
+                                <span asp-validation-for="BackdropPath" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="ReleaseDate" class="form-label">Release Date</label>
                                 <input asp-for="ReleaseDate" type="date" class="form-control" />

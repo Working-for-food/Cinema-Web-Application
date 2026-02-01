@@ -28,8 +28,23 @@ public class MovieEditVm : IValidatableObject
     [Range(1, 600, ErrorMessage = "Duration must be between 1 and 600 min")]
     public int? Duration { get; set; }
 
-    
-    
+    [StringLength(200, ErrorMessage = "PosterPath must be <= 200 characters.")]
+    public string? PosterPath { get; set; }
+
+    [StringLength(200, ErrorMessage = "BackdropPath must be <= 200 characters.")]
+    public string? BackdropPath { get; set; }
+
+    [StringLength(200, ErrorMessage = "Original name must be <= 200 characters.")]
+    public string? OriginalName { get; set; }
+
+    [StringLength(50, ErrorMessage = "Language must be <= 50 characters.")]
+    [RegularExpression(@"^$|^[A-Za-z]{2}$", ErrorMessage = "Language must be 2 letters (e.g. en).")]
+    public string? Language { get; set; }
+
+    [StringLength(700, ErrorMessage = "Trailer URL must be <= 700 characters.")]
+    [Url(ErrorMessage = "Trailer URL must be a valid URL (https://...)")]
+    public string? TrailerUrl { get; set; }
+
 
     [Display(Name = "Genres")]
     public List<int> SelectedGenreIds { get; set; } = new();

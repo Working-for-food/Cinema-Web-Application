@@ -80,6 +80,30 @@
                 <dt class="col-sm-3">Sessions</dt>
                 <dd class="col-sm-9">@(Model.Sessions?.Count ?? 0)</dd>
 
+                <dt class="col-sm-3">Original name</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.OriginalName) ? "-" : Model.OriginalName)</dd>
+
+                <dt class="col-sm-3">Language</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Language) ? "-" : Model.Language)</dd>
+
+                <dt class="col-sm-3">Trailer</dt>
+                <dd class="col-sm-9">
+                    @if (string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        <a href="@Model.TrailerUrl" target="_blank" rel="noopener">Open trailer</a>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">PosterPath</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.PosterPath) ? "-" : Model.PosterPath)</dd>
+
+                <dt class="col-sm-3">BackdropPath</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.BackdropPath) ? "-" : Model.BackdropPath)</dd>
+
                 <dt class="col-sm-3">Description</dt>
                 <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
             </dl>

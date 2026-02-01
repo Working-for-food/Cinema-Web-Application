@@ -23,7 +23,11 @@ namespace Application.DTOs
         public string? Description { get; set; }
         public DateOnly? ReleaseDate { get; set; }
         public int? Duration { get; set; }
-
+        public string? PosterPath { get; set; }
+        public string? BackdropPath { get; set; }
+        public string? OriginalName { get; set; }
+        public string? Language { get; set; }
+        public string? TrailerUrl { get; set; }
         public List<int> GenreIds { get; set; } = new();
         public List<int> ActorIds { get; set; } = new();
         public List<string> CountryCodes { get; set; } = new();

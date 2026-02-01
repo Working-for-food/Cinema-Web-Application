@@ -131,6 +131,11 @@ public class MovieRepository : IMovieRepository
         existing.Description = movie.Description;
         existing.ReleaseDate = movie.ReleaseDate;
         existing.Duration = movie.Duration;
+        existing.PosterPath = movie.PosterPath;
+        existing.BackdropPath = movie.BackdropPath;
+        existing.OriginalName = movie.OriginalName;
+        existing.Language = movie.Language;
+        existing.TrailerUrl = movie.TrailerUrl;
 
         // genres
         existing.MovieGenres.Clear();
