@@ -42,20 +42,11 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="ProductionCountryCode" class="form-label">Production country</label>
-                            <select asp-for="ProductionCountryCode" asp-items="Model.CountryList" class="form-select">
-                                <option value="">-- none --</option>
-                            </select>
-                            <span asp-validation-for="ProductionCountryCode" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="DirectorId" class="form-label">Director</label>
-                            <select asp-for="DirectorId" asp-items="Model.DirectorList" class="form-select">
-                                <option value="">-- none --</option>
-                            </select>
-                            <span asp-validation-for="DirectorId" class="text-danger"></span>
+                        <div class="mb-4">
+                            <label asp-for="SelectedDirectorIds" class="form-label">Directors</label>
+                            <select asp-for="SelectedDirectorIds" asp-items="Model.DirectorMultiList" class="form-control" multiple size="6"></select>
+                            <span asp-validation-for="SelectedDirectorIds" class="text-danger"></span>
+                            <div class="form-text">Ctrl/Command для множинного вибору.</div>
                         </div>
 
                         <div class="mb-4">

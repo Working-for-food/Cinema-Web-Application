@@ -67,11 +67,10 @@ public class MovieService : IMovieService
             Description = movie.Description,
             Duration = movie.Duration,
             ReleaseDate = movie.ReleaseDate,
-            ProductionCountryCode = movie.ProductionCountryCode,
-            DirectorId = movie.DirectorId,
             GenreIds = movie.MovieGenres.Select(mg => mg.GenreId).ToList(),
             ActorIds = movie.MovieActors.Select(ma => ma.ActorId).ToList(),
-            CountryCodes = movie.MovieCountries.Select(mc => mc.CountryCode).ToList()
+            CountryCodes = movie.MovieCountries.Select(mc => mc.CountryCode).ToList(),
+            DirectorIds = movie.MovieDirectors.Select(md => md.DirectorId).ToList()
         };
     }
 
@@ -85,12 +84,10 @@ public class MovieService : IMovieService
             Title = dto.Title.Trim(),
             Description = NormalizeNullable(dto.Description),
             ReleaseDate = dto.ReleaseDate,
-            Duration = dto.Duration,
-            ProductionCountryCode = NormalizeCountryCode(dto.ProductionCountryCode),
-            DirectorId = dto.DirectorId
+            Duration = dto.Duration
         };
 
-        await _movies.AddAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), ct);
+        await _movies.AddAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), DistinctIds(dto.DirectorIds), ct);
         return (true, null);
     }
 
@@ -107,12 +104,10 @@ public class MovieService : IMovieService
             Title = dto.Title.Trim(),
             Description = NormalizeNullable(dto.Description),
             ReleaseDate = dto.ReleaseDate,
-            Duration = dto.Duration,
-            ProductionCountryCode = NormalizeCountryCode(dto.ProductionCountryCode),
-            DirectorId = dto.DirectorId
+            Duration = dto.Duration
         };
 
-        await _movies.UpdateAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), ct);
+        await _movies.UpdateAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), DistinctIds(dto.DirectorIds), ct);
         return (true, null);
     }
 
@@ -149,7 +144,6 @@ public class MovieService : IMovieService
     {
         dto.Title = (dto.Title ?? "").Trim();
         dto.Description = NormalizeNullable(dto.Description);
-        dto.ProductionCountryCode = NormalizeCountryCode(dto.ProductionCountryCode);
 
         if (string.IsNullOrWhiteSpace(dto.Title))
             return "Title is required.";
@@ -183,25 +177,15 @@ public class MovieService : IMovieService
         if (genreIds.Any(id => !existingGenreIds.Contains(id)))
             return "Some selected genres do not exist.";
 
-        if (dto.ProductionCountryCode != null)
+
+        var directorIds = DistinctIds(dto.DirectorIds);
+        foreach (var directorId in directorIds)
         {
-            if (dto.ProductionCountryCode.Length != 2 || !dto.ProductionCountryCode.All(char.IsLetter))
-                return "Production country code must be 2 letters (e.g. UA).";
-
-            var c = await _countries.GetByCodeAsync(dto.ProductionCountryCode, ct);
-            if (c == null)
-                return "Selected production country does not exist.";
-        }
-
-        if (dto.DirectorId.HasValue)
-        {
-            if (dto.DirectorId.Value <= 0)
-                return "Invalid director id.";
-
-            var director = await _people.GetByIdAsync(dto.DirectorId.Value, ct);
+            var director = await _people.GetByIdAsync(directorId, ct);
             if (director == null)
-                return "Selected director does not exist.";
+                return "Some selected directors do not exist.";
         }
+
 
         var actorIds = DistinctIds(dto.ActorIds);
         foreach (var actorId in actorIds)

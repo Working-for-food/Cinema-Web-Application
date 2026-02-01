@@ -24,7 +24,4 @@ public class Person
     // navs
     public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     public ICollection<MovieDirector> MovieDirectors { get; set; } = new List<MovieDirector>();
-
-    // Movies.directorId
-    public ICollection<Movie> DirectedMoviesMain { get; set; } = new List<Movie>();
 }

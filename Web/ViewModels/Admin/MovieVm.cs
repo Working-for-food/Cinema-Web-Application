@@ -29,21 +29,21 @@ public class MovieEditVm : IValidatableObject
     public int? Duration { get; set; }
 
     
-    [RegularExpression(@"^$|^[A-Za-z]{2}$", ErrorMessage = "Production country code must be 2 letters or empty.")]
-    public string? ProductionCountryCode { get; set; }
-
-    public int? DirectorId { get; set; }
+    
 
     [Display(Name = "Genres")]
     public List<int> SelectedGenreIds { get; set; } = new();
 
     public MultiSelectList? GenreList { get; set; }
-    public SelectList? CountryList { get; set; }
-    public SelectList? DirectorList { get; set; }
 
     [Display(Name = "Actors")]
     public List<int> SelectedActorIds { get; set; } = new();
     public MultiSelectList? ActorList { get; set; }
+
+    [Display(Name = "Directors")]
+    public List<int> SelectedDirectorIds { get; set; } = new();
+
+    public MultiSelectList? DirectorMultiList { get; set; }
 
     [Display(Name = "Countries")]
     public List<string> SelectedCountryCodes { get; set; } = new();
@@ -61,6 +61,11 @@ public class MovieEditVm : IValidatableObject
             var x = c.Trim();
             if (x.Length != 2 || !x.All(char.IsLetter))
                 yield return new ValidationResult("Country code in list must be 2 letters.", new[] { nameof(SelectedCountryCodes) });
+        }
+        foreach (var id in SelectedDirectorIds ?? new List<int>())
+        {
+            if (id <= 0)
+                yield return new ValidationResult("Director id must be positive.", new[] { nameof(SelectedDirectorIds) });
         }
     }
 }

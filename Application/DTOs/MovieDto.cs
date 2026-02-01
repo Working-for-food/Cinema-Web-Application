@@ -24,11 +24,10 @@ namespace Application.DTOs
         public DateOnly? ReleaseDate { get; set; }
         public int? Duration { get; set; }
 
-        public string? ProductionCountryCode { get; set; }
-        public int? DirectorId { get; set; }
-
         public List<int> GenreIds { get; set; } = new();
         public List<int> ActorIds { get; set; } = new();
         public List<string> CountryCodes { get; set; } = new();
+        public List<int> DirectorIds { get; set; } = new();
+
     }
 }
