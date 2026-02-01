@@ -137,6 +137,8 @@ public class SessionService : ISessionService
         if (entity.IsCancelled)
             throw new InvalidOperationException("Не можна редагувати скасований сеанс. Спочатку відновіть його.");
 
+        EnsureNotOver(entity, "редагувати сеанс");
+
         var hasOverlap = await _repo.HasOverlapAsync(dto.HallId, dto.StartTime, dto.EndTime, ignoreSessionId: id, ct);
         if (hasOverlap)
             throw new InvalidOperationException("У цьому залі вже є сеанс, що перетинається за часом.");
@@ -158,6 +160,8 @@ public class SessionService : ISessionService
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity is null) return false;
 
+        EnsureNotOver(entity, "скасувати сеанс");
+
         if (!entity.IsCancelled)
         {
             entity.IsCancelled = true;
@@ -172,6 +176,8 @@ public class SessionService : ISessionService
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity is null) return false;
+
+        EnsureNotOver(entity, "відновити сеанс");
 
         if (entity.IsCancelled)
         {
@@ -192,5 +198,15 @@ public class SessionService : ISessionService
     {
         if (start >= end)
             throw new ArgumentException("Час початку має бути раніше часу завершення.");
+    }
+    private static bool IsOver(DateTime endTime)
+    {
+        return endTime <= DateTime.Now;
+    }
+
+    private static void EnsureNotOver(Session s, string action)
+    {
+        if (IsOver(s.EndTime))
+            throw new InvalidOperationException($"Не можна {action}: сеанс уже завершився.");
     }
 }

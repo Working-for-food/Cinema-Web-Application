@@ -5,6 +5,8 @@
     ViewData["Title"] = "Сеанси (адмін)";
     string FormatDate(DateTime? dt) => dt?.ToString("yyyy-MM-dd") ?? "";
 
+    var now = DateTime.Now;
+
     var today = DateTime.Today;
 
     var weekStart = today.AddDays(-((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1));
@@ -191,6 +193,9 @@
         {
             foreach (var s in Model.Sessions)
             {
+                var isOver = s.EndTime <= now;
+                var isFinished = !s.IsCancelled && isOver;
+
                 <tr>
                     <td>@s.Id</td>
 
@@ -219,6 +224,10 @@
                         {
                             <span class="badge text-bg-danger">Скасовано</span>
                         }
+                        else if (isFinished)
+                        {
+                            <span class="badge text-bg-dark">Завершено</span>
+                        }
                         else
                         {
                             <span class="badge text-bg-success">Активний</span>
@@ -232,44 +241,75 @@
                             Деталі
                         </a>
 
-                        <a class="btn btn-sm btn-outline-secondary"
-                           asp-action="Edit"
-                           asp-route-id="@s.Id">
-                            Редагувати
-                        </a>
-
-                        @if (!s.IsCancelled)
+                        @if (s.IsCancelled || isOver)
                         {
-                            <form asp-action="Cancel"
-                                  asp-route-id="@s.Id"
-                                  method="post"
-                                  class="d-inline js-cancel-form"
-                                  data-session-id="@s.Id"
-                                  data-movie="@(s.MovieTitle ?? "")"
-                                  data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
-                                @Html.AntiForgeryToken()
-
-                                <input type="hidden" name="returnUrl" value="@returnUrl" />
-
-                                <button class="btn btn-sm btn-outline-danger" type="submit">
-                                    Скасувати
+                            <span title="Не можна редагувати скасований або завершений сеанс">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" disabled>
+                                    Редагувати
                                 </button>
-                            </form>
+                            </span>
                         }
                         else
                         {
-                            <form asp-action="Restore"
-                                  asp-route-id="@s.Id"
-                                  method="post"
-                                  class="d-inline">
-                                @Html.AntiForgeryToken()
+                            <a class="btn btn-sm btn-outline-secondary"
+                               asp-action="Edit"
+                               asp-route-id="@s.Id">
+                                Редагувати
+                            </a>
+                        }
 
-                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        @if (!s.IsCancelled)
+                        {
+                            if (isOver)
+                            {
+                                <span title="Не можна скасувати завершений сеанс ">
+                                    <button class="btn btn-sm btn-outline-danger" type="button" disabled>
+                                        Скасувати
+                                    </button>
+                                </span>
+                            }
+                            else
+                            {
+                                <form asp-action="Cancel"
+                                      asp-route-id="@s.Id"
+                                      method="post"
+                                      class="d-inline js-cancel-form"
+                                      data-session-id="@s.Id"
+                                      data-movie="@(s.MovieTitle ?? "")"
+                                      data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
 
-                                <button class="btn btn-sm btn-outline-success" type="submit">
-                                    Відновити
-                                </button>
-                            </form>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                                        Скасувати
+                                    </button>
+                                </form>
+                            }
+                        }
+                        else
+                        {
+                            if (isOver)
+                            {
+                                <span title="Не можна відновити завершений сеанс">
+                                    <button class="btn btn-sm btn-outline-success" type="button" disabled>
+                                        Відновити
+                                    </button>
+                                </span>
+                            }
+                            else
+                            {
+                                <form asp-action="Restore"
+                                      asp-route-id="@s.Id"
+                                      method="post"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                                    <button class="btn btn-sm btn-outline-success" type="submit">
+                                        Відновити
+                                    </button>
+                                </form>
+                            }
                         }
                     </td>
                 </tr>
@@ -329,6 +369,8 @@
 
           document.querySelectorAll('form.js-cancel-form').forEach(form => {
             form.addEventListener('submit', (e) => {
+              if (form.querySelector('button[disabled]')) return;
+
               const id = form.dataset.sessionId || '';
               const movie = (form.dataset.movie || '').trim();
               const start = (form.dataset.start || '').trim();
