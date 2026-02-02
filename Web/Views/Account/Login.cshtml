@@ -24,7 +24,12 @@
 
                 <div class="mb-4">
                     <label class="form-label text-muted">Пароль</label>
-                    <input asp-for="Password" class="form-control auth-input" placeholder="Введіть пароль" />
+                    <div class="input-group">
+                        <input asp-for="Password" class="form-control auth-input" placeholder="Введіть пароль" type="password" />
+                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
@@ -51,4 +56,21 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function () {
+            $('.toggle-password').on('click', function () {
+                const input = $(this).closest('.input-group').find('input');
+                const icon = $(this).find('i');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text'); 
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    input.attr('type', 'password'); 
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye'); 
+                }
+            });
+        });
+    </script>
 }

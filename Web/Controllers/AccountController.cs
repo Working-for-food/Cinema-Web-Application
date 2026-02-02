@@ -33,8 +33,8 @@ public class AccountController : Controller
         {
             var user = new ApplicationUser
             {
-                UserName = model.Username, // Identity саме перевірить унікальність
-                Email = model.Email,       // Identity саме перевірить унікальність
+                UserName = model.Username, 
+                Email = model.Email,      
                 DateOfBirth = model.DateOfBirth
             };
 
@@ -42,28 +42,23 @@ public class AccountController : Controller
 
             if (result.Succeeded)
             {
+                await _userManager.AddToRoleAsync(user, "user");
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "Home");
             }
 
-            // --- ОБРОБКА ПОМИЛОК ---
             foreach (var error in result.Errors)
             {
-                // error.Description вже буде українською завдяки UkrainianIdentityErrorDescriber!
-
                 switch (error.Code)
                 {
                     case "DuplicateUserName":
-                        // Помилка піде під поле "Ім'я користувача"
                         ModelState.AddModelError("Username", error.Description);
                         break;
 
                     case "DuplicateEmail":
-                        // Помилка піде під поле "Електронна пошта"
                         ModelState.AddModelError("Email", error.Description);
                         break;
 
-                    // (Додатково) Можна виводити помилки пароля прямо під полем пароля
                     case "PasswordTooShort":
                     case "PasswordRequiresDigit":
                     case "PasswordRequiresLower":
@@ -73,14 +68,12 @@ public class AccountController : Controller
                         break;
 
                     default:
-                        // Всі інші помилки (загальні) йдуть наверх сторінки
                         ModelState.AddModelError(string.Empty, error.Description);
                         break;
                 }
             }
         }
 
-        // Якщо щось пішло не так, повертаємо форму з даними та помилками
         return View(model);
     }
 

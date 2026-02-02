@@ -53,7 +53,27 @@ public class RolesController : Controller
     }
 
 
-    public IActionResult UserList() => View(_userManager.Users.ToList());
+    [HttpGet]
+    public async Task<IActionResult> UserList()
+    {
+        var users = _userManager.Users.ToList();
+
+        var model = new List<UserWithRolesVm>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            model.Add(new UserWithRolesVm
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Roles = roles 
+            });
+        }
+
+        return View(model);
+    }
 
     public async Task<IActionResult> Edit(string userId)
     {
