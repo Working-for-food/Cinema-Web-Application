@@ -1,0 +1,360 @@
+﻿@using Infrastructure.Entities
+@model Web.ViewModels.Admin.Sessions.SessionEditVm
+
+@{
+    ViewData["Title"] = "Створити сеанс";
+
+    var movieTitleFromPost = Context.Request.HasFormContentType
+        ? Context.Request.Form["movieTitle"].ToString()
+        : "";
+
+    var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
+
+    var movieTitleValue = !string.IsNullOrWhiteSpace(movieTitleFromPost)
+        ? movieTitleFromPost
+        : movieTitleFromQuery;
+
+    var isHallDisabled = Model.CinemaId <= 0;
+    var hallPlaceholder = Model.CinemaId > 0 ? "— Оберіть зал —" : "— Спершу оберіть кінотеатр —";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Створити сеанс</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">До списку</a>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success mb-3" role="alert">@ok</div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post" novalidate id="createForm">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+
+                <!-- КІНОТЕАТР -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Кінотеатр</label>
+                    <select class="form-select"
+                            asp-for="CinemaId"
+                            asp-items="Model.Cinemas"
+                            id="cinemaSelect">
+                        <option value="0">— Оберіть кінотеатр —</option>
+                    </select>
+                    <span class="text-danger" asp-validation-for="CinemaId"></span>
+                </div>
+
+                <!-- ЗАЛ -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Зал</label>
+
+                    <select class="form-select"
+                            asp-for="HallId"
+                            asp-items="Model.Halls"
+                            id="hallSelect"
+                            disabled="@isHallDisabled"
+                            aria-disabled="@isHallDisabled">
+                        <option value="0">@hallPlaceholder</option>
+                    </select>
+
+                    @if (isHallDisabled)
+                    {
+                        <div class="form-text">Щоб обрати зал, спершу оберіть кінотеатр.</div>
+                    }
+
+                    <span class="text-danger" asp-validation-for="HallId"></span>
+                </div>
+
+                <!-- ФІЛЬМ + ПОСТЕР -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Фільм</label>
+
+                    <div class="d-flex gap-2 align-items-start">
+                        <div class="flex-grow-1">
+                            <input class="form-control"
+                                   list="movieList"
+                                   id="movieTitleInput"
+                                   name="movieTitle"
+                                   placeholder="Почніть вводити назву..."
+                                   autocomplete="off"
+                                   value="@movieTitleValue" />
+
+                            <datalist id="movieList">
+                                @foreach (var m in Model.Movies)
+                                {
+                                    <option value="@m.Text" data-id="@m.Value"></option>
+                                }
+                            </datalist>
+
+                            <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+
+                            <div class="form-text">Показано до 50 підказок.</div>
+                            <span class="text-danger" asp-validation-for="MovieId"></span>
+                        </div>
+
+                        <div style="width:86px;">
+                            <img id="posterImg"
+                                 class="d-none"
+                                 src=""
+                                 alt="Постер"
+                                 style="width:86px;height:auto;border-radius:8px;object-fit:cover;"
+                                 loading="lazy" />
+                            <div id="posterPlaceholder" class="text-muted small">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ТИП -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Тип показу</label>
+                    <select class="form-select"
+                            asp-for="PresentationType"
+                            asp-items="Model.PresentationTypes">
+                    </select>
+                    <span class="text-danger" asp-validation-for="PresentationType"></span>
+                </div>
+
+                <!-- ПОЧАТОК -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Початок</label>
+                    <input class="form-control"
+                           asp-for="StartTime"
+                           id="StartTime"
+                           type="datetime-local"
+                           step="60" />
+                    <span class="text-danger" asp-validation-for="StartTime"></span>
+                </div>
+
+                <!-- КІНЕЦЬ -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Кінець</label>
+                    <input class="form-control"
+                           asp-for="EndTime"
+                           id="EndTime"
+                           type="datetime-local"
+                           step="60" />
+
+                    <div class="form-text" id="movieDurationText">Тривалість: —</div>
+
+                    <div class="alert alert-warning mt-2 py-2 d-none" id="shortDurationWarn" role="alert">
+                        Увага: тривалість сеансу менша за тривалість фільму.
+                    </div>
+
+                    <span class="text-danger" asp-validation-for="EndTime"></span>
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Створити</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Скасувати</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                        (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
+                ));
+
+          const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                        (Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())
+                ));
+
+          // --- Elements ---
+          const cinemaSelect = document.getElementById('cinemaSelect');
+          const hallSelect = document.getElementById('hallSelect');
+
+          const titleInput = document.getElementById('movieTitleInput');
+          const hiddenMovieId = document.getElementById('movieIdHidden');
+          const list = document.getElementById('movieList');
+
+          const startInput = document.getElementById('StartTime');
+          const endInput = document.getElementById('EndTime');
+
+          const durationText = document.getElementById('movieDurationText');
+          const warn = document.getElementById('shortDurationWarn');
+
+          const posterImg = document.getElementById('posterImg');
+          const posterPlaceholder = document.getElementById('posterPlaceholder');
+
+          if (!cinemaSelect || !hallSelect || !titleInput || !hiddenMovieId || !list || !startInput || !endInput) return;
+
+          // --- Helpers ---
+          function posterUrl(path) {
+            if (!path) return '';
+            const p = String(path).trim();
+            if (!p) return '';
+            if (p.startsWith('http://') || p.startsWith('https://')) return p;
+            return `https://image.tmdb.org/t/p/w154${p.startsWith('/') ? p : '/' + p}`;
+          }
+
+          function setPoster(movieId) {
+            if (!posterImg || !posterPlaceholder) return;
+
+            const path = moviePosters[Number(movieId || 0)];
+            const url = posterUrl(path);
+
+            if (!url) {
+              posterImg.classList.add('d-none');
+              posterImg.src = '';
+              posterPlaceholder.classList.remove('d-none');
+              posterPlaceholder.textContent = '—';
+              return;
+            }
+
+            posterImg.src = url;
+            posterImg.classList.remove('d-none');
+            posterPlaceholder.classList.add('d-none');
+          }
+
+          function pad(n) { return String(n).padStart(2, "0"); }
+
+          function parseDt(v) {
+            if (!v) return null;
+            const d = new Date(v);
+            return isNaN(d) ? null : d;
+          }
+
+          function fmtDt(d) {
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          }
+
+          function findSelectedMovieIdByTitle() {
+            const value = (titleInput.value || '').trim();
+            const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
+            return option ? (option.dataset.id || "0") : "0";
+          }
+
+          function updateDurationLabel(movieId) {
+            if (!durationText) return;
+            const dur = movieDurations[Number(movieId || 0)];
+            durationText.textContent = (dur && dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
+          }
+
+          let endTouched = false;
+          endInput.addEventListener('input', () => endTouched = true);
+
+          function recalcEnd(movieId) {
+            const dur = movieDurations[Number(movieId || 0)];
+            if (!dur || dur <= 0) return;
+            if (endTouched) return;
+
+            const start = parseDt(startInput.value);
+            if (!start) return;
+
+            const end = new Date(start.getTime() + dur * 60000);
+            endInput.value = fmtDt(end);
+          }
+
+          function checkShortDuration(movieId) {
+            if (!warn) return;
+
+            const dur = movieDurations[Number(movieId || 0)];
+            const start = parseDt(startInput.value);
+            const end = parseDt(endInput.value);
+
+            if (!dur || dur <= 0 || !start || !end) {
+              warn.classList.add('d-none');
+              return;
+            }
+
+            const sessionMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
+
+            if (sessionMinutes < dur) {
+              warn.classList.remove('d-none');
+              warn.textContent = `Увага: тривалість сеансу (${sessionMinutes} хв) менша за тривалість фільму (${dur} хв).`;
+            } else {
+              warn.classList.add('d-none');
+            }
+          }
+
+          function syncMovieIdAndUpdate() {
+            const newId = findSelectedMovieIdByTitle();
+            const oldId = hiddenMovieId.value;
+
+            hiddenMovieId.value = newId;
+
+            if (newId !== oldId) endTouched = false;
+
+            updateDurationLabel(newId);
+            recalcEnd(newId);
+            checkShortDuration(newId);
+            setPoster(newId);
+          }
+
+          async function loadHallsByCinema(cinemaId) {
+            const cid = Number(cinemaId || 0);
+
+            hallSelect.innerHTML = '';
+            hallSelect.disabled = true;
+            hallSelect.setAttribute('aria-disabled', 'true');
+
+            const ph = document.createElement('option');
+            ph.value = "0";
+            ph.textContent = cid > 0 ? "— Оберіть зал —" : "— Спершу оберіть кінотеатр —";
+            hallSelect.appendChild(ph);
+
+            if (cid < 1) return;
+
+            try {
+              const url = '@Url.Action("HallsByCinema", "Sessions")' + '?cinemaId=' + encodeURIComponent(cid);
+              const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+
+              if (!res.ok) throw new Error('Bad response');
+
+              const data = await res.json();
+              for (const h of data) {
+                const opt = document.createElement('option');
+                opt.value = String(h.id);
+                opt.textContent = h.title;
+                hallSelect.appendChild(opt);
+              }
+
+              hallSelect.disabled = false;
+              hallSelect.removeAttribute('aria-disabled');
+            } catch (e) {
+              console.warn('Failed to load halls', e);
+            }
+          }
+
+          // --- Events ---
+          cinemaSelect.addEventListener('change', async () => {
+            hallSelect.value = "0";
+            await loadHallsByCinema(cinemaSelect.value);
+          });
+
+          titleInput.addEventListener('input', syncMovieIdAndUpdate);
+
+          startInput.addEventListener('change', () => {
+            endTouched = false;
+            syncMovieIdAndUpdate();
+          });
+
+          endInput.addEventListener('change', () => {
+            checkShortDuration(hiddenMovieId.value);
+          });
+
+          loadHallsByCinema(cinemaSelect.value).then(() => {
+          });
+
+          syncMovieIdAndUpdate();
+
+        })();
+    </script>
+}

@@ -52,84 +52,84 @@
             </div>
         </div>
 
-        <div class="card shadow-sm mb-3">
-            <div class="card-header bg-maroon text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-door-open me-2"></i>Список залів
-                </h5>
+        @if (Model.Halls == null || !Model.Halls.Any())
+        {
+            <div class="card shadow-sm col-lg-8 mx-auto">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        Немає результатів
+                    </h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="mb-0">Залів не знайдено.</p>
+                </div>
             </div>
-
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead class="people-thead">
-                            <tr>
-                                <th>Кінотеатр</th>
-                                <th>Зал</th>
-                                <th style="width:190px;">Кількість місць</th>
-                                <th style="width:240px;">Дії</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @if (Model.Halls == null || !Model.Halls.Any())
-                            {
+        }
+        else
+        {
+            <!-- Table (універсальний стиль як Movies/Users) -->
+            <div class="card shadow-sm mb-3 admin-table-card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table admin-table mb-0 align-middle">
+                            <thead>
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">
-                                        Залів не знайдено.
-                                    </td>
+                                    <th>Кінотеатр</th>
+                                    <th>Зал</th>
+                                    <th style="width:190px;">Кількість місць</th>
+                                    <th class="text-end" style="width:220px;">Дії</th>
                                 </tr>
-                            }
-                            else
-                            {
+                            </thead>
+
+                            <tbody>
                                 @foreach (var h in Model.Halls)
                                 {
                                     <tr>
                                         <td class="fw-semibold">@h.CinemaName</td>
                                         <td>@h.HallName</td>
                                         <td>@h.SeatsCount</td>
+
+                                        <!-- КНОПКИ ЯК У MOVIES: маленькі, іконки -->
                                         <td class="text-end">
-                                            <div class="d-inline-flex gap-2">
+                                            <a asp-action="Edit"
+                                               asp-route-id="@h.HallId"
+                                               class="btn btn-sm btn-secondary me-1"
+                                               title="Редагувати">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
 
-                                                <a asp-action="Edit"
-                                                   asp-route-id="@h.HallId"
-                                                   class="btn btn-sm btn-maroon"
-                                                   title="Редагувати">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
+                                            <a asp-action="Seats"
+                                               asp-route-id="@h.HallId"
+                                               class="btn btn-sm btn-admin-seats me-1"
+                                               title="Місця">
+                                                <i class="fas fa-chair"></i>
+                                            </a>
 
-                                                <a asp-action="Seats"
-                                                   asp-route-id="@h.HallId"
-                                                   class="btn btn-sm btn-secondary"
-                                                   title="Місця">
-                                                    <i class="fas fa-chair"></i>
-                                                </a>
 
-                                                <form method="post"
-                                                      asp-action="Delete"
-                                                      asp-route-id="@h.HallId"
-                                                      asp-route-cinemaId="@Model.CinemaId"
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('Видалити цей зал?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit"
-                                                            class="btn btn-sm btn-danger"
-                                                            title="Видалити">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
-                                                </form>
-
-                                            </div>
+                                            <form method="post"
+                                                  asp-action="Delete"
+                                                  asp-route-id="@h.HallId"
+                                                  asp-route-cinemaId="@Model.CinemaId"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Видалити цей зал?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-danger"
+                                                        title="Видалити">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 }
-                            }
-                        </tbody>
+                            </tbody>
 
-                    </table>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
     </div>
 </section>

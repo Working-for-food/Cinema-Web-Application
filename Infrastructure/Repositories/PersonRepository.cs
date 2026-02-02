@@ -61,9 +61,6 @@ public class PersonRepository : IPersonRepository
 
     public async Task<bool> IsUsedAsync(int personId, CancellationToken ct = default)
     {
-        var usedAsMainDirector = await _db.Movies.AsNoTracking().AnyAsync(m => m.DirectorId == personId, ct);
-        if (usedAsMainDirector) return true;
-
         var usedAsActor = await _db.MovieActors.AsNoTracking().AnyAsync(x => x.ActorId == personId, ct);
         if (usedAsActor) return true;
 
@@ -72,22 +69,8 @@ public class PersonRepository : IPersonRepository
     }
     public async Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default)
     {
-        var mainDirectorIds = _db.Movies
-            .AsNoTracking()
-            .Where(m => m.DirectorId != null)
-            .Select(m => m.DirectorId!.Value);
-
-        var extraDirectorIds = _db.MovieDirectors
-            .AsNoTracking()
-            .Select(md => md.DirectorId);
-
-        var directorIds = mainDirectorIds
-            .Union(extraDirectorIds)
-            .Distinct();
-
         return await _db.People
             .AsNoTracking()
-            .Where(p => directorIds.Contains(p.Id))
             .OrderBy(p => p.FullName)
             .ToListAsync(ct);
     }

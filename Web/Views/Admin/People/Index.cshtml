@@ -61,23 +61,17 @@
         }
         else
         {
-            <div class="card shadow-sm mb-3">
-                <div class="card-header bg-maroon text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-users me-2"></i>Список користувачів
-                    </h5>
-                </div>
-
+            <div class="card shadow-sm mb-3 admin-table-card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0 align-middle">
-                            <thead class="people-thead">
+                        <table class="table admin-table mb-0 align-middle">
+                            <thead>
                                 <tr>
-                                    <th style="width:72px;">Фото</th>
+                                    <th style="width:84px;">Фото</th>
                                     <th>ПІБ</th>
                                     <th style="width:220px;">Країна</th>
-                                    <th style="width:170px;">Дата народження</th>
-                                    <th style="width:340px;">Дії</th>
+                                    <th style="width:180px;">Дата народження</th>
+                                    <th class="text-end" style="width:250px;">Дії</th>
                                 </tr>
                             </thead>
 
@@ -85,7 +79,7 @@
                                 @foreach (var p in Model)
                                 {
                                     <tr>
-                                        <td style="width:72px;">
+                                        <td>
                                             <div class="person-avatar">
                                                 @if (!string.IsNullOrWhiteSpace(p.PhotoUrl))
                                                 {
@@ -107,35 +101,34 @@
                                             @(p.FullName ?? $"{p.FirstName} {p.LastName}")
                                         </td>
 
-                                        <td style="width:220px;">
+                                        <td>
                                             @(p.Country?.Name ?? "—")
                                         </td>
 
-                                        <td style="width:170px;">
+                                        <td>
                                             @(p.BirthDate?.ToString("dd.MM.yyyy") ?? "—")
                                         </td>
 
-                                        <td class="text-end" style="width:220px;">
-                                            <div class="d-inline-flex gap-2">
-                                                <a asp-action="Edit"
-                                                   asp-route-id="@p.Id"
-                                                   class="btn btn-secondary">
-                                                    <i class="fa-solid fa-pen-to-square me-1"></i>
-                                                    РЕДАГУВАТИ
-                                                </a>
+                                        <td class="text-end">
+                                            <a asp-action="Edit"
+                                               asp-route-id="@p.Id"
+                                               class="btn btn-sm btn-secondary me-1"
+                                               title="Редагувати">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
 
-                                                <form method="post"
-                                                      asp-action="Delete"
-                                                      asp-route-id="@p.Id"
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('Видалити цього користувача?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-maroon">
-                                                        <i class="fa-solid fa-trash me-1"></i>
-                                                        ВИДАЛИТИ
-                                                    </button>
-                                                </form>
-                                            </div>
+                                            <form method="post"
+                                                  asp-action="Delete"
+                                                  asp-route-id="@p.Id"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Видалити цього користувача?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-danger"
+                                                        title="Видалити">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 }
@@ -150,13 +143,13 @@
         @if (totalPages > 1)
         {
             <nav class="mt-4">
-                <ul class="pagination justify-content-center">
+                <ul class="pagination justify-content-center mb-0">
                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
                         <a class="page-link"
                            asp-action="Index"
                            asp-route-page="@(currentPage - 1)"
                            asp-route-search="@search">
-                            ← Назад
+                            Prev
                         </a>
                     </li>
 
@@ -169,7 +162,7 @@
                            asp-action="Index"
                            asp-route-page="@(currentPage + 1)"
                            asp-route-search="@search">
-                            Далі →
+                            Next
                         </a>
                     </li>
                 </ul>
@@ -178,4 +171,3 @@
 
     </div>
 </section>
-

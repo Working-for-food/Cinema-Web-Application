@@ -102,104 +102,113 @@
         }
         else
         {
-            <div class="card shadow-sm col-12">
+            <!-- Table -->
+            <div class="card shadow-sm col-12 admin-table-card">
                 <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead class="bg-maroon text-white">
-                            <tr>
-                                <th scope="col">
-                                    <a asp-action="Index"
-                                       asp-route-sortBy="@(Model.SortBy == "title_desc" ? "title" : "title_desc")"
-                                       asp-route-search="@Model.SearchTerm"
-                                       asp-route-page="@Model.Page"
-                                       class="text-white text-decoration-none">
-                                        Назва @(Model.SortBy == "title_desc" ? "▼" : "▲")
-                                    </a>
-                                </th>
-                                <th scope="col" style="width: 160px;">
-                                    <a asp-action="Index"
-                                       asp-route-sortBy="@(Model.SortBy == "date_desc" ? "date_asc" : "date_desc")"
-                                       asp-route-search="@Model.SearchTerm"
-                                       asp-route-page="@Model.Page"
-                                       class="text-white text-decoration-none">
-                                        Дата релізу
-                                    </a>
-                                </th>
-                                <th scope="col" style="width: 140px;">Тривалість</th>
-                                <th scope="col">Жанри</th>
-                                <th scope="col" style="width: 130px;">Сеанси</th>
-                                <th scope="col" class="text-end" style="width: 260px;">Дії</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @foreach (var movie in Model.Movies)
-                            {
+                    <div class="table-responsive">
+                        <table class="table admin-table mb-0">
+                            <thead>
                                 <tr>
-                                    <td class="fw-semibold">@movie.Title</td>
-                                    <td>@(movie.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</td>
-                                    <td>@(movie.Duration.HasValue ? $"{movie.Duration} хв" : "-")</td>
-                                    <td>
-                                        @if (!string.IsNullOrWhiteSpace(movie.GenreNames))
-                                        {
-                                            <span class="badge bg-info text-dark">@movie.GenreNames</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">-</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (movie.SessionsCount > 0)
-                                        {
-                                            <span class="badge bg-secondary">@movie.SessionsCount</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">0</span>
-                                        }
-                                    </td>
-
-                                    <td class="text-end">
-                                        <a asp-action="Details"
-                                           asp-route-id="@movie.Id"
-                                           class="btn btn-sm btn-maroon me-1">
-                                            <i class="fa-solid fa-circle-info"></i>
+                                    <th scope="col">
+                                        <a asp-action="Index"
+                                           asp-route-sortBy="@(Model.SortBy == "title_desc" ? "title" : "title_desc")"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-page="@Model.Page"
+                                           class="text-decoration-none text-reset">
+                                            Назва @(Model.SortBy == "title_desc" ? "▼" : "▲")
                                         </a>
+                                    </th>
 
-                                        <a asp-action="Edit"
-                                           asp-route-id="@movie.Id"
-                                           class="btn btn-sm btn-secondary me-1">
-                                            <i class="fa-solid fa-pen-to-square"></i>
+                                    <th scope="col" style="width: 160px;">
+                                        <a asp-action="Index"
+                                           asp-route-sortBy="@(Model.SortBy == "date_desc" ? "date_asc" : "date_desc")"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-page="@Model.Page"
+                                           class="text-decoration-none text-reset">
+                                            Дата релізу
                                         </a>
+                                    </th>
 
-                                        @if (movie.SessionsCount > 0)
-                                        {
-                                            <button type="button"
-                                                    class="btn btn-sm btn-danger"
-                                                    disabled
-                                                    title="Цей фільм має сеанси">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="Delete"
-                                                  asp-route-id="@movie.Id"
-                                                  method="post"
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('Ви впевнені, що хочете видалити цей фільм?');">
-                                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <th scope="col" style="width: 140px;">Тривалість</th>
+                                    <th scope="col">Жанри</th>
+                                    <th scope="col" style="width: 130px;">Сеанси</th>
+                                    <th scope="col" class="text-end" style="width: 260px;">Дії</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var movie in Model.Movies)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@movie.Title</td>
+                                        <td>@(movie.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                                        <td>@(movie.Duration.HasValue ? $"{movie.Duration} хв" : "-")</td>
+
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(movie.GenreNames))
+                                            {
+                                                <span class="badge bg-info text-dark">@movie.GenreNames</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            @if (movie.SessionsCount > 0)
+                                            {
+                                                <span class="badge bg-secondary">@movie.SessionsCount</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">0</span>
+                                            }
+                                        </td>
+
+                                        <td class="text-end">
+                                            <a asp-action="Details"
+                                               asp-route-id="@movie.Id"
+                                               class="btn btn-sm btn-maroon me-1"
+                                               title="Деталі">
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            </a>
+
+                                            <a asp-action="Edit"
+                                               asp-route-id="@movie.Id"
+                                               class="btn btn-sm btn-secondary me-1"
+                                               title="Редагувати">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+
+                                            @if (movie.SessionsCount > 0)
+                                            {
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger"
+                                                        disabled
+                                                        title="Цей фільм має сеанси">
                                                     <i class="fa-solid fa-trash"></i>
                                                 </button>
-                                            </form>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="Delete"
+                                                      asp-route-id="@movie.Id"
+                                                      method="post"
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('Ви впевнені, що хочете видалити цей фільм?');">
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Видалити">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
 
-                    </table>
+                        </table>
+                    </div>
                 </div>
             </div>
 

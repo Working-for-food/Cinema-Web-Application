@@ -1,7 +1,7 @@
 ﻿@model Infrastructure.Entities.Movie
 
 @{
-    ViewData["Title"] = "Деталі фільму";
+    ViewData["Title"] = "Movie details";
 
     var genres = Model.MovieGenres?
         .Select(mg => mg.Genre?.Name)
@@ -18,29 +18,34 @@
         .Select(x => x.Actor?.FullName ?? x.ActorId.ToString())
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .ToList() ?? new();
+
+    var directors = Model.MovieDirectors?
+        .OrderBy(x => x.BillingOrder)
+        .Select(x => x.Director?.FullName ?? x.DirectorId.ToString())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
 }
 
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-4">ДЕТАЛІ ФІЛЬМУ</h1>
+        <h1 class="section-title text-center mb-4">MOVIE DETAILS</h1>
 
         <div class="card shadow-sm col-lg-8 mx-auto">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fa-solid fa-circle-info me-2"></i>
-                    Інформація про фільм
+                    Movie information
                 </h5>
             </div>
 
             <div class="card-body p-4">
-
                 <div class="mb-4">
 
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-clapperboard me-1"></i>
-                            Назва
+                            Title
                         </label>
                         <div class="fw-semibold fs-5">@Model.Title</div>
                     </div>
@@ -48,7 +53,7 @@
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-calendar-days me-1"></i>
-                            Дата виходу
+                            Release date
                         </label>
                         <div class="fw-semibold fs-5">
                             @(Model.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")
@@ -58,27 +63,27 @@
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-clock me-1"></i>
-                            Тривалість
+                            Duration
                         </label>
                         <div class="fw-semibold fs-5">
-                            @(Model.Duration.HasValue ? $"{Model.Duration} хв" : "-")
+                            @(Model.Duration.HasValue ? $"{Model.Duration} min" : "-")
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label text-muted">
-                            <i class="fa-solid fa-flag me-1"></i>
-                            Країна виробництва
+                            <i class="fa-solid fa-video me-1"></i>
+                            Directors
                         </label>
-                        <div class="fw-semibold fs-5">
-                            @(string.IsNullOrWhiteSpace(Model.ProductionCountryCode) ? "-" : Model.ProductionCountryCode)
+                        <div class="fw-semibold">
+                            @(directors.Count == 0 ? "-" : string.Join(", ", directors))
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-tags me-1"></i>
-                            Жанри
+                            Genres
                         </label>
                         <div class="fw-semibold">
                             @if (genres.Count == 0)
@@ -98,7 +103,7 @@
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-globe me-1"></i>
-                            Країни (MovieCountries)
+                            Countries
                         </label>
                         <div class="fw-semibold">
                             @(countries.Count == 0 ? "-" : string.Join(", ", countries))
@@ -108,7 +113,7 @@
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-user-group me-1"></i>
-                            Актори
+                            Actors
                         </label>
                         <div class="fw-semibold">
                             @(actors.Count == 0 ? "-" : string.Join(", ", actors))
@@ -118,17 +123,74 @@
                     <div class="mb-3">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-ticket me-1"></i>
-                            Сеанси
+                            Sessions
                         </label>
                         <div class="fw-semibold fs-5">
                             @(Model.Sessions?.Count ?? 0)
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-pen-nib me-1"></i>
+                            Original name
+                        </label>
+                        <div class="fw-semibold">
+                            @(string.IsNullOrWhiteSpace(Model.OriginalName) ? "-" : Model.OriginalName)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-language me-1"></i>
+                            Language
+                        </label>
+                        <div class="fw-semibold">
+                            @(string.IsNullOrWhiteSpace(Model.Language) ? "-" : Model.Language)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-link me-1"></i>
+                            Trailer
+                        </label>
+                        <div class="fw-semibold">
+                            @if (string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                            else
+                            {
+                                <a href="@Model.TrailerUrl" target="_blank" rel="noopener">Open trailer</a>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-image me-1"></i>
+                            PosterPath
+                        </label>
+                        <div class="fw-semibold">
+                            @(string.IsNullOrWhiteSpace(Model.PosterPath) ? "-" : Model.PosterPath)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-panorama me-1"></i>
+                            BackdropPath
+                        </label>
+                        <div class="fw-semibold">
+                            @(string.IsNullOrWhiteSpace(Model.BackdropPath) ? "-" : Model.BackdropPath)
+                        </div>
+                    </div>
+
                     <div class="mb-0">
                         <label class="form-label text-muted">
                             <i class="fa-solid fa-align-left me-1"></i>
-                            Опис
+                            Description
                         </label>
                         <div class="fw-semibold">
                             @(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)
@@ -140,12 +202,12 @@
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a asp-action="Index" class="btn btn-secondary">
                         <i class="fa-solid fa-arrow-left me-1"></i>
-                        Назад
+                        Back
                     </a>
 
                     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-maroon">
                         <i class="fa-solid fa-pen-to-square me-1"></i>
-                        Редагувати
+                        Edit
                     </a>
                 </div>
 
@@ -154,3 +216,4 @@
 
     </div>
 </section>
+

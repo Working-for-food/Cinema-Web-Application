@@ -2,9 +2,8 @@
 
 using Infrastructure.Entities;
 
-public class RowSeatsDto
+public class RowCategoryDto
 {
     public int RowNumber { get; set; }
-    public int SeatsCount { get; set; }
     public SeatCategory Category { get; set; } = SeatCategory.Standard;
 }

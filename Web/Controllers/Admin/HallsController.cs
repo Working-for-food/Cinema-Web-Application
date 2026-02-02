@@ -197,6 +197,40 @@ public class HallsController : Controller
         return RedirectToAction(nameof(Seats), new { id = hallId });
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateRowCategories(int hallId, List<RowCategoryDto> rows)
+    {
+        try
+        {
+            await _hallService.UpdateRowCategoriesAsync(hallId, rows);
+            TempData["Success"] = "Категорії рядів оновлено.";
+        }
+        catch (Exception ex)
+        {
+            TempData["SeatsError"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Seats), new { id = hallId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateSeatCategories(int hallId, List<SeatCategoryChangeDto> changes)
+    {
+        try
+        {
+            await _hallService.UpdateSeatCategoriesAsync(hallId, changes);
+            TempData["Success"] = "Категорії місць оновлено.";
+        }
+        catch (Exception ex)
+        {
+            TempData["SeatsError"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Seats), new { id = hallId });
+    }
+
     private static HallEditDto ToDto(HallEditVm vm) => new()
     {
         Id = vm.Id,

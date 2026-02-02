@@ -91,10 +91,14 @@ public class MoviesController : Controller
             Description = dto.Description,
             Duration = dto.Duration,
             ReleaseDate = dto.ReleaseDate,
-            ProductionCountryCode = dto.ProductionCountryCode,
-            DirectorId = dto.DirectorId,
+            PosterPath = dto.PosterPath,
+            BackdropPath = dto.BackdropPath,
+            OriginalName = dto.OriginalName,
+            Language = dto.Language,
+            TrailerUrl = dto.TrailerUrl,
             SelectedGenreIds = dto.GenreIds,
             SelectedActorIds = dto.ActorIds,
+            SelectedDirectorIds = dto.DirectorIds,
             SelectedCountryCodes = dto.CountryCodes
         };
 
@@ -187,11 +191,10 @@ public class MoviesController : Controller
         vm.GenreList = new MultiSelectList(genres, "Id", "Name", vm.SelectedGenreIds);
 
         var countries = await _service.GetCountriesAsync(ct);
-        vm.CountryList = new SelectList(countries, "Code", "Name", vm.ProductionCountryCode);
         vm.CountryMultiList = new MultiSelectList(countries, "Code", "Name", vm.SelectedCountryCodes);
 
         var directors = await _service.GetDirectorsAsync(ct);
-        vm.DirectorList = new SelectList(directors, "Id", "FullName", vm.DirectorId);
+        vm.DirectorMultiList = new MultiSelectList(directors, "Id", "FullName", vm.SelectedDirectorIds);
 
         var actors = await _service.GetActorsAsync(ct);
         vm.ActorList = new MultiSelectList(actors, "Id", "FullName", vm.SelectedActorIds);
@@ -204,10 +207,14 @@ public class MoviesController : Controller
         Description = vm.Description,
         Duration = vm.Duration,
         ReleaseDate = vm.ReleaseDate,
-        ProductionCountryCode = vm.ProductionCountryCode,
-        DirectorId = vm.DirectorId,
+        PosterPath = vm.PosterPath,
+        BackdropPath = vm.BackdropPath,
+        OriginalName = vm.OriginalName,
+        Language = vm.Language,
+        TrailerUrl = vm.TrailerUrl,
         GenreIds = vm.SelectedGenreIds,
         ActorIds = vm.SelectedActorIds,
-        CountryCodes = vm.SelectedCountryCodes
+        CountryCodes = vm.SelectedCountryCodes,
+        DirectorIds = vm.SelectedDirectorIds
     };
 }
