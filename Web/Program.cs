@@ -17,14 +17,27 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+}).AddRazorOptions(options =>
+{
+    options.AreaViewLocationFormats.Clear();
+    options.AreaViewLocationFormats.Add("/Views/{2}/{1}/{0}.cshtml"); 
+    options.AreaViewLocationFormats.Add("/Views/{2}/Shared/{0}.cshtml");
+    options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
 });
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<CinemaDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+})
+.AddEntityFrameworkStores<CinemaDbContext>()
+.AddDefaultTokenProviders();
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -84,19 +97,27 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed Countries
+// Seed Countries and Roles
 using (var scope = app.Services.CreateScope())
 {
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Seeder");
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Seeder");
+
     try
     {
-        var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+        var db = services.GetRequiredService<CinemaDbContext>();
         await CountrySeeder.SeedAsync(db);
         logger.LogInformation("Countries seeded/updated.");
+
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await RoleInitializer.InitializeAsync(userManager, roleManager);
+        logger.LogInformation("Roles and SuperAdmin seeded.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Countries seeding failed.");
+        logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
 

@@ -1,0 +1,26 @@
+﻿@model Web.ViewModels.Roles.ChangeRoleVm
+@{
+    ViewData["Title"] = "Зміна ролей";
+}
+
+<div class="container mt-4">
+    <h2>Зміна ролей для користувача @Model.UserEmail</h2>
+
+    <form asp-action="Edit" method="post">
+        <input type="hidden" name="userId" value="@Model.UserId" />
+
+        <div class="form-group mb-3">
+            @foreach (var role in Model.AllRoles)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="roles" value="@role.Name"
+                    @(Model.UserRoles.Contains(role.Name) ? "checked=\"checked\"" : "") />
+                    <label class="form-check-label">@role.Name</label>
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="btn btn-primary">Зберегти</button>
+        <a asp-action="UserList" class="btn btn-secondary">Назад</a>
+    </form>
+</div>

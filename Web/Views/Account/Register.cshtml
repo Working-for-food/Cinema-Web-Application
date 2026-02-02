@@ -1,0 +1,65 @@
+﻿@model Web.ViewModels.Account.RegisterVm
+@{
+    ViewData["Title"] = "Реєстрація";
+}
+
+<div class="auth-container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="col-12 col-md-6 col-lg-5">
+        <div class="auth-card p-5 shadow-lg rounded">
+            <h1 class="section-title text-center mb-4">
+                <i class="fas fa-user-plus"></i> Реєстрація
+            </h1>
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <form asp-action="Register" method="post">
+                <div class="mb-4">
+                    <label class="form-label text-muted">Електронна пошта</label>
+                    <input type="email" class="form-control auth-input" asp-for="Email" placeholder="Введіть email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted">Ім'я користувача</label>
+                    <input type="text" class="form-control auth-input" asp-for="Username" placeholder="Введіть ім'я користувача" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted">Дата народження</label>
+                    <input type="date" class="form-control auth-input" asp-for="DateOfBirth"
+                           min="@DateTime.Today.AddYears(-120).ToString("yyyy-MM-dd")"
+                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted">Пароль</label>
+                    <input type="password" class="form-control auth-input" asp-for="Password" placeholder="Введіть пароль" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        Вимоги: 8+ символів, 1 велика літера, 1 цифра, 1 символ.
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted">Підтвердження пароля</label>
+                    <input type="password" class="form-control auth-input" asp-for="ConfirmPassword" placeholder="Підтвердіть пароль" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4 text-center">
+                    <button type="submit" class="btn btn-maroon w-100" style="background-color: #800000; color: white;">Зареєструватися</button>
+                </div>
+            </form>
+
+            <p class="text-center text-muted mt-3">
+                Вже маєте обліковий запис? <a asp-action="Login" class="text-maroon">Увійти</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
