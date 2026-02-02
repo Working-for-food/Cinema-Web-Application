@@ -205,7 +205,6 @@ public class HallService : IHallService
                 throw new ArgumentException("Неможливо повторно створити місця: поточні місця відсутні.");
         }
 
-        // дедуп по номеру ряду
         rows = rows
             .GroupBy(r => r.RowNumber)
             .Select(g => new RowSeatsDto { RowNumber = g.Key, SeatsCount = g.Max(x => x.SeatsCount) })

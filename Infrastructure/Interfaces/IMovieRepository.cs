@@ -20,6 +20,7 @@ namespace Infrastructure.Interfaces
 
         // for details screen (includes genres + sessions)
         Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
+        Task<string?> GetTitleByIdAsync(int id, CancellationToken ct);
 
         Task AddAsync(Movie movie, IEnumerable<int> genreIds, IEnumerable<int> actorIds, IEnumerable<string> countryCodes, IEnumerable<int> directorIds, CancellationToken ct = default);
         Task UpdateAsync(Movie movie, IEnumerable<int> genreIds, IEnumerable<int> actorIds, IEnumerable<string> countryCodes, IEnumerable<int> directorIds, CancellationToken ct = default);
@@ -27,5 +28,8 @@ namespace Infrastructure.Interfaces
 
         // "status" check: is this movie used in sessions?
         Task<bool> AnySessionsAsync(int movieId, CancellationToken ct = default);
+
+        //search by title
+        Task<List<Movie>> SearchAsync(string? query, int take, CancellationToken ct);
     }
 }
