@@ -11,4 +11,8 @@ public interface ISeatRepository
     Task DeleteByHallAsync(int hallId);
 
     Task<Dictionary<int, int>> CountByHallIdsAsync(IEnumerable<int> hallIds);
+
+    Task UpdateRowCategoriesAsync(int hallId, Dictionary<int, SeatCategory> rowCategories);
+    Task UpdateSeatCategoriesAsync(int hallId, Dictionary<int, SeatCategory> seatCategories);
+
 }
