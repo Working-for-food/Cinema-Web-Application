@@ -35,8 +35,15 @@
 
                 <div class="mb-4">
                     <label class="form-label text-muted">Пароль</label>
-                    <input type="password" class="form-control auth-input" asp-for="Password" placeholder="Введіть пароль" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
+
+                    <div class="input-group">
+                        <input type="password" class="form-control auth-input" asp-for="Password" placeholder="Введіть пароль" id="Password" />
+                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <span asp-validation-for="Password" class="text-danger d-block mb-1"></span>
                     <small class="text-muted" style="font-size: 0.75rem;">
                         Вимоги: 8+ символів, 1 велика літера, 1 цифра, 1 символ.
                     </small>
@@ -44,8 +51,15 @@
 
                 <div class="mb-4">
                     <label class="form-label text-muted">Підтвердження пароля</label>
-                    <input type="password" class="form-control auth-input" asp-for="ConfirmPassword" placeholder="Підтвердіть пароль" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+
+                    <div class="input-group">
+                        <input type="password" class="form-control auth-input" asp-for="ConfirmPassword" placeholder="Підтвердіть пароль" />
+                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <span asp-validation-for="ConfirmPassword" class="text-danger d-block"></span>
                 </div>
 
                 <div class="mb-4 text-center">
@@ -62,4 +76,93 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function () {
+            $('.toggle-password').on('click', function () {
+                const input = $(this).closest('.input-group').find('input');
+                const icon = $(this).find('i');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text'); 
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash'); 
+                } else {
+                    input.attr('type', 'password'); 
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye'); 
+                }
+            });
+            const passwordInput = $('#Password');
+            const errorSpan = $('span[data-valmsg-for="Password"]');
+
+            function validatePassword() {
+                const password = passwordInput.val();
+                let errors = [];
+
+                if (!password) return; 
+                if (password.length < 8) {
+                    errors.push("мінімум 8 символів");
+                }
+                if (!/[A-Z]/.test(password)) {
+                    errors.push("1 велику літеру");
+                }
+                if (!/[a-z]/.test(password)) {
+                    errors.push("1 малу літеру");
+                }
+                if (!/[0-9]/.test(password)) {
+                    errors.push("1 цифру");
+                }
+                if (!/[^a-zA-Z0-9]/.test(password)) {
+                    errors.push("1 спецсимвол");
+                }
+
+                if (errors.length > 0) {
+                    const message = "Пароль повинен містити щонайменше: " + errors.join(", ") + ".";
+
+                    errorSpan.text(message);
+                    errorSpan.addClass("field-validation-error").removeClass("field-validation-valid");
+                    passwordInput.addClass("input-validation-error");
+                } else {
+                    errorSpan.text("");
+                    errorSpan.removeClass("field-validation-error").addClass("field-validation-valid");
+                    passwordInput.removeClass("input-validation-error");
+                }
+            }
+
+            passwordInput.on('blur keyup', function () {
+                if ($(this).val().length > 0) {
+                    validatePassword();
+                }
+            });
+        const dobInput = $('#DateOfBirth');
+            const dobErrorSpan = $('span[data-valmsg-for="DateOfBirth"]');
+
+            function validateAge() {
+                const dobValue = dobInput.val();
+                if (!dobValue) return; 
+
+                const birthDate = new Date(dobValue);
+                const today = new Date();
+
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age < 12) {
+                    const message = "Вибачте, реєстрація дозволена тільки з 12 років.";
+                    dobErrorSpan.text(message);
+                    dobErrorSpan.addClass("field-validation-error").removeClass("field-validation-valid");
+                    dobInput.addClass("input-validation-error");
+                } else {
+                    dobErrorSpan.text("");
+                    dobErrorSpan.removeClass("field-validation-error").addClass("field-validation-valid");
+                    dobInput.removeClass("input-validation-error");
+                }
+            }
+
+            dobInput.on('change blur', validateAge);
+        });
+    </script>
 }

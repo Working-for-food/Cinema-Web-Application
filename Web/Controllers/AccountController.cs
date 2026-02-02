@@ -33,8 +33,8 @@ public class AccountController : Controller
         {
             var user = new ApplicationUser
             {
-                UserName = model.Username,
-                Email = model.Email,
+                UserName = model.Username, // Identity саме перевірить унікальність
+                Email = model.Email,       // Identity саме перевірить унікальність
                 DateOfBirth = model.DateOfBirth
             };
 
@@ -46,12 +46,41 @@ public class AccountController : Controller
                 return RedirectToAction("Index", "Home");
             }
 
+            // --- ОБРОБКА ПОМИЛОК ---
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                // error.Description вже буде українською завдяки UkrainianIdentityErrorDescriber!
+
+                switch (error.Code)
+                {
+                    case "DuplicateUserName":
+                        // Помилка піде під поле "Ім'я користувача"
+                        ModelState.AddModelError("Username", error.Description);
+                        break;
+
+                    case "DuplicateEmail":
+                        // Помилка піде під поле "Електронна пошта"
+                        ModelState.AddModelError("Email", error.Description);
+                        break;
+
+                    // (Додатково) Можна виводити помилки пароля прямо під полем пароля
+                    case "PasswordTooShort":
+                    case "PasswordRequiresDigit":
+                    case "PasswordRequiresLower":
+                    case "PasswordRequiresUpper":
+                    case "PasswordRequiresNonAlphanumeric":
+                        ModelState.AddModelError("Password", error.Description);
+                        break;
+
+                    default:
+                        // Всі інші помилки (загальні) йдуть наверх сторінки
+                        ModelState.AddModelError(string.Empty, error.Description);
+                        break;
+                }
             }
         }
 
+        // Якщо щось пішло не так, повертаємо форму з даними та помилками
         return View(model);
     }
 
@@ -180,4 +209,33 @@ public class AccountController : Controller
 
         return RedirectToAction("Profile");
     }
+
+    // REMOTE VALIDATION: Email Check
+    [AcceptVerbs("GET", "POST")]
+    public async Task<IActionResult> VerifyEmail(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user != null)
+        {
+            return Json($"Електронна пошта '{email}' вже використовується.");
+        }
+
+        return Json(true);
+    }
+
+    // REMOTE VALIDATION: Username Check
+    [AcceptVerbs("GET", "POST")]
+    public async Task<IActionResult> VerifyUsername(string username)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+
+        if (user != null)
+        {
+            return Json($"Ім'я користувача '{username}' вже зайняте.");
+        }
+
+        return Json(true);
+    }
 }
+
