@@ -10,7 +10,6 @@ public class Person
     public string FullName { get; set; } = null!;
     public DateOnly? BirthDate { get; set; }
 
-    // FK -> Countries.code (optional)
     public string? CountryCode { get; set; }
     public string? PhotoUrl { get; set; }
 
@@ -21,10 +20,8 @@ public class Person
 
     public Country? Country { get; set; }
 
-    // navs
     public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     public ICollection<MovieDirector> MovieDirectors { get; set; } = new List<MovieDirector>();
 
-    // Movies.directorId
     public ICollection<Movie> DirectedMoviesMain { get; set; } = new List<Movie>();
 }
