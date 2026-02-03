@@ -74,15 +74,6 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.Property(x => x.Language).HasMaxLength(50);
             e.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
             e.Property(x => x.AgeRating).HasColumnType("smallint");
-            e.HasOne(x => x.Director)
-                 .WithMany(p => p.DirectedMoviesMain)
-                 .HasForeignKey(x => x.DirectorId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            e.HasOne(x => x.ProductionCountry)
-                .WithMany(c => c.ProducedMovies)
-                .HasForeignKey(x => x.ProductionCountryCode)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Genres
