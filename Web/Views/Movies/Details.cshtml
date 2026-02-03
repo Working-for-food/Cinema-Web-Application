@@ -20,9 +20,9 @@
                 {
                     <div><span class="meta-label">Оригінальна назва:</span> @Model.OriginalName</div>
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.DirectorName))
+                @if (Model.Directors.Count > 0)
                 {
-                    <div><span class="meta-label">Режисер:</span> @Model.DirectorName</div>
+                    <div><span class="meta-label">Режисер:</span> @string.Join(", ", Model.Directors)</div>
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.Language))
                 {
@@ -32,9 +32,9 @@
                 {
                     <div><span class="meta-label">Тривалість:</span> @Model.Duration хв</div>
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.Country))
+                @if (Model.Countries.Count > 0)
                 {
-                    <div><span class="meta-label">Країна:</span> @Model.Country</div>
+                    <div><span class="meta-label">Країна:</span> @string.Join(", ", Model.Countries)</div>
                 }
                 @if (Model.Rating is not null)
                 {

@@ -18,8 +18,10 @@ public class UserMovieRepository : IUserMovieRepository
     {
         return _db.Movies
             .AsNoTracking()
-            .Include(m => m.Director)
-            .Include(m => m.ProductionCountry)
+            .Include(m => m.MovieDirectors)
+                .ThenInclude(md => md.DirectorId)
+            .Include(m => m.MovieCountries)
+                .ThenInclude(mc => mc.Country)
             .FirstOrDefaultAsync(m => m.Id == id, ct);
     }
 }

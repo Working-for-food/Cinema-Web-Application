@@ -24,14 +24,14 @@ public class MoviesController : Controller
             Title = dto.Title,
             ReleaseDate = dto.ReleaseDate,
             OriginalName = dto.OriginalName,
-            DirectorName = dto.DirectorName,
             Description = dto.Description,
             Language = dto.Language,
             Duration = dto.Duration,
-            Country = dto.Country,
             TrailerUrl = dto.TrailerUrl,
             Rating = dto.Rating,
-            PosterUrl = string.IsNullOrWhiteSpace(dto.PosterUrl) ? "/images/no-poster.png" : dto.PosterUrl
+            PosterUrl = string.IsNullOrWhiteSpace(dto.PosterUrl) ? "/images/no-poster.png" : dto.PosterUrl,
+            Directors = dto.Directors,
+            Countries = dto.Countries
         };
 
         return View(vm);

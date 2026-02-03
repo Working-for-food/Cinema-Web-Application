@@ -21,20 +21,32 @@ public class MoviePublicService : IMoviePublicService
 
         string posterUrl = string.IsNullOrWhiteSpace(movie.PosterPath) ? "" : $"{TmdbBase}{movie.PosterPath}";
 
+        var directors = movie.MovieDirectors
+            .Where(x => x.Director is not null)
+            .Select(x => x.Director!.FullName)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .ToList();
+        var countries = movie.MovieCountries
+           .Where(x => x.Country is not null)
+           .Select(x => x.Country!.Name)
+           .Where(s => !string.IsNullOrWhiteSpace(s))
+           .Distinct()
+           .ToList();
         return new MovieDetailsDto
         {
             Id = movie.Id,
             Title = movie.Title,
             ReleaseDate = movie.ReleaseDate,
             OriginalName = movie.OriginalName,
-            DirectorName = movie.Director is null ? null : $"{movie.Director.FirstName} {movie.Director.LastName}",
             Description = movie.Description,
             Language = movie.Language,
             Duration = movie.Duration,
-            Country = movie.ProductionCountry?.Name,
             TrailerUrl = movie.TrailerUrl,
             Rating = movie.Rating,
-            PosterUrl = posterUrl
+            PosterUrl = posterUrl,
+            Directors = directors,
+            Countries = countries
         };
     }
 }

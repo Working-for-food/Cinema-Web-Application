@@ -27,7 +27,6 @@ public static class MovieSessionSeeder
                 Title = "Паддінгтон у Перу",
                 OriginalName = "Paddington in Peru",
                 ReleaseDate = new DateOnly(2026, 1, 10),
-                DirectorId = director.Id,
                 Description = "Пригоди доброго ведмедика, який знову вирушає в подорож.",
                 Language = "англійська",
                 Duration = 105,
@@ -39,7 +38,6 @@ public static class MovieSessionSeeder
                 Title = "Сонік 3",
                 OriginalName = "Sonic the Hedgehog 3",
                 ReleaseDate = new DateOnly(2026, 1, 20),
-                DirectorId = director.Id,
                 Description = "Швидкі пригоди у новій частині франшизи.",
                 Language = "англійська",
                 Duration = 110,
@@ -51,7 +49,6 @@ public static class MovieSessionSeeder
                 Title = "Носферату",
                 OriginalName = "Nosferatu",
                 ReleaseDate = new DateOnly(2026, 2, 1),
-                DirectorId = director.Id,
                 Description = "Готична історія з атмосферою класичного хорору.",
                 Language = "англійська",
                 Duration = 122,
@@ -63,7 +60,6 @@ public static class MovieSessionSeeder
                 Title = "Wicked: Чародійка",
                 OriginalName = "Wicked",
                 ReleaseDate = new DateOnly(2026, 3, 1),
-                DirectorId = director.Id,
                 Description = "Фентезі-історія про магію та вибір.",
                 Language = "англійська",
                 Duration = 130,
@@ -74,7 +70,13 @@ public static class MovieSessionSeeder
 
         db.Movies.AddRange(movies);
         await db.SaveChangesAsync();
-
+        var movieDirectors = movies.Select(m => new MovieDirector
+        {
+            MovieId = m.Id,
+            DirectorId = director.Id
+        });
+        db.MovieDirectors.AddRange(movieDirectors);
+        await db.SaveChangesAsync();
         var cinema = new Cinema
         {
             Name = "Кінотеатр Центр",

@@ -36,15 +36,11 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
-<<<<<<< HEAD
 builder.Services.AddScoped<IAfishaRepository, AfishaRepository>();
 builder.Services.AddScoped<IUserMovieRepository, UserMovieRepository>();
 builder.Services.AddScoped<IAfishaService, AfishaService>();
 builder.Services.AddScoped<IMoviePublicService, MoviePublicService>();
-
-=======
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
->>>>>>> origin/main
 
 // Services
 builder.Services.AddScoped<IMovieService, MovieService>();
