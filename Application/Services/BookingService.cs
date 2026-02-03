@@ -1,68 +1,21 @@
-﻿using Infrastructure.Data;
-using Infrastructure.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Application.DTOs;
+using Application.Interfaces;
+using Infrastructure.Interfaces;
+
+namespace Application.Services;
 
 public class BookingService : IBookingService
 {
-    private readonly CinemaDbContext _db;
+    private readonly IBookingRepository _repo;
 
-    public BookingService(CinemaDbContext db)
+    public BookingService(IBookingRepository repo)
     {
-        _db = db;
+        _repo = repo;
     }
 
-    public async Task<BookingResultDto> CreateAsync(string userId, BookingCreateDto dto, CancellationToken ct = default)
+    public async Task<BookingResultDto> CreateAsync(string userId, BookingCreateDto dto, CancellationToken ct)
     {
-        if (dto.SeatIds == null || dto.SeatIds.Count == 0)
-            throw new ArgumentException("Choose at least one seat.");
-
-        // 1) Проверим, что сессия существует и не отменена
-        var session = await _db.Sessions
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == dto.SessionId, ct);
-
-        if (session == null) throw new InvalidOperationException("Session not found.");
-        if (session.IsCancelled) throw new InvalidOperationException("Session is cancelled.");
-
-        // 2) Транзакция: проверка + захват мест + создание Booking
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
-
-        // Достаём SessionSeat по выбранным seatIds
-        var sessionSeats = await _db.SessionSeats
-            .Include(ss => ss.Seat)
-            .Where(ss => ss.SessionId == dto.SessionId && dto.SeatIds.Contains(ss.SeatId))
-            .ToListAsync(ct);
-
-        // Если не найдены все места — значит SessionSeat ещё не создан или seatId неверные
-        if (sessionSeats.Count != dto.SeatIds.Count)
-            throw new InvalidOperationException("Some seats are missing for this session.");
-
-        // 2.1 Проверяем, что они свободны
-        var busy = sessionSeats.Where(x => x.BookingId != null).ToList();
-        if (busy.Count > 0)
-            throw new InvalidOperationException("Some seats are already booked.");
-
-        // 2.2 Считаем сумму
-        var total = sessionSeats.Sum(x => x.Price);
-
-        // 2.3 Создаём бронирование
-        var booking = new Booking
-        {
-            UserId = userId,
-            SessionId = dto.SessionId,
-            TotalAmount = total,
-            BookedAt = DateTime.UtcNow
-        };
-
-        _db.Bookings.Add(booking);
-        await _db.SaveChangesAsync(ct); // получаем booking.Id
-
-        // 2.4 “Захватываем” места: проставляем BookingId
-        foreach (var ss in sessionSeats)
-            ss.BookingId = booking.Id;
-
-        await _db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
+        var booking = await _repo.CreateBookingAsync(userId, dto.SessionId, dto.SeatIds, ct);
 
         return new BookingResultDto
         {
@@ -70,34 +23,66 @@ public class BookingService : IBookingService
             SessionId = booking.SessionId,
             TotalAmount = booking.TotalAmount,
             BookedAt = booking.BookedAt,
-            Seats = sessionSeats
+            Seats = booking.SessionSeats
                 .OrderBy(x => x.Seat.RowNumber).ThenBy(x => x.Seat.SeatNumber)
-                .Select(x => (x.SeatId, x.Seat.RowNumber, x.Seat.SeatNumber, x.Price))
+                .Select(x => new BookedSeatDto
+                {
+                    SeatId = x.SeatId,
+                    RowNumber = x.Seat.RowNumber,
+                    SeatNumber = x.Seat.SeatNumber,
+                    Category = (int)x.Seat.Category,
+                    Price = x.Price
+                })
                 .ToList()
         };
     }
 
-    public async Task CancelAsync(string userId, int bookingId, CancellationToken ct = default)
+    public async Task<BookingResultDto?> GetByIdAsync(int id, CancellationToken ct)
     {
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var b = await _repo.GetByIdAsync(id, ct);
+        if (b is null) return null;
 
-        var booking = await _db.Bookings
-            .Include(b => b.SessionSeats)
-            .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
+        return new BookingResultDto
+        {
+            BookingId = b.Id,
+            SessionId = b.SessionId,
+            TotalAmount = b.TotalAmount,
+            BookedAt = b.BookedAt,
+            Seats = b.SessionSeats
+                .OrderBy(x => x.Seat.RowNumber).ThenBy(x => x.Seat.SeatNumber)
+                .Select(x => new BookedSeatDto
+                {
+                    SeatId = x.SeatId,
+                    RowNumber = x.Seat.RowNumber,
+                    SeatNumber = x.Seat.SeatNumber,
+                    Category = (int)x.Seat.Category,
+                    Price = x.Price
+                })
+                .ToList()
+        };
+    }
 
-        if (booking == null) throw new InvalidOperationException("Booking not found.");
-        if (booking.UserId != userId) throw new UnauthorizedAccessException();
+    public async Task<IReadOnlyList<BookingResultDto>> GetMyAsync(string userId, CancellationToken ct)
+    {
+        var items = await _repo.GetMyBookingsAsync(userId, ct);
 
-        if (booking.IsDeleted) return;
-
-        // освобождаем места
-        foreach (var ss in booking.SessionSeats)
-            ss.BookingId = null;
-
-        booking.IsDeleted = true;
-        booking.DeletedAt = DateTime.UtcNow;
-
-        await _db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
+        return items.Select(b => new BookingResultDto
+        {
+            BookingId = b.Id,
+            SessionId = b.SessionId,
+            TotalAmount = b.TotalAmount,
+            BookedAt = b.BookedAt,
+            Seats = b.SessionSeats
+                .OrderBy(x => x.Seat.RowNumber).ThenBy(x => x.Seat.SeatNumber)
+                .Select(x => new BookedSeatDto
+                {
+                    SeatId = x.SeatId,
+                    RowNumber = x.Seat.RowNumber,
+                    SeatNumber = x.Seat.SeatNumber,
+                    Category = (int)x.Seat.Category,
+                    Price = x.Price
+                })
+                .ToList()
+        }).ToList();
     }
 }

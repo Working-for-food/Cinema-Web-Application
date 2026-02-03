@@ -1,149 +1,36 @@
-﻿@using Infrastructure.Entities
-@model Web.ViewModels.Bookings.BookingCreateVm
+﻿@model Web.ViewModels.BookingCreateVm
 
 @{
-    ViewData["Title"] = "Бронювання місць";
-
-    string PtText(PresentationType pt) => pt switch
-    {
-        PresentationType.TwoD => "2D",
-        PresentationType.ThreeD => "3D",
-        _ => pt.ToString()
-    };
+    ViewData["Title"] = "Booking";
+    var grouped = Model.Seats
+        .GroupBy(x => x.RowNumber)
+        .OrderBy(g => g.Key)
+        .ToList();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="mb-0">Бронювання місць</h1>
-    <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">На головну</a>
-</div>
+<h2>Choose seats</h2>
 
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger">@err</div>
-}
-
-<div class="card shadow-sm mb-3">
-    <div class="card-body">
-        <div class="row g-2">
-            <div class="col-md-6">
-                <div class="text-muted">Фільм</div>
-                <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.MovieTitle) ? Model.MovieTitle : "—")</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted">Початок</div>
-                <div class="fw-semibold">@Model.StartTime.ToString("dd.MM.yyyy HH:mm")</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted">Тип</div>
-                <div class="fw-semibold">@PtText(Model.PresentationType)</div>
-            </div>
-
-            <div class="col-md-6 mt-2">
-                <div class="text-muted">Кінотеатр</div>
-                <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.CinemaName) ? Model.CinemaName : "—")</div>
-            </div>
-            <div class="col-md-6 mt-2">
-                <div class="text-muted">Зал</div>
-                <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.HallName) ? Model.HallName : "—")</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<form asp-controller="Bookings" asp-action="Create" method="post" id="bookingForm">
+<form method="post">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="SessionId" value="@Model.SessionId" />
 
-    <input type="hidden" asp-for="SessionId" />
+    <div asp-validation-summary="All" class="text-danger"></div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">Виберіть місця</h5>
-                <div class="text-muted small" id="pickedInfo">Обрано: 0</div>
-            </div>
+    @foreach (var row in grouped)
+    {
+        <div style="margin-bottom: 12px;">
+            <div><b>Row @row.Key</b></div>
 
-            <div class="screen mb-3">ЕКРАН</div>
-
-            @if (Model.Seats == null || Model.Seats.Count == 0)
+            @foreach (var s in row.OrderBy(x => x.SeatNumber))
             {
-                <div class="alert alert-warning mb-0">
-                    Поки що немає даних про місця для цього сеансу.
-                    (Це ок - підключимо, коли буде готовий Sessions.)
-                </div>
-            }
-            else
-            {
-                <div class="seats-grid">
-                    @foreach (var s in Model.Seats.OrderBy(x => x.RowNumber).ThenBy(x => x.SeatNumber))
-                    {
-                        var booked = s.IsBooked;
-                        var cls = booked ? "seat booked" : "seat free";
-
-                        <label class="@cls" title="Ряд @s.RowNumber, Місце @s.SeatNumber, @s.Price">
-                            <input class="seat-check" type="checkbox" name="SeatIds" value="@s.SeatId" @(booked ? "disabled" : "") />
-                            <span>@s.RowNumber-@s.SeatNumber</span>
-                            <small>@s.Price</small>
-                        </label>
-                    }
-                </div>
-
-                <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
-                    <div class="legend">
-                        <span class="dot free"></span> вільне
-                        <span class="dot booked ms-3"></span> зайняте
-                        <span class="dot picked ms-3"></span> обране
-                    </div>
-
-                    <div class="ms-auto fw-semibold" id="totalInfo">Сума: 0</div>
-                </div>
+                var disabled = s.IsBooked ? "disabled" : "";
+                <label style="display:inline-block; margin-right:10px; opacity:@(s.IsBooked ? "0.45" : "1")">
+                    <input type="checkbox" name="SelectedSeatIds" value="@s.SeatId" @disabled />
+                    @s.SeatNumber (@s.Price)
+                </label>
             }
         </div>
+    }
 
-        <div class="card-footer d-flex justify-content-between align-items-center">
-            <a class="btn btn-outline-secondary" asp-controller="Sessions" asp-action="Details" asp-route-id="@Model.SessionId">
-                Назад до сеансу
-            </a>
-
-            <button class="btn btn-primary" type="submit" id="submitBtn" disabled>
-                Забронювати
-            </button>
-        </div>
-    </div>
+    <button type="submit">Book</button>
 </form>
-
-@section Scripts {
-    <script>
-        (function () {
-            const checks = document.querySelectorAll(".seat-check");
-            const pickedInfo = document.getElementById("pickedInfo");
-            const totalInfo = document.getElementById("totalInfo");
-            const submitBtn = document.getElementById("submitBtn");
-
-            function update() {
-                let picked = 0;
-                let sum = 0;
-
-                checks.forEach(ch => {
-                    const label = ch.closest("label");
-                    if (!label) return;
-
-                    if (ch.checked) {
-                        picked++;
-                        label.classList.add("picked");
-                        const priceEl = label.querySelector("small");
-                        if (priceEl) sum += parseFloat(priceEl.textContent.replace(",", ".")) || 0;
-                    } else {
-                        label.classList.remove("picked");
-                    }
-                });
-
-                if (pickedInfo) pickedInfo.textContent = "Обрано: " + picked;
-                if (totalInfo) totalInfo.textContent = "Сума: " + sum.toFixed(2);
-                if (submitBtn) submitBtn.disabled = picked === 0;
-            }
-
-            checks.forEach(ch => ch.addEventListener("change", update));
-            update();
-        })();
-    </script>
-}

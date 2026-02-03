@@ -1,37 +1,14 @@
-﻿@model Web.ViewModels.Bookings.BookingSuccessVm
-
+﻿@model Web.ViewModels.BookingSuccessVm
 @{
-    ViewData["Title"] = "Бронювання успішне";
+    ViewData["Title"] = "Success";
 }
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h1 class="h4 mb-3">Готово! Бронювання створено ✅</h1>
+<h2>Booked</h2>
 
-        <div class="mb-2"><b>Номер бронювання:</b> #@Model.BookingId</div>
-        <div class="mb-2"><b>Час:</b> @Model.BookedAt.ToString("dd.MM.yyyy HH:mm")</div>
-        <div class="mb-2"><b>Сума:</b> @Model.TotalAmount.ToString("0.00")</div>
+<p><b>Booking:</b> #@Model.BookingId</p>
+<p><b>Total:</b> @Model.TotalAmount</p>
+<p><b>Date:</b> @Model.BookedAt</p>
 
-        <hr />
+<p><b>Seats:</b> @string.Join(", ", Model.Seats)</p>
 
-        <div class="mb-1"><b>Фільм:</b> @Model.MovieTitle</div>
-        <div class="mb-1"><b>Кінотеатр:</b> @Model.CinemaName</div>
-        <div class="mb-3"><b>Зал:</b> @Model.HallName</div>
-
-        @if (Model.SeatsText?.Count > 0)
-        {
-            <div class="mb-2"><b>Місця:</b></div>
-            <ul class="mb-3">
-                @foreach (var s in Model.SeatsText)
-                {
-                    <li>@s</li>
-                }
-            </ul>
-        }
-
-        <div class="d-flex gap-2">
-            <a class="btn btn-primary" asp-controller="Bookings" asp-action="My">Мої бронювання</a>
-            <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">На головну</a>
-        </div>
-    </div>
-</div>
+<a asp-action="My">My bookings</a>
