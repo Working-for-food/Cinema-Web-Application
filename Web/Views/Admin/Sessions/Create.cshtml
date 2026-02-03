@@ -155,6 +155,33 @@
 
             <hr class="my-4" />
 
+            <div class="card border-0 bg-light mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">Ціноутворення</h5>
+                        <span class="text-muted small">Формула: ряд × категорія</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <label class="form-label fw-semibold">Ціни по рядах</label>
+                            <div id="rowPricesWrap" class="border rounded p-2 bg-white">
+                                <div class="text-muted small">Оберіть зал, щоб згенерувати рядки.</div>
+                            </div>
+                            <span class="text-danger" asp-validation-for="RowPrices"></span>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <label class="form-label fw-semibold">Множники по категоріях</label>
+                            <div id="catMultipliersWrap" class="border rounded p-2 bg-white">
+                                <div class="text-muted small">Оберіть зал, щоб згенерувати категорії.</div>
+                            </div>
+                            <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex gap-2">
                 <button class="btn btn-primary" type="submit">Створити</button>
                 <a class="btn btn-outline-secondary" asp-action="Index">Скасувати</a>
@@ -168,13 +195,20 @@
 
     <script>
         (function () {
-            const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                        (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
-                ));
+        const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                                            (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
 
-          const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                        (Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())
-                ));
+            const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                                        (Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
+
+        const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
+
+        const rowWrap = document.getElementById('rowPricesWrap');
+        const catWrap = document.getElementById('catMultipliersWrap');
+
+        const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
+        const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
+
 
           // --- Elements ---
           const cinemaSelect = document.getElementById('cinemaSelect');
@@ -333,11 +367,179 @@
             }
           }
 
+                  function normalizeDecimalInput(el) {
+          if (!el) return;
+          let v = (el.value || '').trim();
+          if (!v) return;
+
+          v = v.replace(/\s+/g, '').replace(/\./g, ',');
+          v = v.replace(/[^0-9,]/g, '');
+
+          const parts = v.split(',');
+          if (parts.length > 2) v = parts[0] + ',' + parts.slice(1).join('');
+
+          el.value = v;
+        }
+
+        function buildRowPriceMapFromInitial() {
+          const map = new Map();
+          if (Array.isArray(initialRowPrices)) {
+            for (const x of initialRowPrices) {
+              const rn = Number(x.rowNumber ?? x.RowNumber ?? 0);
+              const bp = x.basePrice ?? x.BasePrice;
+              if (rn > 0 && bp != null) map.set(rn, String(bp).replace('.', ','));
+            }
+          }
+          return map;
+        }
+
+        function buildCatMultiplierMapFromInitial() {
+          const map = new Map();
+          if (Array.isArray(initialCategoryMultipliers)) {
+            for (const x of initialCategoryMultipliers) {
+              const id = Number(x.category ?? x.Category ?? 0);
+              const m = x.multiplier ?? x.Multiplier;
+              if (id > 0 && m != null) map.set(id, String(m).replace('.', ','));
+            }
+          }
+          return map;
+        }
+
+        function renderRowPrices(rows) {
+          if (!rowWrap) return;
+
+          const initMap = buildRowPriceMapFromInitial();
+
+          if (!Array.isArray(rows) || rows.length === 0) {
+            rowWrap.innerHTML = `<div class="text-muted small">Немає рядів.</div>`;
+            return;
+          }
+
+          rowWrap.innerHTML = `
+        <table class="table table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:40%;">Ряд</th>
+              <th>Базова ціна</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((rowNumber, i) => {
+              const rn = Number(rowNumber);
+              const val = initMap.get(rn) ?? '100';
+              return `
+        <tr>
+          <td class="text-muted">Ряд ${rn}</td>
+          <td>
+            <input type="hidden" name="RowPrices[${i}].RowNumber" value="${rn}" />
+            <input class="form-control form-control-sm js-decimal"
+                   type="text"
+                   inputmode="decimal"
+                   name="RowPrices[${i}].BasePrice"
+                   value="${val}"
+                   autocomplete="off" />
+          </td>
+        </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+        }
+
+        function renderCategoryMultipliers(categories) {
+          if (!catWrap) return;
+
+          const initMap = buildCatMultiplierMapFromInitial();
+
+          if (!Array.isArray(categories) || categories.length === 0) {
+            catWrap.innerHTML = `<div class="text-muted small">Немає категорій.</div>`;
+            return;
+          }
+
+          catWrap.innerHTML = `
+        <table class="table table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:55%;">Категорія</th>
+              <th>Множник</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${categories.map((c, i) => {
+              const id = Number(c.id);
+              const title = String(c.title ?? id);
+              const val = initMap.get(id) ?? '1';
+              return `
+        <tr>
+          <td class="text-muted">${title}</td>
+          <td>
+            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
+            <input class="form-control form-control-sm js-decimal"
+                   type="text"
+                   inputmode="decimal"
+                   name="CategoryMultipliers[${i}].Multiplier"
+                   value="${val}"
+                   autocomplete="off" />
+          </td>
+        </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+        }
+
+        async function loadPricingMetaAndRender(hallId) {
+          if (!rowWrap || !catWrap) return;
+
+          const hid = Number(hallId || 0);
+          if (hid < 1) {
+            rowWrap.innerHTML = `<div class="text-muted small">Оберіть зал, щоб згенерувати рядки.</div>`;
+            catWrap.innerHTML = `<div class="text-muted small">Оберіть зал, щоб згенерувати категорії.</div>`;
+            return;
+          }
+
+          try {
+            const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid), {
+              headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) throw new Error('Bad response');
+
+            const meta = await res.json();
+            const rows = Array.isArray(meta.rows) ? meta.rows : [];
+            const cats = Array.isArray(meta.categories) ? meta.categories : [];
+
+            renderRowPrices(rows);
+            renderCategoryMultipliers(cats);
+          } catch (e) {
+            console.warn('Failed to load pricing meta', e);
+            rowWrap.innerHTML = `<div class="text-danger small">Не вдалося завантажити ряди.</div>`;
+            catWrap.innerHTML = `<div class="text-danger small">Не вдалося завантажити категорії.</div>`;
+          }
+        }
+
+        if (rowWrap) {
+          rowWrap.addEventListener('blur', (e) => {
+            const t = e.target;
+            if (t && t.classList && t.classList.contains('js-decimal')) normalizeDecimalInput(t);
+          }, true);
+        }
+        if (catWrap) {
+          catWrap.addEventListener('blur', (e) => {
+            const t = e.target;
+            if (t && t.classList && t.classList.contains('js-decimal')) normalizeDecimalInput(t);
+          }, true);
+        }
+
+
           // --- Events ---
-          cinemaSelect.addEventListener('change', async () => {
-            hallSelect.value = "0";
-            await loadHallsByCinema(cinemaSelect.value);
-          });
+            cinemaSelect.addEventListener('change', async () => {
+              hallSelect.value = "0";
+              await loadHallsByCinema(cinemaSelect.value);
+              await loadPricingMetaAndRender(hallSelect.value);
+            });
+
+            hallSelect.addEventListener('change', async () => {
+                await loadPricingMetaAndRender(hallSelect.value);
+            });
+
 
           titleInput.addEventListener('input', syncMovieIdAndUpdate);
 
@@ -350,8 +552,10 @@
             checkShortDuration(hiddenMovieId.value);
           });
 
-          loadHallsByCinema(cinemaSelect.value).then(() => {
-          });
+        loadHallsByCinema(cinemaSelect.value).then(async () => {
+          await loadPricingMetaAndRender(hallSelect.value);
+        });
+
 
           syncMovieIdAndUpdate();
 

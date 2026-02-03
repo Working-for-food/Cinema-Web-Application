@@ -1,0 +1,171 @@
+﻿@using Infrastructure.Entities
+@model Web.ViewModels.Admin.Sessions.SessionPricingPageVm
+
+@{
+    ViewData["Title"] = "Ціни сеансу";
+    var rows = Model.Seats.GroupBy(x => x.Row).OrderBy(g => g.Key).ToList();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-0">Ціни сеансу</h1>
+        <div class="text-muted small">
+            @Model.CinemaName · @Model.HallName · @Model.MovieTitle
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.SessionId">До редагування</a>
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.SessionId">Деталі</a>
+    </div>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success mb-3" role="alert">@ok</div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+}
+
+<form asp-action="Pricing" asp-route-id="@Model.SessionId" method="post" novalidate>
+    @Html.AntiForgeryToken()
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <label class="form-label fw-semibold">Ціни по рядах</label>
+
+                    <div class="border rounded p-2 bg-white">
+                        @if (Model.RowPrices is null || Model.RowPrices.Count == 0)
+                        {
+                            <div class="text-muted small">—</div>
+                        }
+                        else
+                        {
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40%;">Ряд</th>
+                                        <th>Базова ціна</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.RowPrices.Count; i++)
+                                    {
+                                        <tr>
+                                            <td class="text-muted">Ряд @Model.RowPrices[i].RowNumber</td>
+                                            <td>
+                                                <input type="hidden" asp-for="RowPrices[@i].RowNumber" />
+                                                <input class="form-control form-control-sm"
+                                                       asp-for="RowPrices[@i].BasePrice"
+                                                       type="number"
+                                                       step="0.01"
+                                                       min="0.01" />
+                                                <span class="text-danger small" asp-validation-for="RowPrices[@i].BasePrice"></span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                    <span class="text-danger" asp-validation-for="RowPrices"></span>
+                </div>
+
+                <div class="col-lg-6">
+                    <label class="form-label fw-semibold">Множники по категоріях</label>
+
+                    <div class="border rounded p-2 bg-white">
+                        @if (Model.CategoryMultipliers is null || Model.CategoryMultipliers.Count == 0)
+                        {
+                            <div class="text-muted small">—</div>
+                        }
+                        else
+                        {
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width:55%;">Категорія</th>
+                                        <th>Множник</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.CategoryMultipliers.Count; i++)
+                                    {
+                                        var catId = Model.CategoryMultipliers[i].Category;
+                                        var title = !string.IsNullOrWhiteSpace(Model.CategoryMultipliers[i].Title)
+                                        ? Model.CategoryMultipliers[i].Title
+                                        : ((SeatCategory)catId).ToString();
+
+                                        <tr>
+                                            <td class="text-muted">@title</td>
+                                            <td>
+                                                <input type="hidden" asp-for="CategoryMultipliers[@i].Category" />
+                                                <input type="hidden" asp-for="CategoryMultipliers[@i].Title" />
+                                                <input class="form-control form-control-sm"
+                                                       asp-for="CategoryMultipliers[@i].Multiplier"
+                                                       type="number"
+                                                       step="0.01"
+                                                       min="0.01" />
+                                                <span class="text-danger small" asp-validation-for="CategoryMultipliers[@i].Multiplier"></span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                    <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
+                </div>
+            </div>
+
+            <hr class="my-3" />
+
+            <button class="btn btn-primary" type="submit">Застосувати</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Схема і ціни</h5>
+                <span class="text-muted small">Ряд × категорія</span>
+            </div>
+
+            @if (Model.Seats is null || Model.Seats.Count == 0)
+            {
+                <div class="text-muted">Немає місць для відображення.</div>
+            }
+            else
+            {
+                @foreach (var g in rows)
+                {
+                    <div class="mb-3">
+                        <div class="fw-semibold mb-2">Ряд @g.Key</div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var seat in g.OrderBy(x => x.Number))
+                            {
+                                <div class="border rounded text-center p-2" style="width:72px;">
+                                    <div class="fw-semibold">@seat.Number</div>
+                                    <div class="text-muted small">@((SeatCategory)seat.Category)</div>
+                                    <div class="fw-semibold">@seat.Price.ToString("0.00")</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
