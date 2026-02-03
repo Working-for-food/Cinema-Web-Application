@@ -115,7 +115,7 @@ public sealed class MovieImportRepository : IMovieImportRepository
             _db.MovieDirectors.Add(new MovieDirector
             {
                 MovieId = movieId,
-                Director = d.person,
+                DirectorId = d.person.Id,
                 BillingOrder = d.order
             });
         }
