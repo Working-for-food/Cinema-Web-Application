@@ -8,10 +8,10 @@
     var search = (string?)ViewBag.Search;
 }
 
-<section class="sessions-section py-4 pb-6 gray-bg">
+<section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-5">Користувачі</h1>
+        <h1 class="section-title text-center mb-4">Користувачі</h1>
 
         @if (TempData["Success"] != null)
         {
@@ -40,7 +40,7 @@
                 </div>
             </form>
 
-            <a class="btn btn-maroon mb-1" asp-action="Create">
+            <a class="btn btn-maroon" asp-action="Create">
                 <i class="fas fa-plus me-2"></i>Додати користувача
             </a>
         </div>
