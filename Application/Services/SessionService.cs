@@ -324,74 +324,66 @@ public class SessionService : ISessionService
         if (s is null)
             throw new InvalidOperationException("Сеанс не знайдено.");
 
+        await _pricingRepo.EnsureSessionSeatsCreatedAsync(sessionId, s.HallId, ct);
+
         var hallSeats = await _pricingRepo.GetHallSeatsAsync(s.HallId, ct);
 
-        var hallRows = hallSeats.Select(x => x.RowNumber).Distinct().OrderBy(x => x).ToList();
-        var hallCats = hallSeats.Select(x => (int)x.Category).Distinct().OrderBy(x => x).ToList();
+        var hallRowSet = hallSeats.Select(x => x.RowNumber).ToHashSet();
+        var hallCatSet = hallSeats.Select(x => (int)x.Category).ToHashSet();
 
         var rowPrices = pricing.RowPrices ?? new List<RowPriceDto>();
         var catMultipliers = pricing.CategoryMultipliers ?? new List<CategoryMultiplierDto>();
 
-        var inRows = rowPrices
-            .Select(x => x.Row)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-
-        var inCats = catMultipliers
-            .Select(x => x.Category)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-
-        if (!hallRows.SequenceEqual(inRows))
-            throw new InvalidOperationException("Некоректні ціни по рядах: набір рядів не відповідає залу.");
-
-        if (!hallCats.SequenceEqual(inCats))
-            throw new InvalidOperationException("Некоректні множники: набір категорій не відповідає залу.");
-
         if (rowPrices.Count == 0)
             throw new InvalidOperationException("Заповніть ціни по рядах.");
-
         if (catMultipliers.Count == 0)
             throw new InvalidOperationException("Заповніть множники по категоріях.");
-
         if (rowPrices.Any(x => x.BasePrice <= 0))
             throw new InvalidOperationException("Ціни по рядах мають бути > 0.");
-
         if (catMultipliers.Any(x => x.Multiplier <= 0))
             throw new InvalidOperationException("Множники мають бути > 0.");
 
-        var rowEntities = pricing.RowPrices.Select(x => new SessionRowPrice
-        {
-            SessionId = sessionId,
-            RowNumber = x.Row,
-            BasePrice = x.BasePrice
-        });
+        var validRowPrices = rowPrices
+            .Where(x => hallRowSet.Contains(x.Row))
+            .DistinctBy(x => x.Row) // Захист від дублікатів
+            .Select(x => new SessionRowPrice
+            {
+                SessionId = sessionId,
+                RowNumber = x.Row,
+                BasePrice = x.BasePrice
+            })
+            .ToList();
 
-        var catEntities = pricing.CategoryMultipliers.Select(x => new SessionCategoryMultiplier
-        {
-            SessionId = sessionId,
-            Category = (SeatCategory)x.Category,
-            Multiplier = x.Multiplier
-        });
+        var validMultipliers = catMultipliers
+            .Where(x => hallCatSet.Contains(x.Category))
+            .DistinctBy(x => x.Category)
+            .Select(x => new SessionCategoryMultiplier
+            {
+                SessionId = sessionId,
+                Category = (SeatCategory)x.Category,
+                Multiplier = x.Multiplier
+            })
+            .ToList();
 
-        await _pricingRepo.ReplaceRowPricesAsync(sessionId, rowEntities, ct);
-        await _pricingRepo.ReplaceCategoryMultipliersAsync(sessionId, catEntities, ct);
+        await _pricingRepo.ReplaceRowPricesAsync(sessionId, validRowPrices, ct);
+        await _pricingRepo.ReplaceCategoryMultipliersAsync(sessionId, validMultipliers, ct);
 
-        var rowMap = pricing.RowPrices.ToDictionary(x => x.Row, x => x.BasePrice);
-        var catMap = pricing.CategoryMultipliers.ToDictionary(x => x.Category, x => x.Multiplier);
+        var rowMap = validRowPrices.ToDictionary(x => x.RowNumber, x => x.BasePrice);
+        var catMap = validMultipliers.ToDictionary(x => (int)x.Category, x => x.Multiplier);
 
         var sessionSeats = await _pricingRepo.GetSessionSeatsWithSeatAsync(sessionId, ct);
 
-        var seatIdToPrice = sessionSeats.ToDictionary(
-            x => x.SeatId,
-            x =>
+        var seatIdToPrice = new Dictionary<int, decimal>();
+
+        foreach (var ss in sessionSeats)
+        {
+            if (rowMap.TryGetValue(ss.Seat.RowNumber, out var basePrice) &&
+                catMap.TryGetValue((int)ss.Seat.Category, out var mult))
             {
-                var basePrice = rowMap[x.Seat.RowNumber];
-                var mult = catMap[(int)x.Seat.Category];
-                return Math.Round(basePrice * mult, 2, MidpointRounding.AwayFromZero);
-            });
+                var finalPrice = Math.Round(basePrice * mult, 2, MidpointRounding.AwayFromZero);
+                seatIdToPrice[ss.SeatId] = finalPrice;
+            }
+        }
 
         await _pricingRepo.UpdateSessionSeatPricesAsync(sessionId, seatIdToPrice, ct);
     }

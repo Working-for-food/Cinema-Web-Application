@@ -40,7 +40,7 @@ public sealed class SessionPricingPageVm : IValidatableObject
 
         if (CategoryMultipliers is not null)
         {
-            if (CategoryMultipliers.Any(x => x.Category <= 0))
+            if (CategoryMultipliers.Any(x => x.Category < 0))
                 yield return new ValidationResult("Некоректна категорія.", new[] { nameof(CategoryMultipliers) });
 
             if (CategoryMultipliers.Any(x => x.Multiplier <= 0))

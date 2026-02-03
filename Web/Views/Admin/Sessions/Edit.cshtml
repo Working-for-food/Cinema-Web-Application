@@ -54,44 +54,33 @@
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
 
-            @* disabled select не поститься *@
             <input type="hidden" asp-for="CinemaId" />
             <input type="hidden" asp-for="HallId" />
 
             <div class="row g-3">
 
-                <!-- КІНОТЕАТР -->
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Кінотеатр</label>
                     <select class="form-select"
-                            asp-for="CinemaId"
                             asp-items="Model.Cinemas"
                             id="cinemaSelect"
-                            disabled="@(lockHall ? "disabled" : null)"
-                            aria-disabled="@(lockHall ? "true" : "false")">
+                            disabled>
                         <option value="0">— Оберіть кінотеатр —</option>
                     </select>
-                    <span class="text-danger" asp-validation-for="CinemaId"></span>
                 </div>
 
-                <!-- ЗАЛ -->
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Зал</label>
                     <select class="form-select"
-                            asp-for="HallId"
                             asp-items="Model.Halls"
                             id="hallSelect"
-                            disabled="@(lockHall ? "disabled" : null)"
-                            aria-disabled="@(lockHall ? "true" : "false")">
+                            disabled>
                         <option value="0">— Оберіть зал —</option>
                     </select>
-                    <span class="text-danger" asp-validation-for="HallId"></span>
                 </div>
 
-                <!-- ФІЛЬМ + ПОСТЕР -->
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Фільм</label>
-
                     <div class="d-flex gap-2 align-items-start">
                         <div class="flex-grow-1">
                             <input class="form-control"
@@ -109,61 +98,38 @@
                                 }
                             </datalist>
 
-                            <div class="form-text">Показано до 50 підказок.</div>
+                            <div class="form-text">Пошук фільму по базі.</div>
                             <span class="text-danger" asp-validation-for="MovieId"></span>
                         </div>
 
                         <div style="width:86px;">
-                            <img id="posterImg"
-                                 class="d-none"
-                                 src=""
-                                 alt="Постер"
-                                 style="width:86px;height:auto;border-radius:8px;object-fit:cover;"
-                                 loading="lazy" />
-                            <div id="posterPlaceholder" class="text-muted small">—</div>
+                            [Image of movie poster placeholder icon]
+                            <img id="posterImg" class="d-none" src="" alt="Постер"
+                                 style="width:86px;height:auto;border-radius:8px;object-fit:cover;" loading="lazy" />
+                            <div id="posterPlaceholder" class="text-muted small border rounded d-flex align-items-center justify-content-center" style="width:86px; height:120px;">—</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ТИП -->
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Тип показу</label>
-                    <select class="form-select"
-                            asp-for="PresentationType"
-                            asp-items="Model.PresentationTypes">
-                    </select>
+                    <select class="form-select" asp-for="PresentationType" asp-items="Model.PresentationTypes"></select>
                     <span class="text-danger" asp-validation-for="PresentationType"></span>
                 </div>
 
-                <!-- ПОЧАТОК -->
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Початок</label>
-                    <input class="form-control"
-                           asp-for="StartTime"
-                           id="StartTime"
-                           type="datetime-local"
-                           step="60"
-                           value="@FormatDt(Model.StartTime)" />
+                    <input class="form-control" asp-for="StartTime" id="StartTime" type="datetime-local" step="60" value="@FormatDt(Model.StartTime)" />
                     <span class="text-danger" asp-validation-for="StartTime"></span>
                 </div>
 
-                <!-- КІНЕЦЬ -->
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Кінець</label>
-                    <input class="form-control"
-                           asp-for="EndTime"
-                           id="EndTime"
-                           type="datetime-local"
-                           step="60"
-                           value="@FormatDt(Model.EndTime)" />
-
+                    <input class="form-control" asp-for="EndTime" id="EndTime" type="datetime-local" step="60" value="@FormatDt(Model.EndTime)" />
                     <div class="form-text" id="movieDurationText">Тривалість: —</div>
-
                     <div class="alert alert-warning mt-2 py-2 d-none" id="shortDurationWarn" role="alert"></div>
-
                     <span class="text-danger" asp-validation-for="EndTime"></span>
                 </div>
-
             </div>
 
             <hr class="my-4" />
@@ -172,22 +138,26 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0">Ціноутворення</h5>
-                        <span class="text-muted small">Формула: ряд × категорія</span>
+                        <span class="text-muted small">Формула: ціна ряду × множник категорії</span>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-lg-6">
-                            <label class="form-label fw-semibold">Ціни по рядах</label>
+                            <label class="form-label fw-semibold">Базові ціни по рядах (грн)</label>
                             <div id="rowPricesWrap" class="border rounded p-2 bg-white">
-                                <div class="text-muted small">—</div>
+                                <div class="text-center py-3">
+                                    <div class="spinner-border text-primary spinner-border-sm" role="status"></div> Завантаження...
+                                </div>
                             </div>
                             <span class="text-danger" asp-validation-for="RowPrices"></span>
                         </div>
 
                         <div class="col-lg-6">
-                            <label class="form-label fw-semibold">Множники по категоріях</label>
+                            <label class="form-label fw-semibold">Множники категорій</label>
                             <div id="catMultipliersWrap" class="border rounded p-2 bg-white">
-                                <div class="text-muted small">—</div>
+                                <div class="text-center py-3">
+                                    <div class="spinner-border text-primary spinner-border-sm" role="status"></div> Завантаження...
+                                </div>
                             </div>
                             <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
                         </div>
@@ -196,7 +166,7 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2">
-                <button class="btn btn-primary" type="submit">Зберегти</button>
+                <button class="btn btn-primary" type="submit">Зберегти зміни</button>
                 <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Скасувати</a>
             </div>
         </form>
@@ -207,329 +177,188 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-                (function () {
-                    const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                            (Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())
-                                    ));
+        (function () {
+            const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
+            const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
 
-                const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                        (Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())
-                                ));
+            const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
+            const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
 
-                const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
+            const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
 
-                    const rowWrap = document.getElementById('rowPricesWrap');
-                    const catWrap = document.getElementById('catMultipliersWrap');
+            const rowWrap = document.getElementById('rowPricesWrap');
+            const catWrap = document.getElementById('catMultipliersWrap');
+            const hallSelect = document.getElementById('hallSelect');
+            const hiddenHallIdInput = document.querySelector('input[name="HallId"]');
 
-                    const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                        Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()
-                                ));
+            const currentHallId = hiddenHallIdInput ? hiddenHallIdInput.value : (hallSelect ? hallSelect.value : 0);
 
-                const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                        Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()
-                                ));
+            const titleInput = document.getElementById('movieTitleInput');
+            const movieIdHidden = document.getElementById('movieIdHidden');
+            const list = document.getElementById('movieList');
+            const startInput = document.getElementById('StartTime');
+            const endInput = document.getElementById('EndTime');
+            const durationText = document.getElementById('movieDurationText');
+            const warn = document.getElementById('shortDurationWarn');
+            const posterImg = document.getElementById('posterImg');
+            const posterPlaceholder = document.getElementById('posterPlaceholder');
 
-                const hallSelect = document.getElementById('hallSelect');
-
-                    const titleInput = document.getElementById('movieTitleInput');
-                    const movieIdHidden = document.getElementById('movieIdHidden');
-                    const list = document.getElementById('movieList');
-
-                    const startInput = document.getElementById('StartTime');
-                    const endInput = document.getElementById('EndTime');
-
-                    const durationText = document.getElementById('movieDurationText');
-                    const warn = document.getElementById('shortDurationWarn');
-
-                    const posterImg = document.getElementById('posterImg');
-                    const posterPlaceholder = document.getElementById('posterPlaceholder');
-
-                    if (!titleInput || !movieIdHidden || !list || !startInput || !endInput) return;
-
-                    function posterUrl(path) {
-                        if (!path) return '';
-                        const p = String(path).trim();
-                        if (!p) return '';
-                        if (p.startsWith('http://') || p.startsWith('https://')) return p;
-                        return `https://image.tmdb.org/t/p/w154${p.startsWith('/') ? p : '/' + p}`;
+            function buildMap(arr, keyProp, valProp) {
+                const map = new Map();
+                if (Array.isArray(arr)) {
+                    for (const x of arr) {
+                        const key = Number(x[keyProp] ?? x[keyProp.charAt(0).toUpperCase() + keyProp.slice(1)] ?? 0);
+                        const val = x[valProp] ?? x[valProp.charAt(0).toUpperCase() + valProp.slice(1)];
+                        if (key > 0 && val != null) map.set(key, val);
                     }
+                }
+                return map;
+            }
 
-                    function setPoster(movieId) {
-                        if (!posterImg || !posterPlaceholder) return;
+            const initRowMap = buildMap(initialRowPrices, 'rowNumber', 'basePrice');
+            const initCatMap = buildMap(initialCategoryMultipliers, 'category', 'multiplier');
 
-                        const path = moviePosters[Number(movieId || 0)];
-                        const url = posterUrl(path);
+            function renderRowPrices(rows) {
+                if (!rowWrap) return;
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    rowWrap.innerHTML = `<div class="text-muted small">Немає рядів.</div>`;
+                    return;
+                }
 
-                        if (!url) {
-                            posterImg.classList.add('d-none');
-                            posterImg.src = '';
-                            posterPlaceholder.classList.remove('d-none');
-                            posterPlaceholder.textContent = '—';
-                            return;
-                        }
+                rowWrap.innerHTML = `
+                <table class="table table-sm align-middle mb-0">
+                  <thead><tr><th style="width:40%;">Ряд</th><th>Базова ціна</th></tr></thead>
+                  <tbody>
+                    ${rows.map((rowNumber, i) => {
+                        const rn = Number(rowNumber);
+                        const val = initRowMap.get(rn) ?? '100';
+                        return `
+                        <tr>
+                          <td class="text-muted">Ряд ${rn}</td>
+                          <td>
+                            <input type="hidden" name="RowPrices[${i}].RowNumber" value="${rn}" />
+                            <input class="form-control form-control-sm"
+                                   type="number" step="1" min="0"
+                                   name="RowPrices[${i}].BasePrice"
+                                   value="${val}" required />
+                          </td>
+                        </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>`;
+            }
 
-                        posterImg.src = url;
-                        posterImg.classList.remove('d-none');
-                        posterPlaceholder.classList.add('d-none');
-                    }
+            function renderCategoryMultipliers(categories) {
+                if (!catWrap) return;
+                if (!Array.isArray(categories) || categories.length === 0) {
+                    catWrap.innerHTML = `<div class="text-muted small">Немає категорій.</div>`;
+                    return;
+                }
 
-                    function pad(n) { return String(n).padStart(2, "0"); }
+                catWrap.innerHTML = `
+                <table class="table table-sm align-middle mb-0">
+                  <thead><tr><th style="width:55%;">Категорія</th><th>Множник</th></tr></thead>
+                  <tbody>
+                    ${categories.map((c, i) => {
+                        const id = Number(c.id);
+                        const title = String(c.title ?? id);
+                        const val = initCatMap.get(id) ?? '1';
+                        return `
+                        <tr>
+                          <td class="text-muted">${title}</td>
+                          <td>
+                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
+                            <input class="form-control form-control-sm"
+                                   type="number" step="0.1" min="0.1"
+                                   name="CategoryMultipliers[${i}].Multiplier"
+                                   value="${val}" required />
+                          </td>
+                        </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>`;
+            }
 
-                    function parseDt(v) {
-                        if (!v) return null;
-                        const d = new Date(v);
-                        return isNaN(d) ? null : d;
-                    }
+            async function loadPricingMetaAndRender(hallId) {
+                const hid = Number(hallId || 0);
+                if (hid < 1) {
+                    rowWrap.innerHTML = `<div class="text-muted small">—</div>`;
+                    catWrap.innerHTML = `<div class="text-muted small">—</div>`;
+                    return;
+                }
 
-                    function fmtDt(d) {
-                        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                    }
+                try {
+                    const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid));
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    const meta = await res.json();
 
-                    function findSelectedMovieIdByTitle() {
-                        const value = (titleInput.value || '').trim();
-                        const option = Array.from(list.options).find(o => (o.value || '').trim() === value);
-                        return option ? (option.dataset.id || "0") : "0";
-                    }
+                    renderRowPrices(meta.rows);
+                    renderCategoryMultipliers(meta.categories);
+                } catch (e) {
+                    console.error(e);
+                    rowWrap.innerHTML = `<div class="text-danger small">Помилка.</div>`;
+                    catWrap.innerHTML = `<div class="text-danger small">Помилка.</div>`;
+                }
+            }
 
-                    function updateDurationLabel(movieId) {
-                        if (!durationText) return;
-                        const dur = movieDurations[Number(movieId || 0)];
-                        durationText.textContent = (dur && dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
-                    }
+            function posterUrl(path) {
+                if (!path) return '';
+                if (path.startsWith('http')) return path;
+                return `https://image.tmdb.org/t/p/w154${path.startsWith('/') ? path : '/' + path}`;
+            }
 
-                    let endTouched = false;
-                    endInput.addEventListener('input', () => endTouched = true);
+            function setPoster(movieId) {
+                const path = moviePosters[Number(movieId || 0)];
+                const url = posterUrl(path);
+                if (!url) {
+                    posterImg.classList.add('d-none');
+                    posterPlaceholder.classList.remove('d-none');
+                } else {
+                    posterImg.src = url;
+                    posterImg.classList.remove('d-none');
+                    posterPlaceholder.classList.add('d-none');
+                }
+            }
 
-                    function recalcEnd(movieId) {
-                        const dur = movieDurations[Number(movieId || 0)];
-                        if (!dur || dur <= 0) return;
-                        if (endTouched) return;
+            function findSelectedMovieIdByTitle() {
+                const val = (titleInput.value || '').trim();
+                const opt = Array.from(list.options).find(o => o.value === val);
+                return opt ? (opt.dataset.id || "0") : "0";
+            }
 
-                        const start = parseDt(startInput.value);
-                        if (!start) return;
+            function updateUIForMovie(movieId) {
+                 const id = Number(movieId || 0);
+                 const dur = movieDurations[id];
+                 durationText.textContent = (dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
+                 setPoster(id);
 
-                        const end = new Date(start.getTime() + dur * 60000);
-                        endInput.value = fmtDt(end);
-                    }
+                 const start = new Date(startInput.value);
+                 const end = new Date(endInput.value);
+                 if (dur > 0 && !isNaN(start) && !isNaN(end)) {
+                     const diffMins = (end - start) / 60000;
+                     if (diffMins < dur) {
+                         warn.classList.remove('d-none');
+                         warn.textContent = `Увага: час сеансу (${Math.round(diffMins)} хв) менший за фільм (${dur} хв).`;
+                     } else {
+                         warn.classList.add('d-none');
+                     }
+                 } else {
+                     warn.classList.add('d-none');
+                 }
+            }
 
-                    function checkShortDuration(movieId) {
-                        if (!warn) return;
+            titleInput.addEventListener('input', () => {
+                const newId = findSelectedMovieIdByTitle();
+                movieIdHidden.value = newId;
+                updateUIForMovie(newId);
+            });
 
-                        const dur = movieDurations[Number(movieId || 0)];
-                        const start = parseDt(startInput.value);
-                        const end = parseDt(endInput.value);
+            startInput.addEventListener('change', () => updateUIForMovie(movieIdHidden.value));
+            endInput.addEventListener('change', () => updateUIForMovie(movieIdHidden.value));
 
-                        if (!dur || dur <= 0 || !start || !end) {
-                            warn.classList.add('d-none');
-                            warn.textContent = '';
-                            return;
-                        }
+            updateUIForMovie(movieIdHidden.value);
+            loadPricingMetaAndRender(currentHallId);
 
-                        const sessionMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
-
-                        if (sessionMinutes < dur) {
-                            warn.classList.remove('d-none');
-                            warn.textContent = `Увага: тривалість сеансу (${sessionMinutes} хв) менша за тривалість фільму (${dur} хв).`;
-                        } else {
-                            warn.classList.add('d-none');
-                            warn.textContent = '';
-                        }
-                    }
-
-                    function syncMovieIdAndUpdate() {
-                        const newId = findSelectedMovieIdByTitle();
-                        const oldId = movieIdHidden.value;
-
-                        movieIdHidden.value = newId;
-
-                        if (newId !== oldId) endTouched = false;
-
-                        updateDurationLabel(newId);
-                        recalcEnd(newId);
-                        checkShortDuration(newId);
-                        setPoster(newId);
-                    }
-
-                    function normalizeDecimalInput(el) {
-                        if (!el) return;
-                        let v = (el.value || '').trim();
-                        if (!v) return;
-
-                        v = v.replace(/\s+/g, '').replace(/\./g, ',');
-                        v = v.replace(/[^0-9,]/g, '');
-
-                        const parts = v.split(',');
-                        if (parts.length > 2) v = parts[0] + ',' + parts.slice(1).join('');
-
-                        el.value = v;
-                    }
-
-                    function buildRowPriceMapFromInitial() {
-                        const map = new Map();
-                        if (Array.isArray(initialRowPrices)) {
-                            for (const x of initialRowPrices) {
-                                const rn = Number(x.rowNumber ?? x.RowNumber ?? 0);
-                                const bp = x.basePrice ?? x.BasePrice;
-                                if (rn > 0 && bp != null) map.set(rn, String(bp).replace('.', ','));
-                            }
-                        }
-                        return map;
-                    }
-
-                    function buildCatMultiplierMapFromInitial() {
-                        const map = new Map();
-                        if (Array.isArray(initialCategoryMultipliers)) {
-                            for (const x of initialCategoryMultipliers) {
-                                const id = Number(x.category ?? x.Category ?? 0);
-                                const m = x.multiplier ?? x.Multiplier;
-                                if (id > 0 && m != null) map.set(id, String(m).replace('.', ','));
-                            }
-                        }
-                        return map;
-                    }
-
-                    function renderRowPrices(rows) {
-                        if (!rowWrap) return;
-
-                        const initMap = buildRowPriceMapFromInitial();
-
-                        if (!Array.isArray(rows) || rows.length === 0) {
-                            rowWrap.innerHTML = `<div class="text-muted small">—</div>`;
-                            return;
-                        }
-
-                        rowWrap.innerHTML = `
-        <table class="table table-sm align-middle mb-0">
-          <thead>
-            <tr>
-              <th style="width:40%;">Ряд</th>
-              <th>Базова ціна</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((rowNumber, i) => {
-                                const rn = Number(rowNumber);
-                                const val = initMap.get(rn) ?? '100';
-                                return `
-        <tr>
-          <td class="text-muted">Ряд ${rn}</td>
-          <td>
-            <input type="hidden" name="RowPrices[${i}].RowNumber" value="${rn}" />
-            <input class="form-control form-control-sm js-decimal"
-                   type="text"
-                   inputmode="decimal"
-                   name="RowPrices[${i}].BasePrice"
-                   value="${val}"
-                   autocomplete="off" />
-          </td>
-        </tr>`;
-                            }).join('')}
-          </tbody>
-        </table>`;
-                    }
-
-                    function renderCategoryMultipliers(categories) {
-                        if (!catWrap) return;
-
-                        const initMap = buildCatMultiplierMapFromInitial();
-
-                        if (!Array.isArray(categories) || categories.length === 0) {
-                            catWrap.innerHTML = `<div class="text-muted small">—</div>`;
-                            return;
-                        }
-
-                        catWrap.innerHTML = `
-        <table class="table table-sm align-middle mb-0">
-          <thead>
-            <tr>
-              <th style="width:55%;">Категорія</th>
-              <th>Множник</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${categories.map((c, i) => {
-                                const id = Number(c.id);
-                                const title = String(c.title ?? id);
-                                const val = initMap.get(id) ?? '1';
-                                return `
-        <tr>
-          <td class="text-muted">${title}</td>
-          <td>
-            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
-            <input class="form-control form-control-sm js-decimal"
-                   type="text"
-                   inputmode="decimal"
-                   name="CategoryMultipliers[${i}].Multiplier"
-                   value="${val}"
-                   autocomplete="off" />
-          </td>
-        </tr>`;
-                            }).join('')}
-          </tbody>
-        </table>`;
-                    }
-
-                    async function loadPricingMetaAndRender(hallId) {
-                        if (!rowWrap || !catWrap) return;
-
-                        const hid = Number(hallId || 0);
-                        if (hid < 1) {
-                            rowWrap.innerHTML = `<div class="text-muted small">—</div>`;
-                            catWrap.innerHTML = `<div class="text-muted small">—</div>`;
-                            return;
-                        }
-
-                        try {
-                            const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid), {
-                                headers: { 'Accept': 'application/json' }
-                            });
-                            if (!res.ok) throw new Error('Bad response');
-
-                            const meta = await res.json();
-                            const rows = Array.isArray(meta.rows) ? meta.rows : [];
-                            const cats = Array.isArray(meta.categories) ? meta.categories : [];
-
-                            renderRowPrices(rows);
-                            renderCategoryMultipliers(cats);
-                        } catch (e) {
-                            console.warn('Failed to load pricing meta', e);
-                            rowWrap.innerHTML = `<div class="text-danger small">Помилка завантаження.</div>`;
-                            catWrap.innerHTML = `<div class="text-danger small">Помилка завантаження.</div>`;
-                        }
-                    }
-
-                    if (rowWrap) {
-                        rowWrap.addEventListener('blur', (e) => {
-                            const t = e.target;
-                            if (t && t.classList && t.classList.contains('js-decimal')) normalizeDecimalInput(t);
-                        }, true);
-                    }
-                    if (catWrap) {
-                        catWrap.addEventListener('blur', (e) => {
-                            const t = e.target;
-                            if (t && t.classList && t.classList.contains('js-decimal')) normalizeDecimalInput(t);
-                        }, true);
-                    }
-
-                    titleInput.addEventListener('input', syncMovieIdAndUpdate);
-
-                    startInput.addEventListener('change', () => {
-                        endTouched = false;
-                        syncMovieIdAndUpdate();
-                    });
-
-                    endInput.addEventListener('change', () => {
-                        checkShortDuration(movieIdHidden.value);
-                    });
-
-                    if (hallSelect) {
-                        hallSelect.addEventListener('change', async () => {
-                            await loadPricingMetaAndRender(hallSelect.value);
-                        });
-                    }
-
-                    syncMovieIdAndUpdate();
-                    if (hallSelect) loadPricingMetaAndRender(hallSelect.value);
-                })();
+        })();
     </script>
 }
