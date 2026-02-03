@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Data.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    partial class CinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260203085346_AddSessionPricingRules")]
+    partial class AddSessionPricingRules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -247,6 +250,9 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<int?>("DirectorId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Duration")
                         .HasColumnType("int");
 
@@ -265,6 +271,9 @@ namespace Infrastructure.Data.Migrations
                     b.Property<string>("PosterPath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ProductionCountryCode")
+                        .HasColumnType("nchar(2)");
 
                     b.Property<decimal?>("Rating")
                         .HasPrecision(4, 1)
@@ -285,6 +294,10 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(700)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DirectorId");
+
+                    b.HasIndex("ProductionCountryCode");
 
                     b.HasIndex("TmdbId")
                         .IsUnique()
@@ -793,6 +806,23 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Cinema");
                 });
 
+            modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
+                {
+                    b.HasOne("Infrastructure.Entities.Person", "Director")
+                        .WithMany("DirectedMoviesMain")
+                        .HasForeignKey("DirectorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Infrastructure.Entities.Country", "ProductionCountry")
+                        .WithMany("ProducedMovies")
+                        .HasForeignKey("ProductionCountryCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Director");
+
+                    b.Navigation("ProductionCountry");
+                });
+
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>
                 {
                     b.HasOne("Infrastructure.Entities.Person", "Actor")
@@ -1045,6 +1075,8 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("MovieCountries");
 
                     b.Navigation("People");
+
+                    b.Navigation("ProducedMovies");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Genre", b =>
@@ -1074,6 +1106,8 @@ namespace Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Infrastructure.Entities.Person", b =>
                 {
+                    b.Navigation("DirectedMoviesMain");
+
                     b.Navigation("MovieActors");
 
                     b.Navigation("MovieDirectors");

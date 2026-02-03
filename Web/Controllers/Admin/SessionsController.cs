@@ -1,6 +1,8 @@
 ﻿using Application.DTOs;
+using Application.DTOs.Pricing;
 using Application.Interfaces;
 using Infrastructure.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Web.ViewModels.Admin.Sessions;
@@ -17,6 +19,7 @@ namespace Web.Controllers.Admin
         private const string CreateViewPath = "~/Views/Admin/Sessions/Create.cshtml";
         private const string EditViewPath = "~/Views/Admin/Sessions/Edit.cshtml";
         private const string DetailsViewPath = "~/Views/Admin/Sessions/Details.cshtml";
+        private const string PricingViewPath = "~/Views/Admin/Sessions/Pricing.cshtml";
 
         private static List<SelectListItem> BuildSortOptions(string? selected)
         {
@@ -151,6 +154,50 @@ namespace Web.Controllers.Admin
             vm.SortOptions = BuildSortOptions(vm.Sort);
         }
 
+        private static SessionPricingDto ToPricingDto(SessionEditVm vm)
+        {
+            var rowPrices = (vm.RowPrices ?? new())
+                .Select(x => new RowPriceDto
+                {
+                    Row = x.RowNumber,
+                    BasePrice = x.BasePrice
+                })
+                .ToList();
+
+            var multipliers = (vm.CategoryMultipliers ?? new())
+                .Select(x => new CategoryMultiplierDto
+                {
+                    Category = x.Category,
+                    Multiplier = x.Multiplier
+                })
+                .ToList();
+
+            return new SessionPricingDto
+            {
+                SessionId = vm.Id ?? 0,
+                HallId = vm.HallId,
+                RowPrices = rowPrices,
+                CategoryMultipliers = multipliers
+            };
+        }
+
+        // GET: /Admin/Sessions/PricingMeta?hallId=1
+        [HttpGet]
+        public async Task<IActionResult> PricingMeta(int hallId, CancellationToken ct)
+        {
+            if (hallId < 1) return Ok(new { rows = Array.Empty<int>(), categories = Array.Empty<object>() });
+
+            var meta = await _lookups.GetHallPricingMetaAsync(hallId, ct);
+
+            return Ok(new
+            {
+                rows = meta.Rows,
+                categories = meta.Categories.Select(c => new { id = c.Id, title = c.Title })
+            });
+        }
+
+
+
         // GET: /Admin/Sessions/HallsByCinema?cinemaId=1
         [HttpGet]
         public async Task<IActionResult> HallsByCinema(int cinemaId, CancellationToken ct)
@@ -194,6 +241,8 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Details(int id, CancellationToken ct)
         {
+            await _sessions.EnsureSessionSeatsAsync(id, ct);
+
             var dto = await _sessions.GetByIdAsync(id, ct);
             if (dto is null) return NotFound();
 
@@ -247,7 +296,9 @@ namespace Web.Controllers.Admin
 
             try
             {
-                await _sessions.CreateAsync(ToDto(vm), ct);
+                var id = await _sessions.CreateAsync(ToDto(vm), ct);
+                await _sessions.ApplyPricingAsync(id, ToPricingDto(vm), ct);
+
                 TempData["Success"] = "Сеанс успішно створено.";
 
                 vm.Id = null;
@@ -267,10 +318,29 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Edit(int id, CancellationToken ct)
         {
+            await _sessions.EnsureSessionSeatsAsync(id, ct);
+
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
 
             var vm = ToEditVm(s);
+            var pricing = await _sessions.GetPricingAsync(id, ct);
+
+            vm.RowPrices = pricing.RowPrices
+                .Select(x => new SessionEditVm.RowPriceVm
+                {
+                    RowNumber = x.Row,
+                    BasePrice = x.BasePrice
+                })
+                .ToList();
+
+            vm.CategoryMultipliers = pricing.CategoryMultipliers
+                .Select(x => new SessionEditVm.CategoryMultiplierVm
+                {
+                    Category = x.Category,
+                    Multiplier = x.Multiplier
+                })
+                .ToList();
 
             await FillEditLookupsAsync(vm, ct);
             ViewBag.MovieTitle = s.MovieTitle;
@@ -296,12 +366,14 @@ namespace Web.Controllers.Admin
                 var ok = await _sessions.UpdateAsync(id, ToDto(vm), ct);
                 if (!ok) return NotFound();
 
+                await _sessions.ApplyPricingAsync(id, ToPricingDto(vm), ct);
+
                 TempData["Success"] = "Сеанс успішно оновлено.";
 
                 await FillEditLookupsAsync(vm, ct);
                 ViewBag.MovieTitle = vm.MovieId > 0
-                            ? await _lookups.GetMovieTitleByIdAsync(vm.MovieId, ct) ?? ""
-                            : "";
+                    ? await _lookups.GetMovieTitleByIdAsync(vm.MovieId, ct) ?? ""
+                    : "";
 
                 return View(EditViewPath, vm);
             }
@@ -350,6 +422,111 @@ namespace Web.Controllers.Admin
                 return LocalRedirect(returnUrl);
 
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> Pricing(int id, CancellationToken ct)
+        {
+            await _sessions.EnsureSessionSeatsAsync(id, ct);
+
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            var pricing = await _sessions.GetPricingAsync(id, ct);
+            var seats = await _sessions.GetSeatPricesAsync(id, ct);
+
+            var vm = new SessionPricingPageVm
+            {
+                SessionId = id,
+                MovieTitle = s.MovieTitle,
+                CinemaName = s.CinemaName,
+                HallName = s.HallName,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                RowPrices = pricing.RowPrices
+                    .Select(x => new SessionPricingPageVm.RowPriceVm { RowNumber = x.Row, BasePrice = x.BasePrice })
+                    .ToList(),
+                CategoryMultipliers = pricing.CategoryMultipliers
+                    .Select(x => new SessionPricingPageVm.CategoryMultiplierVm { Category = x.Category, Multiplier = x.Multiplier, Title = x.Category.ToString() })
+                    .ToList(),
+                Seats = seats.Select(x => new SessionPricingPageVm.SeatPriceVm
+                {
+                    SeatId = x.SeatId,
+                    Row = x.Row,
+                    Number = x.Number,
+                    Category = x.Category,
+                    Price = x.Price
+                }).ToList()
+            };
+
+            return View(PricingViewPath, vm);
+        }
+
+        [HttpPost("{id:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Pricing(int id, SessionPricingPageVm vm, CancellationToken ct)
+        {
+            vm.SessionId = id;
+
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            async Task<IActionResult> ReturnWithViewModelAsync()
+            {
+                vm.MovieTitle = s.MovieTitle;
+                vm.CinemaName = s.CinemaName;
+                vm.HallName = s.HallName;
+                vm.StartTime = s.StartTime;
+                vm.EndTime = s.EndTime;
+
+                var seats = await _sessions.GetSeatPricesAsync(id, ct);
+                vm.Seats = seats.Select(x => new SessionPricingPageVm.SeatPriceVm
+                {
+                    SeatId = x.SeatId,
+                    Row = x.Row,
+                    Number = x.Number,
+                    Category = x.Category,
+                    Price = x.Price
+                }).ToList();
+
+                return View(PricingViewPath, vm);
+            }
+
+            if (!ModelState.IsValid)
+                return await ReturnWithViewModelAsync();
+
+            try
+            {
+                var dto = new SessionPricingDto
+                {
+                    SessionId = id,
+                    HallId = s.HallId,
+                    RowPrices = (vm.RowPrices ?? new())
+                        .Select(x => new RowPriceDto
+                        {
+                            Row = x.RowNumber,
+                            BasePrice = x.BasePrice
+                        })
+                        .ToList(),
+                    CategoryMultipliers = (vm.CategoryMultipliers ?? new())
+                        .Select(x => new CategoryMultiplierDto
+                        {
+                            Category = x.Category,
+                            Multiplier = x.Multiplier
+                        })
+                        .ToList()
+                };
+
+                await _sessions.ApplyPricingAsync(id, dto, ct);
+
+                TempData["Success"] = "Ціни збережено.";
+                return RedirectToAction(nameof(Pricing), new { id });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return await ReturnWithViewModelAsync();
+            }
         }
     }
 }
