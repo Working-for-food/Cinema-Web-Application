@@ -93,7 +93,7 @@ public sealed class MovieImportRepository : IMovieImportRepository
         _db.MovieActors.RemoveRange(old);
         var sorted = actors.OrderBy(a => a.order).ToList();
         short cust = 1;
-        foreach (var a in actors)
+        foreach (var a in sorted)
         {
             _db.MovieActors.Add(new MovieActor
             {
@@ -109,14 +109,15 @@ public sealed class MovieImportRepository : IMovieImportRepository
     {
         var old = await _db.MovieDirectors.Where(x => x.MovieId == movieId).ToListAsync(ct);
         _db.MovieDirectors.RemoveRange(old);
-
-        foreach (var d in directors)
+        var sorted = directors.OrderBy(a => a.order).ToList();
+        short cust = 1;
+        foreach (var d in sorted)
         {
             _db.MovieDirectors.Add(new MovieDirector
             {
                 MovieId = movieId,
                 DirectorId = d.person.Id,
-                BillingOrder = d.order
+                BillingOrder = cust++
             });
         }
     }

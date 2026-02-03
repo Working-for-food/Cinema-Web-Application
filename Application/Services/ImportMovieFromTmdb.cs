@@ -21,21 +21,6 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         var videos = await _tmdb.GetVideosAsync(tmdbId, ct);
         var releaseDates = await _tmdb.GetReleaseDatesAsync(tmdbId, ct);
 
-        var uaCerts = releaseDates.Results
-    .FirstOrDefault(r => string.Equals(r.Iso3166_1, "UA", StringComparison.OrdinalIgnoreCase))
-    ?.ReleaseDates
-    ?.Select(x => x.Certification)
-    .ToList();
-
-        var usCerts = releaseDates.Results
-            .FirstOrDefault(r => string.Equals(r.Iso3166_1, "US", StringComparison.OrdinalIgnoreCase))
-            ?.ReleaseDates
-            ?.Select(x => x.Certification)
-            .ToList();
-
-        var computed = TmdbAgeRatingHelper.GetAgeRating(releaseDates);
-
-
         var trailer = videos.Results.FirstOrDefault(v =>
             v.Site == "YouTube" && v.Type == "Trailer" && !string.IsNullOrWhiteSpace(v.Key));
         var trailerUrl = trailer is null ? null : $"https://www.youtube.com/watch?v={trailer.Key}";

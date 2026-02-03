@@ -151,11 +151,16 @@ public class MovieRepository : IMovieRepository
             existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
 
         // actors
-        existing.MovieActors.Clear();
         var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-        short actorOrder = 1;
+        var existingByActorId = existing.MovieActors.ToDictionary(x => x.ActorId, x => x);
+        var toRemove = existing.MovieActors.Where(x => !aIds.Contains(x.ActorId)).ToList();
+        _db.MovieActors.RemoveRange(toRemove);
+        short next = (short)((existing.MovieActors.Count == 0) ? 1 : (existing.MovieActors.Max(x => x.CustOrder) + 1));
         foreach (var aId in aIds)
-            existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = actorOrder++ });
+        {
+            if (existingByActorId.ContainsKey(aId)) continue;
+            existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = next++ });
+        }
 
         // countries
         existing.MovieCountries.Clear();
@@ -169,11 +174,16 @@ public class MovieRepository : IMovieRepository
             existing.MovieCountries.Add(new MovieCountry { MovieId = existing.Id, CountryCode = code });
 
         // directors
-        existing.MovieDirectors.Clear();
         var dIds = (directorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-        short billing = 1;
+        var existingByDirectorId = existing.MovieDirectors.ToDictionary(x => x.DirectorId, x => x);
+        var dToRemove = existing.MovieDirectors.Where(x => !dIds.Contains(x.DirectorId)).ToList();
+        _db.MovieDirectors.RemoveRange(dToRemove);
+        short nextBilling = (short)((existing.MovieDirectors.Count == 0) ? 1 : (existing.MovieDirectors.Max(x => x.BillingOrder) + 1));
         foreach (var dId in dIds)
-            existing.MovieDirectors.Add(new MovieDirector { MovieId = existing.Id, DirectorId = dId, BillingOrder = billing++ });
+        {
+            if (existingByDirectorId.ContainsKey(dId)) continue;
+            existing.MovieDirectors.Add(new MovieDirector { MovieId = existing.Id, DirectorId = dId, BillingOrder = nextBilling++ });
+        }    
 
         await _db.SaveChangesAsync(ct);
     }
