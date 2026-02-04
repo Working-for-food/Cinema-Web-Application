@@ -34,6 +34,27 @@ public class PricingTemplateService : IPricingTemplateService
         return MapToListDto(list);
     }
 
+    public async Task<PricingTemplateEditDto?> GetForEditAsync(int id, CancellationToken ct)
+    {
+        var entity = await _repo.GetByIdWithDetailsAsync(id, ct);
+        if (entity == null) return null;
+
+        return new PricingTemplateEditDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            IsActive = entity.IsActive,
+            HallId = entity.HallId,
+            RowPrices = entity.RowPrices
+                .OrderBy(x => x.Row)
+                .Select(x => new RowPriceDto { Row = x.Row, BasePrice = x.BasePrice })
+                .ToList(),
+            CategoryMultipliers = entity.CategoryMultipliers
+                .Select(x => new CategoryMultiplierDto { Category = (int)x.Category, Multiplier = x.Multiplier })
+                .ToList()
+        };
+    }
+
     public async Task<ApplyPricingTemplateResultDto?> GetTemplateDataAsync(int templateId, CancellationToken ct)
     {
         var entity = await _repo.GetByIdWithDetailsAsync(templateId, ct);
@@ -85,5 +106,45 @@ public class PricingTemplateService : IPricingTemplateService
         };
 
         await _repo.AddAsync(entity, ct);
+    }
+
+    public async Task UpdateAsync(PricingTemplateEditDto dto, CancellationToken ct)
+    {
+        var entity = await _repo.GetByIdWithDetailsAsync(dto.Id, ct);
+        if (entity == null) throw new Exception("Шаблон не знайдено");
+
+        entity.Name = dto.Name;
+        entity.IsActive = dto.IsActive;
+
+        foreach (var rowDto in dto.RowPrices)
+        {
+            var rowEntity = entity.RowPrices.FirstOrDefault(x => x.Row == rowDto.Row);
+            if (rowEntity != null)
+            {
+                rowEntity.BasePrice = rowDto.BasePrice;
+            }
+        }
+
+        foreach (var catDto in dto.CategoryMultipliers)
+        {
+            var catEntity = entity.CategoryMultipliers
+                .FirstOrDefault(x => (int)x.Category == catDto.Category);
+
+            if (catEntity != null)
+            {
+                catEntity.Multiplier = catDto.Multiplier;
+            }
+        }
+
+        await _repo.UpdateAsync(entity, ct);
+    }
+
+    public async Task DeleteAsync(int id, CancellationToken ct)
+    {
+        var entity = await _repo.GetByIdAsync(id, ct);
+        if (entity != null)
+        {
+            await _repo.DeleteAsync(entity, ct);
+        }
     }
 }

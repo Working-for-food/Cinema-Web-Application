@@ -1,0 +1,187 @@
+﻿@using System.Text.Json
+@using Web.ViewModels.Admin.PricingTemplates
+@model PricingTemplateEditVm
+
+@{
+    ViewData["Title"] = "Редагування шаблону";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Редагування шаблону: @Model.Name</h1>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-hallId="@Model.HallId">Назад</a>
+</div>
+
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<form asp-action="Edit" method="post" id="editForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <input type="hidden" asp-for="HallId" />
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Назва шаблону</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Зал</label>
+                        <select asp-for="HallId" asp-items="ViewBag.Halls" class="form-select bg-light" disabled>
+                            <option value="">-- Оберіть зал --</option>
+                        </select>
+                        <div class="form-text text-muted">
+                            <i class="bi bi-lock-fill"></i> Зал не можна змінити.
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActive">
+                        <label class="form-check-label" for="isActive">Активний шаблон</label>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <button type="submit" class="btn btn-primary w-100">Зберегти зміни</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-primary border-opacity-25">
+                <div class="card-header bg-primary bg-opacity-10">
+                    <h5 class="card-title mb-0 text-primary fs-6 fw-bold">Налаштування цін</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ціна квитка = <strong>База ряду</strong> × <strong>Множник категорії</strong>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Базові ціни (ряд)</label>
+                            <div id="rowPricesWrap" class="bg-white border rounded overflow-hidden p-3 bg-light">
+                                <div class="text-center text-muted small">Завантаження...</div>
+                            </div>
+                            <span class="text-danger small" asp-validation-for="RowPrices"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Множники (категорія)</label>
+                            <div id="catMultipliersWrap" class="bg-white border rounded overflow-hidden p-3 bg-light">
+                                <div class="text-center text-muted small">Завантаження...</div>
+                            </div>
+                            <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const rowPricesData = @Html.Raw(JsonSerializer.Serialize(Model.RowPrices));
+            const catMultipliersData = @Html.Raw(JsonSerializer.Serialize(Model.CategoryMultipliers));
+
+            const els = {
+                rowWrap: document.getElementById('rowPricesWrap'),
+                catWrap: document.getElementById('catMultipliersWrap')
+            };
+
+            function renderRowPrices(rows) {
+                if (!els.rowWrap) return;
+
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    els.rowWrap.innerHTML = `<div class="text-muted small text-center py-3">Дані відсутні</div>`;
+                    return;
+                }
+
+                els.rowWrap.innerHTML = `
+                <table class="table table-sm table-borderless align-middle mb-0">
+                  <thead class="table-light border-bottom">
+                    <tr><th class="ps-3 text-secondary small">Ряд</th><th class="text-end pe-3 text-secondary small">Ціна</th></tr>
+                  </thead>
+                  <tbody>
+                    ${rows.map((row, i) => {
+                        const rowNum = (row.Row !== undefined) ? row.Row : row.row;
+                        const price = (row.BasePrice !== undefined) ? row.BasePrice : row.basePrice;
+
+                        return `
+                        <tr>
+                          <td class="ps-3 small fw-bold text-muted">Ряд ${rowNum}</td>
+                          <td class="text-end pe-2 py-1">
+                            <input type="hidden" name="RowPrices[${i}].Row" value="${rowNum}" />
+                            <input class="form-control form-control-sm text-end"
+                                   style="max-width: 80px; display: inline-block;"
+                                   type="number" step="1" min="0"
+                                   name="RowPrices[${i}].BasePrice"
+                                   value="${price}" required />
+                          </td>
+                        </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>`;
+            }
+
+            function renderCategoryMultipliers(cats) {
+                if (!els.catWrap) return;
+
+                if (!Array.isArray(cats) || cats.length === 0) {
+                    els.catWrap.innerHTML = `<div class="text-muted small text-center py-3">Дані відсутні</div>`;
+                    return;
+                }
+
+                const categoryNames = {
+                    0: "Standard",
+                    1: "VIP",
+                    2: "Lux"
+                };
+
+                els.catWrap.innerHTML = `
+                <table class="table table-sm table-borderless align-middle mb-0">
+                  <thead class="table-light border-bottom">
+                    <tr><th class="ps-3 text-secondary small">Категорія</th><th class="text-end pe-3 text-secondary small">Множ.</th></tr>
+                  </thead>
+                  <tbody>
+                    ${cats.map((cat, i) => {
+                        const catId = (cat.Category !== undefined) ? cat.Category : cat.category;
+                        const mult = (cat.Multiplier !== undefined) ? cat.Multiplier : cat.multiplier;
+
+                        const catName = categoryNames[catId] || ("Category " + catId);
+
+                        return `
+                        <tr>
+                          <td class="ps-3 small fw-bold text-muted text-truncate" title="${catName}">
+                             ${catName}
+                          </td>
+                          <td class="text-end pe-2 py-1">
+                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${catId}" />
+                            <input class="form-control form-control-sm text-end"
+                                   style="max-width: 80px; display: inline-block;"
+                                   type="number" step="0.1" min="0.1"
+                                   name="CategoryMultipliers[${i}].Multiplier"
+                                   value="${mult}" required />
+                          </td>
+                        </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>`;
+            }
+
+            renderRowPrices(rowPricesData);
+            renderCategoryMultipliers(catMultipliersData);
+        })();
+    </script>
+}

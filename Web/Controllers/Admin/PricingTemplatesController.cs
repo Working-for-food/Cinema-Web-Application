@@ -15,6 +15,7 @@ namespace Web.Controllers.Admin
 
         private const string IndexViewPath = "~/Views/Admin/PricingTemplates/Index.cshtml";
         private const string CreateViewPath = "~/Views/Admin/PricingTemplates/Create.cshtml";
+        private const string EditViewPath = "~/Views/Admin/PricingTemplates/Edit.cshtml";
 
         public PricingTemplatesController(IPricingTemplateService service, ISessionLookupService lookups)
         {
@@ -87,6 +88,97 @@ namespace Web.Controllers.Admin
                 await ReloadLookupsAsync(ct);
                 return View(CreateViewPath, vm);
             }
+        }
+
+        // GET: /Admin/PricingTemplates/Edit/5
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id, CancellationToken ct)
+        {
+            var dto = await _service.GetForEditAsync(id, ct);
+            if (dto == null) return NotFound();
+
+            var halls = await _lookups.GetHallsAsync(ct);
+
+            ViewBag.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString()));
+
+            var vm = new PricingTemplateEditVm
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                IsActive = dto.IsActive,
+                HallId = dto.HallId,
+
+                RowPrices = dto.RowPrices,
+                CategoryMultipliers = dto.CategoryMultipliers
+            };
+
+            return View(EditViewPath, vm);
+        }
+
+        // POST: /Admin/PricingTemplates/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(PricingTemplateEditVm vm, CancellationToken ct)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                await ReloadLookupsAsync(ct);
+
+                TempData["Error"] = "Перевірте правильність введених даних.";
+
+                return View("~/Views/Admin/PricingTemplates/Edit.cshtml", vm);
+            }
+
+            try
+            {
+                var dto = new PricingTemplateEditDto
+                {
+                    Id = vm.Id,
+                    Name = vm.Name,
+                    IsActive = vm.IsActive,
+                    HallId = vm.HallId,
+                    RowPrices = vm.RowPrices,
+                    CategoryMultipliers = vm.CategoryMultipliers
+                };
+
+                await _service.UpdateAsync(dto, ct);
+
+                TempData["Success"] = "Шаблон успішно оновлено.";
+                return RedirectToAction(nameof(Index), new { hallId = vm.HallId });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await ReloadLookupsAsync(ct);
+                return View(EditViewPath, vm);
+            }
+        }
+
+        // POST: /Admin/PricingTemplates/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, CancellationToken ct)
+        {
+            int? returnHallId = null;
+            var dto = await _service.GetForEditAsync(id, ct);
+
+            if (dto != null)
+            {
+                returnHallId = dto.HallId;
+            }
+
+            try
+            {
+                await _service.DeleteAsync(id, ct);
+                TempData["Success"] = "Шаблон успішно видалено.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Помилка видалення: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index), new { hallId = returnHallId });
         }
 
         // POST: /Admin/PricingTemplates/ToggleStatus?id=5
