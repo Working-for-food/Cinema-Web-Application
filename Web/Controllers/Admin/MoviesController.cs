@@ -138,11 +138,13 @@ public class MoviesController : Controller
         TempData[ok ? "Success" : "Error"] = ok ? "Фільм видалено." : error;
         return RedirectToAction(nameof(Index));
     }
+
     [HttpGet("tmdb/add")]
     public IActionResult AddFromTmdb()
     {
         return View($"{ViewsRoot}/AddFromTmdb.cshtml");
     }
+
     [HttpGet("tmdb/search")]
     public async Task<IActionResult> SearchTmdb([FromQuery] string query, CancellationToken ct)
     {
@@ -178,13 +180,24 @@ public class MoviesController : Controller
 
         return Ok(result);
     }
+
     [HttpPost("tmdb/import")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportFromTmdb([FromForm] int tmdbId, CancellationToken ct)
     {
-        var movieId = await _import.ImportAsync(tmdbId, ct);
-        return RedirectToAction(nameof(Edit), new { id = movieId });
+        try
+        {
+            var movieId = await _import.ImportAsync(tmdbId, ct);
+            TempData["Success"] = "Імпорт успішний.";
+            return RedirectToAction(nameof(Edit), new { id = movieId });
+        }
+        catch (Exception)
+        {
+            TempData["Error"] = "Імпорт не вдався (конфлікт даних або помилка TMDB). Перевір жанри/акторів.";
+            return RedirectToAction(nameof(AddFromTmdb));
+        }
     }
+
     private async Task FillLookupsAsync(MovieEditVm vm, CancellationToken ct)
     {
         var genres = await _service.GetGenresAsync(ct);
