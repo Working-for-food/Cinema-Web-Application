@@ -232,6 +232,18 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             .Property(x => x.Multiplier)
             .HasPrecision(10, 2);
 
+        modelBuilder.Entity<PricingTemplateRowPrice>()
+            .HasOne(x => x.PricingTemplate)
+            .WithMany(x => x.RowPrices)
+            .HasForeignKey(x => x.PricingTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PricingTemplateCategoryMultiplier>()
+            .HasOne(x => x.PricingTemplate)
+            .WithMany(x => x.CategoryMultipliers)
+            .HasForeignKey(x => x.PricingTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // MovieActors
         modelBuilder.Entity<MovieActor>(e =>
         {

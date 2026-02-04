@@ -1,0 +1,160 @@
+﻿@using Web.ViewModels.Admin.PricingTemplates
+@model PricingTemplateEditVm
+
+@{
+    ViewData["Title"] = "Створити шаблон цін";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Новий шаблон цін</h1>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="Index">Назад</a>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success mb-3" role="alert">@ok</div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger mb-3" role="alert">@err</div>
+}
+
+<form asp-action="Create" method="post" id="templateForm">
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Назва шаблону</label>
+                        <input asp-for="Name" class="form-control" placeholder="Напр: Прем'єра (Зал 1)" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Зал</label>
+                        <select asp-for="HallId" asp-items="ViewBag.Halls" class="form-select" id="hallSelect">
+                            <option value="">-- Оберіть зал --</option>
+                        </select>
+                        <div class="form-text">Ціни залежать від конфігурації залу.</div>
+                        <span asp-validation-for="HallId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActive">
+                        <label class="form-check-label" for="isActive">Активний шаблон</label>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <button type="submit" class="btn btn-primary w-100">Створити шаблон</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-primary border-opacity-25">
+                <div class="card-header bg-primary bg-opacity-10">
+                    <h5 class="card-title mb-0 text-primary fs-6 fw-bold">Налаштування цін</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Базові ціни (ряд)</label>
+                            <div id="rowPricesWrap" class="border rounded p-3 bg-light text-center text-muted small">
+                                Оберіть зал
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Множники (категорія)</label>
+                            <div id="catMultipliersWrap" class="border rounded p-3 bg-light text-center text-muted small">
+                                Оберіть зал
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            const metaUrl = '@Url.Action("PricingMeta", "Sessions")';
+
+            const hallSelect = document.getElementById('hallSelect');
+            const rowWrap = document.getElementById('rowPricesWrap');
+            const catWrap = document.getElementById('catMultipliersWrap');
+
+            function renderRows(rows) {
+                if(!rows || rows.length === 0) {
+                    rowWrap.innerHTML = '<div class="text-muted small">Немає рядів</div>';
+                    return;
+                }
+
+                let html = '<table class="table table-sm table-borderless align-middle mb-0">';
+                rows.forEach((r, i) => {
+                    html += `
+                    <tr>
+                        <td class="small fw-bold text-muted">Ряд ${r}</td>
+                        <td>
+                            <input type="hidden" name="RowPrices[${i}].Row" value="${r}" />
+                            <input type="number" name="RowPrices[${i}].BasePrice" value="100" class="form-control form-control-sm" step="1" min="0" required />
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                rowWrap.innerHTML = html;
+            }
+
+            function renderCats(cats) {
+                if(!cats || cats.length === 0) {
+                    catWrap.innerHTML = '<div class="text-muted small">Немає категорій</div>';
+                    return;
+                }
+
+                let html = '<table class="table table-sm table-borderless align-middle mb-0">';
+                cats.forEach((c, i) => {
+                    html += `
+                    <tr>
+                        <td class="small fw-bold text-muted">${c.title}</td>
+                        <td>
+                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${c.id}" />
+                            <input type="number" name="CategoryMultipliers[${i}].Multiplier" value="1" class="form-control form-control-sm" step="0.1" min="0.1" required />
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                catWrap.innerHTML = html;
+            }
+
+            async function loadMeta(hallId) {
+                if(!hallId) {
+                    rowWrap.innerHTML = 'Оберіть зал';
+                    catWrap.innerHTML = 'Оберіть зал';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(metaUrl + '?hallId=' + hallId);
+                    if(!res.ok) throw new Error();
+                    const data = await res.json();
+
+                    renderRows(data.rows);
+                    renderCats(data.categories);
+                } catch(e) {
+                    console.error(e);
+                    rowWrap.innerHTML = '<span class="text-danger">Помилка</span>';
+                }
+            }
+
+            hallSelect.addEventListener('change', function() {
+                loadMeta(this.value);
+            });
+
+            if(hallSelect.value) loadMeta(hallSelect.value);
+        })();
+    </script>
+}

@@ -29,7 +29,6 @@
     </a>
 </div>
 
-@* --- ВИПРАВЛЕНО: Вбудований код замість partial --- *@
 @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
 {
     <div class="alert alert-success mb-3" role="alert">@ok</div>
@@ -38,7 +37,6 @@
 {
     <div class="alert alert-danger mb-3" role="alert">@err</div>
 }
-@* ------------------------------------------------ *@
 
 <form asp-action="Create" method="post" novalidate id="createForm">
     @Html.AntiForgeryToken()
@@ -143,6 +141,20 @@
                         <i class="bi bi-tag me-2"></i>Ціноутворення
                     </h5>
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark mb-1">Шаблон цін</label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select" id="templateSelect" disabled>
+                            <option value="0">Спочатку оберіть зал</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" id="applyTemplateBtn" disabled>
+                            <i class="bi bi-arrow-down-square"></i> Заст.
+                        </button>
+                    </div>
+                    <div class="form-text small" id="templateHelp">Автозаповнення цін</div>
+                </div>
+
                 <div class="card-body p-3 bg-light bg-opacity-50">
                     <div class="alert alert-info py-2 px-3 small mb-3">
                         <i class="bi bi-info-circle me-1"></i>
@@ -165,6 +177,7 @@
                         <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
                     </div>
                 </div>
+
                 <div class="card-footer bg-white border-top-0 p-3">
                     <button class="btn btn-primary w-100 fw-bold py-2" type="submit">
                         <i class="bi bi-check-lg me-1"></i> Створити сеанс
@@ -180,19 +193,19 @@
 
     <script>
         (function () {
-            // --- CONFIG ---
             const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
             const hallsUrl = '@Url.Action("HallsByCinema", "Sessions")';
+            const templatesUrl = '@Url.Action("GetTemplatesByHall", "Sessions")';
+            const loadTemplateUrl = '@Url.Action("LoadTemplateData", "Sessions")';
+            const templateSelect = document.getElementById('templateSelect');
+            const applyTemplateBtn = document.getElementById('applyTemplateBtn');
 
-            // Server Data
             const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
             const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
 
-            // Initial Data
             const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
             const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
 
-            // DOM Elements
             const els = {
                 cinemaSelect: document.getElementById('cinemaSelect'),
                 hallSelect: document.getElementById('hallSelect'),
@@ -227,7 +240,6 @@
             const initRowMap = buildMap(initialRowPrices, 'rowNumber', 'basePrice');
             const initCatMap = buildMap(initialCategoryMultipliers, 'category', 'multiplier');
 
-            // --- RENDERERS ---
             function renderRowPrices(rows) {
                 if (!els.rowWrap) return;
 
@@ -297,7 +309,6 @@
                 </table>`;
             }
 
-            // --- FETCHERS ---
             async function loadHalls(cinemaId) {
                 if (cinemaId <= 0) {
                     els.hallSelect.innerHTML = '<option value="0">— Спершу кінотеатр —</option>';
@@ -405,6 +416,85 @@
                 }
             }
 
+            async function loadTemplates(hallId) {
+                if (!templateSelect) return;
+
+                templateSelect.innerHTML = '<option value="0">Завантаження...</option>';
+                templateSelect.disabled = true;
+                applyTemplateBtn.disabled = true;
+
+                const hid = Number(hallId || 0);
+                if (hid < 1) {
+                    templateSelect.innerHTML = '<option value="0">Спочатку оберіть зал</option>';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(templatesUrl + '?hallId=' + hid);
+                    if (!res.ok) throw new Error();
+                    const list = await res.json();
+
+                    if (list.length === 0) {
+                        templateSelect.innerHTML = '<option value="0">Шаблони відсутні</option>';
+                    } else {
+                        templateSelect.innerHTML = '<option value="0">-- Оберіть шаблон --</option>';
+                        list.forEach(t => {
+                            const opt = document.createElement('option');
+                            opt.value = t.id;
+                            opt.textContent = t.title;
+                            templateSelect.appendChild(opt);
+                        });
+                        templateSelect.disabled = false;
+                    }
+                } catch {
+                    templateSelect.innerHTML = '<option value="0">Помилка завантаження</option>';
+                }
+            }
+
+            async function applySelectedTemplate() {
+                const tid = Number(templateSelect.value || 0);
+                if (tid < 1) return;
+
+                try {
+                    applyTemplateBtn.disabled = true;
+                    applyTemplateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                    const res = await fetch(loadTemplateUrl + '?templateId=' + tid);
+                    if (!res.ok) throw new Error();
+
+                    const data = await res.json();
+
+                    initRowMap.clear();
+                    initCatMap.clear();
+
+                    if (Array.isArray(data.rowPrices)) {
+                        data.rowPrices.forEach(x => initRowMap.set(x.row, x.basePrice));
+                    }
+                    if (Array.isArray(data.categoryMultipliers)) {
+                        data.categoryMultipliers.forEach(x => initCatMap.set(x.category, x.multiplier));
+                    }
+
+                    await loadPricingMeta(els.hallSelect.value);
+
+                    const help = document.getElementById('templateHelp');
+                    if(help) {
+                        help.textContent = "Ціни успішно завантажено!";
+                        help.classList.add('text-success');
+                        setTimeout(() => {
+                            help.textContent = "Автозаповнення цін";
+                            help.classList.remove('text-success');
+                        }, 3000);
+                    }
+
+                } catch (e) {
+                    alert("Не вдалося застосувати шаблон.");
+                    console.error(e);
+                } finally {
+                    applyTemplateBtn.disabled = false;
+                    applyTemplateBtn.innerHTML = '<i class="bi bi-arrow-down-square"></i> Заст.';
+                }
+            }
+
             // --- EVENTS ---
             els.cinemaSelect.addEventListener('change', () => loadHalls(els.cinemaSelect.value));
             els.hallSelect.addEventListener('change', () => loadPricingMeta(els.hallSelect.value));
@@ -413,7 +503,18 @@
             els.startInput.addEventListener('change', updateUIForMovie);
             els.endInput.addEventListener('change', updateUIForMovie);
 
-            // Init
+            els.hallSelect.addEventListener('change', async () => {
+                const hid = els.hallSelect.value;
+                loadPricingMeta(hid);
+                loadTemplates(hid);
+            });
+
+            templateSelect.addEventListener('change', () => {
+                applyTemplateBtn.disabled = templateSelect.value == "0";
+            });
+
+            applyTemplateBtn.addEventListener('click', applySelectedTemplate);
+
             if (els.hallSelect.value > 0) loadPricingMeta(els.hallSelect.value);
             updateUIForMovie();
 

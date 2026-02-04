@@ -36,6 +36,7 @@ builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionPricingRepository, SessionPricingRepository>();
+builder.Services.AddScoped<IPricingTemplateRepository, PricingTemplateRepository>();
 
 // Services
 builder.Services.AddScoped<IMovieService, MovieService>();
@@ -46,6 +47,7 @@ builder.Services.AddScoped<ICinemaService, CinemaService>();
 builder.Services.AddScoped<IHallService, HallService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ISessionLookupService, SessionLookupService>();
+builder.Services.AddScoped<IPricingTemplateService, PricingTemplateService>();
 
 builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));
 builder.Services.AddScoped<IImportMovieFromTmdb, ImportMovieFromTmdb>();

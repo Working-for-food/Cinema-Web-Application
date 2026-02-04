@@ -1,0 +1,122 @@
+﻿@model List<Application.DTOs.Pricing.PricingTemplateListItemDto>
+@Html.AntiForgeryToken()
+
+@{
+    ViewData["Title"] = "Шаблони цін";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Шаблони цін</h1>
+    <a class="btn btn-primary" asp-action="Create">
+        <i class="bi bi-plus-lg"></i> Створити шаблон
+    </a>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body bg-light">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label class="col-form-label fw-bold">Фільтр по залу:</label>
+            </div>
+            <div class="col-auto">
+                <select name="hallId" class="form-select" asp-items="ViewBag.Halls" onchange="this.form.submit()">
+                    <option value="">-- Оберіть зал --</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                Шаблонів не знайдено. Оберіть зал або створіть новий.
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Назва</th>
+                        <th class="text-center" style="width: 150px;">Статус</th>
+                        <th class="text-end pe-4">Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-medium">@item.Name</td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-inline-block" title="Увімкнути/Вимкнути">
+                                    <input class="form-check-input toggle-status-btn"
+                                           type="checkbox"
+                                           role="switch"
+                                           style="cursor: pointer;"
+                                           data-id="@item.Id"
+                                           @(item.IsActive ? "checked" : "")>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Редагування поки недоступне">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggles = document.querySelectorAll('.toggle-status-btn');
+            const url = '@Url.Action("ToggleStatus", "PricingTemplates", new { Area = "Admin" })';
+
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', async function (e) {
+                    const id = this.dataset.id;
+                    const originalState = !this.checked;
+
+                    this.disabled = true;
+                    this.style.opacity = '0.5';
+
+                    try {
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                        const response = await fetch(url + '?id=' + id, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': token
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Server error');
+
+                    } catch (error) {
+                        console.error(error);
+                        alert('Помилка збереження.');
+                        this.checked = originalState;
+                    } finally {
+                        this.disabled = false;
+                        this.style.opacity = '1';
+                    }
+                });
+            });
+        });
+    </script>
+}

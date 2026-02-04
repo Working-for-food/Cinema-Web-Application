@@ -14,6 +14,7 @@ namespace Web.Controllers.Admin
     {
         private readonly ISessionService _sessions;
         private readonly ISessionLookupService _lookups;
+        private readonly IPricingTemplateService _templateService;
 
         private const string IndexViewPath = "~/Views/Admin/Sessions/Index.cshtml";
         private const string CreateViewPath = "~/Views/Admin/Sessions/Create.cshtml";
@@ -39,10 +40,11 @@ namespace Web.Controllers.Admin
             }).ToList();
         }
 
-        public SessionsController(ISessionService sessions, ISessionLookupService lookups)
+        public SessionsController(ISessionService sessions, ISessionLookupService lookups, IPricingTemplateService templateService)
         {
             _sessions = sessions;
             _lookups = lookups;
+            _templateService = templateService;
         }
 
         private static SessionEditDto ToDto(SessionEditVm vm)
@@ -527,6 +529,25 @@ namespace Web.Controllers.Admin
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return await ReturnWithViewModelAsync();
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTemplatesByHall(int hallId, CancellationToken ct)
+        {
+            if (hallId < 1) return Ok(Array.Empty<object>());
+
+            var templates = await _templateService.GetActiveListForHallAsync(hallId, ct);
+            return Ok(templates.Select(t => new { id = t.Id, title = t.Name }));
+        }
+
+        // GET: /Admin/Sessions/LoadTemplateData?templateId=5
+        [HttpGet]
+        public async Task<IActionResult> LoadTemplateData(int templateId, CancellationToken ct)
+        {
+            var data = await _templateService.GetTemplateDataAsync(templateId, ct);
+            if (data is null) return NotFound();
+
+            return Ok(data);
         }
     }
 }
