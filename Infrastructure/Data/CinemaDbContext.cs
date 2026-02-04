@@ -25,6 +25,13 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<SessionSeat> SessionSeats => Set<SessionSeat>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<SessionRowPrice> SessionRowPrices => Set<SessionRowPrice>();
+    public DbSet<SessionCategoryMultiplier> SessionCategoryMultipliers => Set<SessionCategoryMultiplier>();
+
+    public DbSet<PricingTemplate> PricingTemplates => Set<PricingTemplate>();
+    public DbSet<PricingTemplateRowPrice> PricingTemplateRowPrices => Set<PricingTemplateRowPrice>();
+    public DbSet<PricingTemplateCategoryMultiplier> PricingTemplateCategoryMultipliers => Set<PricingTemplateCategoryMultiplier>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -187,6 +194,34 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.HasIndex(x => new { x.SessionId, x.SeatId }).IsUnique();
             e.HasIndex(x => x.BookingId);
         });
+
+        modelBuilder.Entity<SessionSeat>()
+            .HasIndex(x => new { x.SessionId, x.SeatId })
+            .IsUnique();
+
+        modelBuilder.Entity<SessionRowPrice>()
+            .HasKey(x => new { x.SessionId, x.RowNumber });
+        modelBuilder.Entity<SessionRowPrice>()
+            .Property(x => x.BasePrice)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<SessionCategoryMultiplier>()
+            .HasKey(x => new { x.SessionId, x.Category });
+        modelBuilder.Entity<SessionCategoryMultiplier>()
+            .Property(x => x.Multiplier)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<PricingTemplateRowPrice>()
+            .HasKey(x => new { x.PricingTemplateId, x.Row });
+        modelBuilder.Entity<PricingTemplateRowPrice>()
+            .Property(x => x.BasePrice)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<PricingTemplateCategoryMultiplier>()
+            .HasKey(x => new { x.PricingTemplateId, x.Category });
+        modelBuilder.Entity<PricingTemplateCategoryMultiplier>()
+            .Property(x => x.Multiplier)
+            .HasPrecision(10, 2);
 
         // MovieActors
         modelBuilder.Entity<MovieActor>(e =>

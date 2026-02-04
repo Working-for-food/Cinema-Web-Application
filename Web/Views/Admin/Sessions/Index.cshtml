@@ -2,7 +2,7 @@
 @model Web.ViewModels.Admin.Sessions.SessionsIndexVm
 
 @{
-    ViewData["Title"] = "Сеанси";
+    ViewData["Title"] = "Сеанси (адмін)";
     string FormatDate(DateTime? dt) => dt?.ToString("yyyy-MM-dd") ?? "";
 
     var now = DateTime.Now;
@@ -17,7 +17,7 @@
     {
         if (string.IsNullOrWhiteSpace(posterPath)) return "";
         if (posterPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return posterPath;
-        return $"https://image.tmdb.org/t/p/w92{posterPath}";
+        return $"https://image.tmdb.org/t/p/w154{(posterPath.StartsWith("/") ? posterPath : "/" + posterPath)}";
     }
 
     IDictionary<string, string> RouteWithDates(DateTime from, DateTime to)
@@ -126,12 +126,8 @@
 
                     <div class="col-12 col-lg-3">
                         <div class="d-flex gap-2 justify-content-lg-end">
-                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">
-                                ЗАСТОСУВАТИ
-                            </button>
-                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">
-                                СКИНУТИ
-                            </a>
+                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">ЗАСТОСУВАТИ</button>
+                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">СКИНУТИ</a>
                         </div>
                     </div>
 
@@ -140,17 +136,20 @@
                             <i class="fa-solid fa-magnifying-glass me-1"></i>
                             Фільм
                         </label>
+
                         <input class="form-control"
                                list="movieList"
                                id="movieTitleInput"
                                asp-for="MovieTitle"
                                placeholder="Почніть вводити назву..." />
+
                         <datalist id="movieList">
                             @foreach (var m in Model.Movies)
                             {
                                 <option value="@m.Text" data-id="@m.Value"></option>
                             }
                         </datalist>
+
                         <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
                     </div>
 
@@ -194,7 +193,6 @@
                             </div>
                         </div>
                     </div>
-
                 </form>
             </div>
         </div>
@@ -242,10 +240,8 @@
                         <div class="card shadow-sm h-100">
                             <div class="card-body p-4">
 
-                                <!-- важливо: g-4 як відступи всередині, як зліва -->
                                 <div class="row align-items-start g-4">
-
-                                    <!-- Постер: чіткі розміри без нових стилів -->
+                                    <!-- Постер -->
                                     <div class="col-auto">
                                         <div class="card overflow-hidden" style="width:150px;">
                                             <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
@@ -321,9 +317,9 @@
                                             }
                                         </div>
 
-                                        <!-- Кнопки: ТІЛЬКИ ІКОНКИ + title (hover) -->
+                                        <!-- Кнопки -->
                                         <div class="d-flex flex-wrap gap-2">
-
+                                            <!-- Деталі -->
                                             <a asp-action="Details"
                                                asp-route-id="@s.Id"
                                                class="btn btn-maroon"
@@ -332,12 +328,35 @@
                                                 <i class="fa-solid fa-circle-info"></i>
                                             </a>
 
+                                            <!-- Ціни -->
                                             @if (s.IsCancelled || isOver)
                                             {
                                                 <button class="btn btn-secondary"
                                                         type="button"
                                                         disabled
-                                                        title="Редагувати недоступно"
+                                                        title="Не можна змінювати ціни для скасованого або завершеного сеансу"
+                                                        aria-label="Ціни недоступні">
+                                                    <i class="fa-solid fa-tags"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="Pricing"
+                                                   asp-route-id="@s.Id"
+                                                   class="btn btn-secondary"
+                                                   title="Ціни"
+                                                   aria-label="Ціни">
+                                                    <i class="fa-solid fa-tags"></i>
+                                                </a>
+                                            }
+
+                                            <!-- Редагувати -->
+                                            @if (s.IsCancelled || isOver)
+                                            {
+                                                <button class="btn btn-secondary"
+                                                        type="button"
+                                                        disabled
+                                                        title="Не можна редагувати скасований або завершений сеанс"
                                                         aria-label="Редагувати недоступно">
                                                     <i class="fa-solid fa-pen-to-square"></i>
                                                 </button>
@@ -353,6 +372,7 @@
                                                 </a>
                                             }
 
+                                            <!-- Скасувати / Відновити -->
                                             @if (!s.IsCancelled)
                                             {
                                                 if (isOver)
@@ -360,7 +380,7 @@
                                                     <button class="btn btn-maroon"
                                                             type="button"
                                                             disabled
-                                                            title="Скасувати недоступно"
+                                                            title="Не можна скасувати завершений сеанс"
                                                             aria-label="Скасувати недоступно">
                                                         <i class="fa-solid fa-ban"></i>
                                                     </button>
@@ -370,7 +390,10 @@
                                                     <form asp-action="Cancel"
                                                           asp-route-id="@s.Id"
                                                           method="post"
-                                                          class="d-inline">
+                                                          class="d-inline js-cancel-form"
+                                                          data-session-id="@s.Id"
+                                                          data-movie="@(s.MovieTitle ?? "")"
+                                                          data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                                                         <button class="btn btn-maroon"
@@ -389,7 +412,7 @@
                                                     <button class="btn btn-maroon"
                                                             type="button"
                                                             disabled
-                                                            title="Відновити недоступно"
+                                                            title="Не можна відновити завершений сеанс"
                                                             aria-label="Відновити недоступно">
                                                         <i class="fa-solid fa-rotate-left"></i>
                                                     </button>
@@ -411,7 +434,6 @@
                                                     </form>
                                                 }
                                             }
-
                                         </div>
                                     </div>
                                 </div>
@@ -476,8 +498,6 @@
 
           document.querySelectorAll('form.js-cancel-form').forEach(formEl => {
             formEl.addEventListener('submit', (e) => {
-              if (formEl.querySelector('button[disabled]')) return;
-
               const id = formEl.dataset.sessionId || '';
               const movie = (formEl.dataset.movie || '').trim();
               const start = (formEl.dataset.start || '').trim();
