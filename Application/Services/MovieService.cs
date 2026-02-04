@@ -41,6 +41,7 @@ public class MovieService : IMovieService
         {
             Id = m.Id,
             Title = m.Title,
+            PosterPath = m.PosterPath,
             ReleaseDate = m.ReleaseDate,
             Duration = m.Duration,
             GenreNames = string.Join(", ", m.MovieGenres.Select(mg => mg.Genre.Name)),

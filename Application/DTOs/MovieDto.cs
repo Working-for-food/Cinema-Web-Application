@@ -10,6 +10,7 @@ namespace Application.DTOs
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
+        public string? PosterPath { get; set; }
         public DateOnly? ReleaseDate { get; set; }
         public int? Duration { get; set; }
         public string GenreNames { get; set; } = string.Empty;
