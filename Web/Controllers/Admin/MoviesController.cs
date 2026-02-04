@@ -14,12 +14,15 @@ public class MoviesController : Controller
     private readonly IMovieService _service;
     private readonly ITmdbClient _tmdb;
     private readonly IImportMovieFromTmdb _import;
+    private readonly IPersonService _people;
 
-    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import)
+
+    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import, IPersonService people)
     {
         _service = service;
         _tmdb = tmdb;
         _import = import;
+        _people = people;
     }
 
     [HttpGet("")]
@@ -206,11 +209,12 @@ public class MoviesController : Controller
         var countries = await _service.GetCountriesAsync(ct);
         vm.CountryMultiList = new MultiSelectList(countries, "Code", "Name", vm.SelectedCountryCodes);
 
-        var directors = await _service.GetDirectorsAsync(ct);
-        vm.DirectorMultiList = new MultiSelectList(directors, "Id", "FullName", vm.SelectedDirectorIds);
+        var selectedDirectors = await GetPeopleByIdsAsync(vm.SelectedDirectorIds, ct);
+        vm.DirectorMultiList = new MultiSelectList(selectedDirectors, "Id", "FullName", vm.SelectedDirectorIds);
 
-        var actors = await _service.GetActorsAsync(ct);
-        vm.ActorList = new MultiSelectList(actors, "Id", "FullName", vm.SelectedActorIds);
+        var selectedActors = await GetPeopleByIdsAsync(vm.SelectedActorIds, ct);
+        vm.ActorList = new MultiSelectList(selectedActors, "Id", "FullName", vm.SelectedActorIds);
+
     }
 
     private static MovieFormDto MapToDto(MovieEditVm vm) => new()
@@ -230,4 +234,38 @@ public class MoviesController : Controller
         CountryCodes = vm.SelectedCountryCodes,
         DirectorIds = vm.SelectedDirectorIds
     };
+
+    [HttpGet("people/search")]
+    public async Task<IActionResult> SearchPeople([FromQuery] string? term, [FromQuery] string? q, [FromQuery] int page = 1, CancellationToken ct = default)
+    {
+        var search = (term ?? q ?? "").Trim();
+        if (search.Length < 3)
+            return Ok(new { results = Array.Empty<object>(), pagination = new { more = false } });
+
+        if (page < 1) page = 1;
+
+        const int pageSize = 20;
+        var (items, total) = await _people.GetAllAsync(search, page, pageSize, ct);
+
+        var results = items
+            .OrderBy(x => x.FullName)
+            .Select(x => new { id = x.Id, text = x.FullName })
+            .ToList();
+
+        var more = page * pageSize < total;
+        return Ok(new { results, pagination = new { more } });
+    }
+
+    private async Task<List<Infrastructure.Entities.Person>> GetPeopleByIdsAsync(IEnumerable<int>? ids, CancellationToken ct)
+    {
+        var res = new List<Infrastructure.Entities.Person>();
+        foreach (var id in (ids ?? Enumerable.Empty<int>()).Distinct())
+        {
+            if (id <= 0) continue;
+            var p = await _people.GetByIdAsync(id, ct);
+            if (p != null) res.Add(p);
+        }
+        return res;
+    }
+
 }
