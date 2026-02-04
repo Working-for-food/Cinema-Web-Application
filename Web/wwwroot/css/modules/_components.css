@@ -91,6 +91,24 @@
         box-shadow: 0 0 0 0.15rem rgba(58, 58, 58, 0.35);
     }
 
+.btn-danger-second {
+    background-color: #92000A;
+    border-color: #92000A;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+    .btn-danger-second:hover {
+        background-color: #8B0000;
+        border-color: #8B0000;
+        color: #ffffff;
+    }
+
+    .btn-danger-second:focus,
+    .btn-danger-second:active {
+        box-shadow: 0 0 0 0.15rem rgba(45, 168, 168, 0.35);
+    }
 
 .card-modern {
     border: 0;
@@ -430,20 +448,3 @@
     font-size: 16px;
 }
 
-/* Admin action: seats / navigation */
-.btn-admin-seats {
-    background-color: #92000A;
-    border-color: #92000A;
-    color: #ffffff;
-}
-
-    .btn-admin-seats:hover {
-        background-color: #8B0000;
-        border-color: #8B0000;
-        color: #ffffff;
-    }
-
-    .btn-admin-seats:focus,
-    .btn-admin-seats:active {
-        box-shadow: 0 0 0 0.15rem rgba(45, 168, 168, 0.35);
-    }

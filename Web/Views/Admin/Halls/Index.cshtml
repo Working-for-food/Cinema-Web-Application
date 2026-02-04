@@ -7,7 +7,7 @@
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-4">Зали</h1>
+        <h1 class="section-title text-center mb-5">Зали</h1>
 
         @if (TempData["Success"] is string ok)
         {
@@ -38,16 +38,16 @@
             </div>
 
             <div class="col-12 col-md-6 text-md-end mt-3 mt-md-0">
-                <a asp-action="Create"
-                   asp-route-cinemaId="@Model.CinemaId"
-                   class="btn btn-maroon">
-                    <i class="fas fa-plus me-1"></i>Створити зал
-                </a>
-
                 <a asp-controller="Cinemas"
                    asp-action="Index"
                    class="btn btn-secondary ms-2">
                     <i class="fas fa-arrow-left me-2"></i>Назад
+                </a>
+
+                <a asp-action="Create"
+                   asp-route-cinemaId="@Model.CinemaId"
+                   class="btn btn-maroon">
+                    <i class="fas fa-plus me-1"></i>Створити зал
                 </a>
             </div>
         </div>
@@ -101,11 +101,10 @@
 
                                             <a asp-action="Seats"
                                                asp-route-id="@h.HallId"
-                                               class="btn btn-sm btn-admin-seats me-1"
+                                               class="btn btn-sm btn-danger-second me-1"
                                                title="Місця">
                                                 <i class="fas fa-chair"></i>
                                             </a>
-
 
                                             <form method="post"
                                                   asp-action="Delete"

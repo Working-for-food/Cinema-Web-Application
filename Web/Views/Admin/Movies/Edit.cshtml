@@ -1,13 +1,13 @@
 ﻿@model Web.ViewModels.Admin.MovieEditVm
 
 @{
-    ViewData["Title"] = "Edit the movie";
+    ViewData["Title"] = "Редагувати фільм";
 }
 
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-4">EDIT THE MOVIE</h1>
+        <h1 class="section-title text-center mb-5">РЕДАГУВАТИ ФІЛЬМ</h1>
 
         @if (TempData["Success"] is string ok)
         {
@@ -22,7 +22,7 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fa-solid fa-pen-to-square me-2"></i>
-                    Edit movie information
+                    Редагування інформації про фільм
                 </h5>
             </div>
 
@@ -40,7 +40,7 @@
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label text-muted">
                             <i class="fa-solid fa-clapperboard me-1"></i>
-                            Title
+                            Назва
                         </label>
                         <input asp-for="Title" class="form-control" />
                         <span asp-validation-for="Title" class="text-danger"></span>
@@ -49,7 +49,7 @@
                     <div class="mb-3">
                         <label asp-for="Description" class="form-label text-muted">
                             <i class="fa-solid fa-align-left me-1"></i>
-                            Description
+                            Опис
                         </label>
                         <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
@@ -59,7 +59,7 @@
                         <div class="col-12 col-md-8">
                             <label asp-for="OriginalName" class="form-label text-muted">
                                 <i class="fa-solid fa-pen-nib me-1"></i>
-                                Original name
+                                Оригінальна назва
                             </label>
                             <input asp-for="OriginalName" class="form-control" />
                             <span asp-validation-for="OriginalName" class="text-danger"></span>
@@ -68,7 +68,7 @@
                         <div class="col-12 col-md-4">
                             <label asp-for="Language" class="form-label text-muted">
                                 <i class="fa-solid fa-language me-1"></i>
-                                Language (ISO)
+                                Мова (ISO)
                             </label>
                             <input asp-for="Language" class="form-control" placeholder="en" />
                             <span asp-validation-for="Language" class="text-danger"></span>
@@ -78,7 +78,7 @@
                     <div class="mb-3 mt-3">
                         <label asp-for="TrailerUrl" class="form-label text-muted">
                             <i class="fa-solid fa-link me-1"></i>
-                            Trailer URL
+                            Посилання на трейлер
                         </label>
                         <input asp-for="TrailerUrl" type="url" class="form-control" placeholder="https://..." />
                         <span asp-validation-for="TrailerUrl" class="text-danger"></span>
@@ -88,7 +88,7 @@
                         <div class="col-12 col-md-6">
                             <label asp-for="PosterPath" class="form-label text-muted">
                                 <i class="fa-solid fa-image me-1"></i>
-                                PosterPath
+                                Шлях до постера
                             </label>
                             <input asp-for="PosterPath" class="form-control" />
                             <span asp-validation-for="PosterPath" class="text-danger"></span>
@@ -98,7 +98,7 @@
                         <div class="col-12 col-md-6">
                             <label asp-for="BackdropPath" class="form-label text-muted">
                                 <i class="fa-solid fa-panorama me-1"></i>
-                                BackdropPath
+                                Шлях до фону (Backdrop)
                             </label>
                             <input asp-for="BackdropPath" class="form-control" />
                             <span asp-validation-for="BackdropPath" class="text-danger"></span>
@@ -109,7 +109,7 @@
                         <div class="col-12 col-md-6">
                             <label asp-for="ReleaseDate" class="form-label text-muted">
                                 <i class="fa-solid fa-calendar-days me-1"></i>
-                                Release Date
+                                Дата виходу
                             </label>
                             <input asp-for="ReleaseDate" type="date" class="form-control" />
                             <span asp-validation-for="ReleaseDate" class="text-danger"></span>
@@ -118,7 +118,7 @@
                         <div class="col-12 col-md-6">
                             <label asp-for="Duration" class="form-label text-muted">
                                 <i class="fa-solid fa-clock me-1"></i>
-                                Duration (min)
+                                Тривалість (хв)
                             </label>
                             <input asp-for="Duration" type="number" class="form-control" />
                             <span asp-validation-for="Duration" class="text-danger"></span>
@@ -128,7 +128,7 @@
                     <div class="mb-4 mt-3">
                         <label asp-for="SelectedDirectorIds" class="form-label text-muted">
                             <i class="fa-solid fa-video me-1"></i>
-                            Directors
+                            Режисери
                         </label>
                         <select asp-for="SelectedDirectorIds"
                                 asp-items="Model.DirectorMultiList"
@@ -142,7 +142,7 @@
                     <div class="mb-4">
                         <label asp-for="SelectedCountryCodes" class="form-label text-muted">
                             <i class="fa-solid fa-globe me-1"></i>
-                            Countries (MovieCountries)
+                            Країни (MovieCountries)
                         </label>
                         <select asp-for="SelectedCountryCodes"
                                 asp-items="Model.CountryMultiList"
@@ -156,7 +156,7 @@
                     <div class="mb-4">
                         <label asp-for="SelectedActorIds" class="form-label text-muted">
                             <i class="fa-solid fa-user-group me-1"></i>
-                            Actors
+                            Актори
                         </label>
                         <select asp-for="SelectedActorIds"
                                 asp-items="Model.ActorList"
@@ -170,7 +170,7 @@
                     <div class="mb-4">
                         <label asp-for="SelectedGenreIds" class="form-label text-muted">
                             <i class="fa-solid fa-tags me-1"></i>
-                            Genres
+                            Жанри
                         </label>
                         <select asp-for="SelectedGenreIds"
                                 asp-items="Model.GenreList"
@@ -184,12 +184,12 @@
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <a asp-action="Index" class="btn btn-secondary">
                             <i class="fa-solid fa-arrow-left me-1"></i>
-                            Back
+                            Назад
                         </a>
 
                         <button type="submit" class="btn btn-maroon">
                             <i class="fa-solid fa-save me-1"></i>
-                            Save changes
+                            Зберегти зміни
                         </button>
                     </div>
 
