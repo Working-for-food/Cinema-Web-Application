@@ -1,26 +1,163 @@
 ﻿@model IReadOnlyList<Application.DTOs.BookingResultDto>
+
 @{
     ViewData["Title"] = "My bookings";
+
+    var totalSpent = Model?.Sum(x => x.TotalAmount) ?? 0m;
 }
 
-<h2>My bookings</h2>
+<style>
+    .page-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+    }
 
-@if (Model.Count == 0)
-{
-    <p>No bookings yet.</p>
-}
-else
-{
-    @foreach (var b in Model)
+    .header-row {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .summary {
+        background: #f8f9fa;
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 12px 14px;
+    }
+
+    .cards {
+        display: grid;
+        gap: 12px;
+    }
+
+    .card {
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        padding: 14px 16px;
+        background: #fff;
+    }
+
+    .card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #eee;
+        font-size: 13px;
+        border: 1px solid #d6d6d6;
+        white-space: nowrap;
+    }
+
+    .badge-primary {
+        background: #e7f1ff;
+        border-color: #cfe2ff;
+    }
+
+    .badge-success {
+        background: #e8f5e9;
+        border-color: #c8e6c9;
+    }
+
+    .meta {
+        color: #555;
+        font-size: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        margin-bottom: 10px;
+    }
+
+        .meta strong {
+            color: #222;
+        }
+
+    .seats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .seat-chip {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 8px;
+        border: 1px solid #d6d6d6;
+        background: #fafafa;
+        font-size: 13px;
+    }
+
+    .empty {
+        padding: 14px 16px;
+        border: 1px dashed #cfcfcf;
+        border-radius: 12px;
+        background: #fcfcfc;
+    }
+</style>
+
+<div class="page-wrap">
+    <div class="header-row">
+        <div>
+            <h2 style="margin-bottom:4px;">My bookings</h2>
+            <div style="color:#666;">All your ticket reservations in one place</div>
+        </div>
+
+        <div class="summary">
+            <div><strong>@(Model?.Count ?? 0)</strong> booking(s)</div>
+            <div>Total spent: <strong>@totalSpent</strong></div>
+        </div>
+    </div>
+
+    @if (Model == null || Model.Count == 0)
     {
-        <div style="border:1px solid #ddd; padding:12px; margin-bottom:12px;">
-            <div><b>#@b.BookingId</b> | session @b.SessionId</div>
-            <div>Total: @b.TotalAmount</div>
-            <div>Date: @b.BookedAt</div>
-            <div>
-                Seats:
-                @string.Join(", ", b.Seats.Select(s => $"{s.RowNumber}-{s.SeatNumber}"))
-            </div>
+        <div class="empty">
+            <div style="font-weight:600; margin-bottom:6px;">No bookings yet</div>
+            <div style="color:#666;">Pick a session, choose seats, and your bookings will show up here.</div>
         </div>
     }
-}
+    else
+    {
+        <div class="cards">
+            @foreach (var b in Model)
+            {
+                var seatCount = b.Seats?.Count ?? 0;
+                var dateText = b.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+
+                <div class="card">
+                    <div class="card-top">
+                        <div style="font-weight:700; font-size:16px;">
+                            Booking #@b.BookingId
+                        </div>
+
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span class="badge badge-primary">Session @b.SessionId</span>
+                            <span class="badge badge-success">@seatCount seat(s)</span>
+                        </div>
+                    </div>
+
+                    <div class="meta">
+                        <div>Date: <strong>@dateText</strong></div>
+                        <div>Total: <strong>@b.TotalAmount</strong></div>
+                    </div>
+
+                    <div style="font-weight:600; margin-bottom:6px;">Seats</div>
+                    <div class="seats">
+                        @foreach (var s in b.Seats.OrderBy(x => x.RowNumber).ThenBy(x => x.SeatNumber))
+                        {
+                            <span class="seat-chip">R@s.RowNumber - S@s.SeatNumber</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

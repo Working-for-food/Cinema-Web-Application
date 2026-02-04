@@ -1,14 +1,152 @@
 ﻿@model Web.ViewModels.BookingSuccessVm
+
 @{
-    ViewData["Title"] = "Success";
+    ViewData["Title"] = "Booking successful";
+    var dateText = Model.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
 }
 
-<h2>Booked</h2>
+<style>
+    .wrap {
+        max-width: 700px;
+        margin: 40px auto;
+        text-align: center;
+    }
 
-<p><b>Booking:</b> #@Model.BookingId</p>
-<p><b>Total:</b> @Model.TotalAmount</p>
-<p><b>Date:</b> @Model.BookedAt</p>
+    .check {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: #e8f5e9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: #2e7d32;
+        border: 2px solid #c8e6c9;
+    }
 
-<p><b>Seats:</b> @string.Join(", ", Model.Seats)</p>
+    .card {
+        border: 1px solid #e5e5e5;
+        border-radius: 14px;
+        padding: 20px 22px;
+        background: #fff;
+        margin-top: 16px;
+        text-align: left;
+    }
 
-<a asp-action="My">My bookings</a>
+    .title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .sub {
+        text-align: center;
+        color: #666;
+        margin-bottom: 18px;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px dashed #eee;
+    }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+    .label {
+        color: #555;
+    }
+
+    .value {
+        font-weight: 600;
+    }
+
+    .seats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .seat {
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #d6d6d6;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .actions {
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .btn-primary {
+        background: #198754;
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background: #f1f1f1;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+</style>
+
+<div class="wrap">
+    <div class="check">✓</div>
+
+    <div class="title">Booking confirmed</div>
+    <div class="sub">Your seats have been successfully reserved</div>
+
+    <div class="card">
+        <div class="row">
+            <div class="label">Booking</div>
+            <div class="value">#@Model.BookingId</div>
+        </div>
+
+        <div class="row">
+            <div class="label">Date</div>
+            <div class="value">@dateText</div>
+        </div>
+
+        <div class="row">
+            <div class="label">Total</div>
+            <div class="value">@Model.TotalAmount</div>
+        </div>
+
+        <div class="row" style="align-items:flex-start;">
+            <div class="label">Seats</div>
+            <div class="value">
+                <div class="seats">
+                    @foreach (var s in Model.Seats)
+                    {
+                        <span class="seat">@s</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a asp-action="My" class="btn btn-primary">My bookings</a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Home</a>
+    </div>
+</div>

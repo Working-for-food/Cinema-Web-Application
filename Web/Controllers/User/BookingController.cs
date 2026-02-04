@@ -1,33 +1,27 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
-using Infrastructure.Entities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels;
 
 namespace Web.Controllers.User;
 
-[Authorize]
+// [Authorize]  // ❌ тимчасово вимкнути
 public class BookingController : Controller
 {
-    private readonly ISessionService _sessions;
+    private readonly SessionService _sessions;
     private readonly IBookingService _bookings;
-    private readonly UserManager<ApplicationUser> _userManager;
 
-    public BookingController(
-        ISessionService sessions,
-        IBookingService bookings,
-        UserManager<ApplicationUser> userManager)
+    public BookingController(SessionService sessions, IBookingService bookings)
     {
         _sessions = sessions;
         _bookings = bookings;
-        _userManager = userManager;
     }
 
     [HttpGet]
     public async Task<IActionResult> Create(int sessionId, CancellationToken ct)
     {
+        await _sessions.EnsureSessionSeatsAsync(sessionId, ct);
         var seats = await _sessions.GetSeatsForBookingAsync(sessionId, ct);
 
         var vm = new BookingCreateVm
@@ -51,9 +45,6 @@ public class BookingController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BookingCreateVm vm, CancellationToken ct)
     {
-        var userId = _userManager.GetUserId(User);
-        if (userId is null) return Unauthorized();
-
         var dto = new BookingCreateDto
         {
             SessionId = vm.SessionId,
@@ -62,6 +53,7 @@ public class BookingController : Controller
 
         try
         {
+            const string userId = "test-user"; // ✅ фейковий користувач
             var result = await _bookings.CreateAsync(userId, dto, ct);
             return RedirectToAction(nameof(Success), new { id = result.BookingId });
         }
@@ -69,8 +61,9 @@ public class BookingController : Controller
         {
             ModelState.AddModelError("", ex.Message);
 
-            // перезагрузим места (чтобы актуально показать занято)
+            await _sessions.EnsureSessionSeatsAsync(vm.SessionId, ct);
             var seats = await _sessions.GetSeatsForBookingAsync(vm.SessionId, ct);
+
             vm.Seats = seats.Select(s => new BookingCreateVm.SeatVm
             {
                 SeatId = s.SeatId,
@@ -96,9 +89,7 @@ public class BookingController : Controller
             BookingId = dto.BookingId,
             TotalAmount = dto.TotalAmount,
             BookedAt = dto.BookedAt,
-            Seats = dto.Seats
-                .Select(s => $"{s.RowNumber}-{s.SeatNumber}")
-                .ToList()
+            Seats = dto.Seats.Select(s => $"{s.RowNumber}-{s.SeatNumber}").ToList()
         };
 
         return View("~/Views/Bookings/Success.cshtml", vm);
@@ -107,9 +98,7 @@ public class BookingController : Controller
     [HttpGet]
     public async Task<IActionResult> My(CancellationToken ct)
     {
-        var userId = _userManager.GetUserId(User);
-        if (userId is null) return Unauthorized();
-
+        const string userId = "test-user";
         var items = await _bookings.GetMyAsync(userId, ct);
         return View("~/Views/Bookings/My.cshtml", items);
     }

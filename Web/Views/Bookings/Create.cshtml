@@ -2,13 +2,111 @@
 
 @{
     ViewData["Title"] = "Booking";
+
     var grouped = Model.Seats
         .GroupBy(x => x.RowNumber)
         .OrderBy(g => g.Key)
         .ToList();
+
+    string CategoryClass(int c) => c switch
+    {
+        1 => "seat-vip",
+        2 => "seat-accessible",
+        _ => "seat-standard"
+    };
 }
 
+<style>
+    .screen {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 8px;
+        background: #eee;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .row-line {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .row-label {
+        width: 60px;
+        font-weight: 600;
+    }
+
+    .seat {
+        margin-right: 6px;
+        position: relative;
+    }
+
+        .seat input {
+            display: none;
+        }
+
+        .seat span {
+            display: inline-block;
+            min-width: 36px;
+            padding: 6px;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            border: 1px solid #999;
+        }
+
+    .seat-standard span {
+        background: #f8f9fa;
+    }
+
+    .seat-vip span {
+        background: #ffe08a;
+    }
+
+    .seat-accessible span {
+        background: #cfe2ff;
+    }
+
+    .seat input:checked + span {
+        outline: 3px solid #198754;
+        font-weight: 600;
+    }
+
+    .seat.booked span {
+        background: #ddd;
+        cursor: not-allowed;
+        opacity: 0.6;
+        text-decoration: line-through;
+    }
+
+    .legend span {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-right: 8px;
+        border: 1px solid #999;
+        font-size: 13px;
+    }
+
+    .total-box {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+</style>
+
 <h2>Choose seats</h2>
+
+<div class="legend mb-3">
+    <span class="seat-standard">Standard</span>
+    <span class="seat-vip">VIP</span>
+    <span class="seat-accessible">Accessible</span>
+    <span style="background:#ddd;">Booked</span>
+</div>
+
+<div class="screen">SCREEN</div>
 
 <form method="post">
     @Html.AntiForgeryToken()
@@ -18,19 +116,48 @@
 
     @foreach (var row in grouped)
     {
-        <div style="margin-bottom: 12px;">
-            <div><b>Row @row.Key</b></div>
+        <div class="row-line">
+            <div class="row-label">Row @row.Key</div>
 
             @foreach (var s in row.OrderBy(x => x.SeatNumber))
             {
-                var disabled = s.IsBooked ? "disabled" : "";
-                <label style="display:inline-block; margin-right:10px; opacity:@(s.IsBooked ? "0.45" : "1")">
-                    <input type="checkbox" name="SelectedSeatIds" value="@s.SeatId" @disabled />
-                    @s.SeatNumber (@s.Price)
+                var css = CategoryClass(s.Category);
+                var bookedClass = s.IsBooked ? "booked" : "";
+
+                <label class="seat @css @bookedClass">
+                    <input type="checkbox"
+                           name="SelectedSeatIds"
+                           value="@s.SeatId"
+                           data-price="@s.Price"
+                    @(s.IsBooked ? "disabled" : "") />
+                    <span>@s.SeatNumber<br /><small>@s.Price</small></span>
                 </label>
             }
         </div>
     }
 
-    <button type="submit">Book</button>
+    <div class="total-box">
+        Total: <span id="total">0</span>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">
+        Book selected seats
+    </button>
 </form>
+
+<script>
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-price]');
+    const totalEl = document.getElementById('total');
+
+    function updateTotal() {
+        let sum = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                sum += parseFloat(cb.dataset.price);
+            }
+        });
+        totalEl.textContent = sum.toFixed(2);
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateTotal));
+</script>
