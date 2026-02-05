@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = "My bookings";
     var totalSpent = Model?.Sum(x => x.TotalAmount) ?? 0m;
+
+    // ✅ TMDB base для постерів (якщо MoviePosterPath зберігається як "/abc.jpg")
+    var tmdbPosterBase = "https://image.tmdb.org/t/p/w342";
 }
 
 <style>
@@ -101,6 +104,71 @@
         border-radius: 12px;
         background: #fcfcfc;
     }
+
+    /* ✅ кнопка скасування */
+    .btn-cancel {
+        border: 1px solid #dc3545;
+        background: transparent;
+        color: #dc3545;
+        border-radius: 10px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all .15s ease-in-out;
+        white-space: nowrap;
+    }
+
+        .btn-cancel:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+    /* ✅ NEW: постер */
+    .left-block {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        min-width: 0;
+    }
+
+    .poster {
+        width: 56px;
+        height: 84px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e5e5e5;
+        background: #f2f2f2;
+        flex: 0 0 auto;
+    }
+
+    .poster-placeholder {
+        width: 56px;
+        height: 84px;
+        border-radius: 10px;
+        border: 1px solid #e5e5e5;
+        background: linear-gradient(135deg, #f4f4f4, #e9e9e9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8a8a8a;
+        font-size: 11px;
+        text-align: center;
+        padding: 6px;
+        flex: 0 0 auto;
+    }
+
+    .title-wrap {
+        min-width: 0;
+    }
+
+    .movie-title {
+        color: #555;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 420px;
+    }
 </style>
 
 <div class="page-wrap">
@@ -116,6 +184,19 @@
         </div>
     </div>
 
+    @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+        <div style="margin-bottom:12px; padding:10px 12px; border:1px solid #c8e6c9; background:#e8f5e9; border-radius:10px;">
+            @ok
+        </div>
+    }
+    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+    {
+        <div style="margin-bottom:12px; padding:10px 12px; border:1px solid #f5c2c7; background:#f8d7da; border-radius:10px;">
+            @err
+        </div>
+    }
+
     @if (Model == null || Model.Count == 0)
     {
         <div class="empty">
@@ -128,19 +209,65 @@
         <div class="cards">
             @foreach (var b in Model)
             {
-                var seats = b.Seats; // тип як у твоєму DTO (наприклад List<BookedSeatDto>)
+                var seats = b.Seats;
                 var seatCount = seats?.Count ?? 0;
                 var dateText = b.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
 
+                // ✅ NEW: постер URL (працює, якщо MoviePosterPath = "/abc.jpg")
+                var posterUrl = !string.IsNullOrWhiteSpace(b.MoviePosterPath)
+                ? (tmdbPosterBase + b.MoviePosterPath)
+                : null;
+
                 <div class="card">
                     <div class="card-top">
-                        <div style="font-weight:700; font-size:16px;">
-                            Booking #@b.BookingId
+
+                        <div class="left-block">
+                            @* ✅ POSTER *@
+                            @if (!string.IsNullOrWhiteSpace(posterUrl))
+                            {
+                                <img src="@posterUrl"
+                                     class="poster"
+                                     alt="@b.MovieTitle"
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="poster-placeholder">
+                                    No poster
+                                </div>
+                            }
+
+                            <div class="title-wrap">
+                                <div style="font-weight:700; font-size:16px;">
+                                    Booking #@b.BookingId
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(b.MovieTitle))
+                                {
+                                    <div class="movie-title">
+                                        🎬 @b.MovieTitle
+                                    </div>
+                                }
+                            </div>
                         </div>
 
-                        <div style="display:flex; gap:8px; align-items:center;">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
                             <span class="badge badge-primary">Session @b.SessionId</span>
                             <span class="badge badge-success">@seatCount seat(s)</span>
+
+                            <form asp-controller="Booking"
+                                  asp-action="Cancel"
+                                  asp-route-id="@b.BookingId"
+                                  method="post"
+                                  class="d-inline"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="btn-cancel"
+                                        onclick="return confirm('Скасувати бронювання №@b.BookingId ?');">
+                                    Cancel
+                                </button>
+                            </form>
                         </div>
                     </div>
 

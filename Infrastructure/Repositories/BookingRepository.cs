@@ -84,4 +84,30 @@ public class BookingRepository : IBookingRepository
 
         return booking;
     }
+
+    public async Task CancelBookingAsync(string userId, int bookingId, CancellationToken ct)
+    {
+        // Транзакція як і в Create — щоб усе було атомарно
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+        var booking = await _db.Bookings
+            .Include(b => b.SessionSeats)
+            .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
+
+        if (booking is null || booking.IsDeleted)
+            throw new InvalidOperationException("Бронювання не знайдено або вже скасовано.");
+
+        if (booking.UserId != userId)
+            throw new InvalidOperationException("Ви не можете скасувати чуже бронювання.");
+
+        // ✅ звільняємо місця
+        foreach (var ss in booking.SessionSeats)
+            ss.BookingId = null;
+
+        // ✅ скасовуємо (soft delete), бо твій GetMyBookingsAsync вже це підтримує
+        booking.IsDeleted = true;
+
+        await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+    }
 }

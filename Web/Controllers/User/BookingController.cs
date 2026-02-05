@@ -123,4 +123,23 @@ public class BookingController : Controller
         var items = await _bookings.GetMyAsync(userId, ct);
         return View("~/Views/Bookings/My.cshtml", items);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, CancellationToken ct)
+    {
+        var userId = await GetTestUserIdAsync(ct);
+
+        try
+        {
+            await _bookings.CancelAsync(userId, id, ct);
+            TempData["Success"] = $"Бронювання №{id} скасовано.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(My));
+    }
 }

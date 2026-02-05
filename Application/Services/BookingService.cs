@@ -48,6 +48,8 @@ public class BookingService : IBookingService
             SessionId = b.SessionId,
             TotalAmount = b.TotalAmount,
             BookedAt = b.BookedAt,
+            MovieTitle = b.Session.Movie.Title,
+            MoviePosterPath = b.Session.Movie.PosterPath,
             Seats = b.SessionSeats
                 .OrderBy(x => x.Seat.RowNumber).ThenBy(x => x.Seat.SeatNumber)
                 .Select(x => new BookedSeatDto
@@ -72,17 +74,24 @@ public class BookingService : IBookingService
             SessionId = b.SessionId,
             TotalAmount = b.TotalAmount,
             BookedAt = b.BookedAt,
+            MovieTitle = b.Session.Movie.Title,
+            MoviePosterPath = b.Session.Movie.PosterPath,
             Seats = b.SessionSeats
-                .OrderBy(x => x.Seat.RowNumber).ThenBy(x => x.Seat.SeatNumber)
-                .Select(x => new BookedSeatDto
-                {
-                    SeatId = x.SeatId,
-                    RowNumber = x.Seat.RowNumber,
-                    SeatNumber = x.Seat.SeatNumber,
-                    Category = (int)x.Seat.Category,
-                    Price = x.Price
-                })
-                .ToList()
+        .OrderBy(x => x.Seat.RowNumber).ThenBy(x => x.Seat.SeatNumber)
+        .Select(x => new BookedSeatDto
+        {
+            SeatId = x.SeatId,
+            RowNumber = x.Seat.RowNumber,
+            SeatNumber = x.Seat.SeatNumber,
+            Category = (int)x.Seat.Category,
+            Price = x.Price
+        })
+        .ToList()
         }).ToList();
+    }
+
+    public async Task CancelAsync(string userId, int bookingId, CancellationToken ct)
+    {
+        await _repo.CancelBookingAsync(userId, bookingId, ct);
     }
 }

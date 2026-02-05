@@ -6,6 +6,8 @@ public class BookingResultDto
     public int SessionId { get; set; }
     public decimal TotalAmount { get; set; }
     public DateTime BookedAt { get; set; }
+    public string? MovieTitle { get; set; }
+    public string? MoviePosterPath { get; set; }
 
     public List<BookedSeatDto> Seats { get; set; } = new();
 }
