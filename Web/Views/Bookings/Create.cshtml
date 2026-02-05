@@ -33,7 +33,7 @@
     }
 
     .row-label {
-        width: 60px;
+        width: 70px;
         font-weight: 600;
     }
 
@@ -48,13 +48,14 @@
 
         .seat span {
             display: inline-block;
-            min-width: 36px;
+            min-width: 42px;
             padding: 6px;
             border-radius: 4px;
             text-align: center;
             cursor: pointer;
             font-size: 13px;
             border: 1px solid #999;
+            line-height: 1.1;
         }
 
     .seat-standard span {
@@ -129,8 +130,11 @@
                            name="SelectedSeatIds"
                            value="@s.SeatId"
                            data-price="@s.Price"
-                    @(s.IsBooked ? "disabled" : "") />
-                    <span>@s.SeatNumber<br /><small>@s.Price</small></span>
+                    @(s.IsBooked ? "disabled" : null) />
+                    <span>
+                        @s.SeatNumber<br />
+                        <small>@s.Price</small>
+                    </span>
                 </label>
             }
         </div>
@@ -152,9 +156,7 @@
     function updateTotal() {
         let sum = 0;
         checkboxes.forEach(cb => {
-            if (cb.checked) {
-                sum += parseFloat(cb.dataset.price);
-            }
+            if (cb.checked) sum += parseFloat(cb.dataset.price);
         });
         totalEl.textContent = sum.toFixed(2);
     }

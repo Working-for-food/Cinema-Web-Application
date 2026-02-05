@@ -1,27 +1,46 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
 using Application.Services;
+using Infrastructure.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels;
 
 namespace Web.Controllers.User;
 
-// [Authorize]  // ❌ тимчасово вимкнути
+// Тимчасово без [Authorize], щоб тестити без Login/Register
 public class BookingController : Controller
 {
-    private readonly SessionService _sessions;
+    private readonly SessionService _sessions; // concrete, щоб був GetSeatsForBookingAsync
     private readonly IBookingService _bookings;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public BookingController(SessionService sessions, IBookingService bookings)
+    private const string TestEmail = "test@local.com";
+
+    public BookingController(
+        SessionService sessions,
+        IBookingService bookings,
+        UserManager<ApplicationUser> userManager)
     {
         _sessions = sessions;
         _bookings = bookings;
+        _userManager = userManager;
+    }
+
+    private async Task<string> GetTestUserIdAsync(CancellationToken ct)
+    {
+        var user = await _userManager.FindByEmailAsync(TestEmail);
+        if (user == null)
+            throw new InvalidOperationException($"Test user not found: {TestEmail}");
+
+        return user.Id;
     }
 
     [HttpGet]
     public async Task<IActionResult> Create(int sessionId, CancellationToken ct)
     {
         await _sessions.EnsureSessionSeatsAsync(sessionId, ct);
+
         var seats = await _sessions.GetSeatsForBookingAsync(sessionId, ct);
 
         var vm = new BookingCreateVm
@@ -53,7 +72,8 @@ public class BookingController : Controller
 
         try
         {
-            const string userId = "test-user"; // ✅ фейковий користувач
+            var userId = await GetTestUserIdAsync(ct);
+
             var result = await _bookings.CreateAsync(userId, dto, ct);
             return RedirectToAction(nameof(Success), new { id = result.BookingId });
         }
@@ -98,7 +118,8 @@ public class BookingController : Controller
     [HttpGet]
     public async Task<IActionResult> My(CancellationToken ct)
     {
-        const string userId = "test-user";
+        var userId = await GetTestUserIdAsync(ct);
+
         var items = await _bookings.GetMyAsync(userId, ct);
         return View("~/Views/Bookings/My.cshtml", items);
     }

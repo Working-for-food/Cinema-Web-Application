@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "My bookings";
-
     var totalSpent = Model?.Sum(x => x.TotalAmount) ?? 0m;
 }
 
@@ -113,7 +112,7 @@
 
         <div class="summary">
             <div><strong>@(Model?.Count ?? 0)</strong> booking(s)</div>
-            <div>Total spent: <strong>@totalSpent</strong></div>
+            <div>Total spent: <strong>@totalSpent.ToString("0.00")</strong></div>
         </div>
     </div>
 
@@ -129,7 +128,8 @@
         <div class="cards">
             @foreach (var b in Model)
             {
-                var seatCount = b.Seats?.Count ?? 0;
+                var seats = b.Seats; // тип як у твоєму DTO (наприклад List<BookedSeatDto>)
+                var seatCount = seats?.Count ?? 0;
                 var dateText = b.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
 
                 <div class="card">
@@ -146,16 +146,24 @@
 
                     <div class="meta">
                         <div>Date: <strong>@dateText</strong></div>
-                        <div>Total: <strong>@b.TotalAmount</strong></div>
+                        <div>Total: <strong>@b.TotalAmount.ToString("0.00")</strong></div>
                     </div>
 
                     <div style="font-weight:600; margin-bottom:6px;">Seats</div>
-                    <div class="seats">
-                        @foreach (var s in b.Seats.OrderBy(x => x.RowNumber).ThenBy(x => x.SeatNumber))
-                        {
-                            <span class="seat-chip">R@s.RowNumber - S@s.SeatNumber</span>
-                        }
-                    </div>
+
+                    @if (seats == null || seats.Count == 0)
+                    {
+                        <div style="color:#777;">No seats attached to this booking.</div>
+                    }
+                    else
+                    {
+                        <div class="seats">
+                            @foreach (var s in seats.OrderBy(x => x.RowNumber).ThenBy(x => x.SeatNumber))
+                            {
+                                <span class="seat-chip">R@(s.RowNumber) - S@(s.SeatNumber)</span>
+                            }
+                        </div>
+                    }
                 </div>
             }
         </div>
