@@ -8,6 +8,7 @@ public interface ITmdbClient
     Task<TmdbMovieDetailsResponse> GetMovieDetailsAsync(int tmdbMovieId, CancellationToken ct = default);
 
     Task<TmdbCreditsResponse> GetCreditsAsync(int tmdbMovieId, CancellationToken ct = default);
+    Task<TmdbExternalIdsResponse> GetExternalIdsAsync(int tmdbMovieId, CancellationToken ct = default);
 
     Task<TmdbVideosResponse> GetVideosAsync(int tmdbMovieId, CancellationToken ct = default);
 }

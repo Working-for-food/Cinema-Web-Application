@@ -1,18 +1,18 @@
-﻿@model Infrastructure.Entities.Movie
+﻿@model Web.ViewModels.Admin.MovieDetailsVm
 
 @{
     ViewData["Title"] = "Movie details";
-    var genres = Model.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
-    var countries = Model.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).ToList() ?? new();
-    var actors = Model.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).ToList() ?? new();
-    var directors = Model.MovieDirectors?.OrderBy(x => x.BillingOrder).Select(x => x.Director?.FullName ?? x.DirectorId.ToString()).ToList() ?? new();
+    var genres = Model.Movie.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
+    var countries = Model.Movie.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).ToList() ?? new();
+    var actors = Model.Movie.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).ToList() ?? new();
+    var directors = Model.Movie.MovieDirectors?.OrderBy(x => x.BillingOrder).Select(x => x.Director?.FullName ?? x.DirectorId.ToString()).ToList() ?? new();
 }
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>@Model.Title</h2>
+        <h2>@Model.Movie.Title</h2>
         <div>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+            <a asp-action="Edit" asp-route-id="@Model.Movie.Id" class="btn btn-warning">Edit</a>
             <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
         </div>
     </div>
@@ -21,10 +21,12 @@
         <div class="card-body">
             <dl class="row mb-0">
                 <dt class="col-sm-3">Release date</dt>
-                <dd class="col-sm-9">@(Model.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</dd>
+                <dd class="col-sm-9">@(Model.Movie.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</dd>
 
                 <dt class="col-sm-3">Duration</dt>
-                <dd class="col-sm-9">@(Model.Duration.HasValue ? $"{Model.Duration} min" : "-")</dd>
+                <dd class="col-sm-9">@(Model.Movie.Duration.HasValue ? $"{Model.Movie.Duration} min" : "-")</dd>
+                <dt class="col-sm-3">Metacritic</dt>
+                <dd class="col-sm-9">@Model.Metacritic</dd>
 
                 <dt class="col-sm-3">Directors</dt>
                 <dd class="col-sm-9">
@@ -78,34 +80,34 @@
                 </dd>
 
                 <dt class="col-sm-3">Sessions</dt>
-                <dd class="col-sm-9">@(Model.Sessions?.Count ?? 0)</dd>
+                <dd class="col-sm-9">@(Model.Movie.Sessions?.Count ?? 0)</dd>
 
                 <dt class="col-sm-3">Original name</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.OriginalName) ? "-" : Model.OriginalName)</dd>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.OriginalName) ? "-" : Model.Movie.OriginalName)</dd>
 
                 <dt class="col-sm-3">Language</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Language) ? "-" : Model.Language)</dd>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.Language) ? "-" : Model.Movie.Language)</dd>
 
                 <dt class="col-sm-3">Trailer</dt>
                 <dd class="col-sm-9">
-                    @if (string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                    @if (string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
                     {
                         <span class="text-muted">-</span>
                     }
                     else
                     {
-                        <a href="@Model.TrailerUrl" target="_blank" rel="noopener">Open trailer</a>
+                        <a href="@Model.Movie.TrailerUrl" target="_blank" rel="noopener">Open trailer</a>
                     }
                 </dd>
 
                 <dt class="col-sm-3">PosterPath</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.PosterPath) ? "-" : Model.PosterPath)</dd>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.PosterPath) ? "-" : Model.Movie.PosterPath)</dd>
 
                 <dt class="col-sm-3">BackdropPath</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.BackdropPath) ? "-" : Model.BackdropPath)</dd>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.BackdropPath) ? "-" : Model.Movie.BackdropPath)</dd>
 
                 <dt class="col-sm-3">Description</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.Description) ? "-" : Model.Movie.Description)</dd>
             </dl>
         </div>
     </div>

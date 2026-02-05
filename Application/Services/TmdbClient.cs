@@ -21,6 +21,19 @@ public sealed class TmdbClient : ITmdbClient
         _http = http;
         _opt = opt.Value;
     }
+    public async Task<TmdbExternalIdsResponse> GetExternalIdsAsync(int tmdbMovieId, CancellationToken ct = default)
+    {
+        var url = $"movie/{tmdbMovieId}/external_ids{BuildQuery(new Dictionary<string, string?>
+        {
+            ["api_key"] = _opt.ApiKey
+            
+        })}";
+
+        var resp = await _http.GetFromJsonAsync<TmdbExternalIdsResponse>(url, JsonOpts, ct);
+        return resp ?? new TmdbExternalIdsResponse();
+    }
+
+
     public async Task<IReadOnlyList<TmdbMovieSearchItem>> SearchMovieAsync(
     string query,
     int page = 1,

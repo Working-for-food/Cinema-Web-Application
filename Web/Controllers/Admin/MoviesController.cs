@@ -14,12 +14,14 @@ public class MoviesController : Controller
     private readonly IMovieService _service;
     private readonly ITmdbClient _tmdb;
     private readonly IImportMovieFromTmdb _import;
+    private readonly IMetacriticService _metacritic;
 
-    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import)
+    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import, IMetacriticService metacritic)
     {
         _service = service;
         _tmdb = tmdb;
         _import = import;
+        _metacritic = metacritic;
     }
 
     [HttpGet("")]
@@ -44,7 +46,27 @@ public class MoviesController : Controller
     {
         var movie = await _service.GetMovieDetailsAsync(id, ct);
         if (movie == null) return NotFound();
-        return View($"{ViewsRoot}/Details.cshtml", movie);
+
+        var metacriticDisplay = "—";
+
+        if (movie.TmdbId.HasValue)
+        {
+            var ext = await _tmdb.GetExternalIdsAsync(movie.TmdbId.Value, ct);
+            if (!string.IsNullOrWhiteSpace(ext.ImdbId))
+            {
+                var meta = await _metacritic.GetMetacriticAsync(ext.ImdbId, ct);
+                if (!string.IsNullOrWhiteSpace(meta))
+                    metacriticDisplay = meta!;
+            }
+        }
+
+        var vm = new MovieDetailsVm
+        {
+            Movie = movie,
+            Metacritic = metacriticDisplay
+        };
+
+        return View($"{ViewsRoot}/Details.cshtml", vm);
     }
 
     [HttpGet("create")]
@@ -199,6 +221,7 @@ public class MoviesController : Controller
         var actors = await _service.GetActorsAsync(ct);
         vm.ActorList = new MultiSelectList(actors, "Id", "FullName", vm.SelectedActorIds);
     }
+    
 
     private static MovieFormDto MapToDto(MovieEditVm vm) => new()
     {
