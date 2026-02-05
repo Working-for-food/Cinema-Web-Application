@@ -12,14 +12,18 @@ using Application.Options;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+// Caching
 builder.Services.AddMemoryCache();
+
+// External APIs (OMDb)
 builder.Services.Configure<OmdbOptions>(builder.Configuration.GetSection("Omdb"));
-builder.Services.AddHttpClient<IMetacriticService, MetacriticService>((sp, http) =>
+builder.Services.AddHttpClient<IExternalRatingsService, OmdbRatingsService>((sp, http) =>
 {
     var opt = sp.GetRequiredService<IOptions<OmdbOptions>>().Value;
     http.BaseAddress = new Uri(opt.BaseUrl);
     http.Timeout = TimeSpan.FromSeconds(10);
 });
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>

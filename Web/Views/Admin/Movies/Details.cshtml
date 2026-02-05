@@ -27,7 +27,10 @@
                 <dd class="col-sm-9">@(Model.Movie.Duration.HasValue ? $"{Model.Movie.Duration} min" : "-")</dd>
                 <dt class="col-sm-3">Metacritic</dt>
                 <dd class="col-sm-9">@Model.Metacritic</dd>
-
+                <dt class="col-sm-3">Rotten Tomatoes</dt>
+                <dd class="col-sm-9">@Model.RottenTomatoes</dd>
+                <dt class="col-sm-3">IMDb</dt>
+                <dd class="col-sm-9">@Model.ImdbRating</dd>
                 <dt class="col-sm-3">Directors</dt>
                 <dd class="col-sm-9">
                     @if (directors.Count == 0)

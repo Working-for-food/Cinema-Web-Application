@@ -14,14 +14,14 @@ public class MoviesController : Controller
     private readonly IMovieService _service;
     private readonly ITmdbClient _tmdb;
     private readonly IImportMovieFromTmdb _import;
-    private readonly IMetacriticService _metacritic;
+    private readonly IExternalRatingsService _ratings;
 
-    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import, IMetacriticService metacritic)
+    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import, IExternalRatingsService ratings)
     {
         _service = service;
         _tmdb = tmdb;
         _import = import;
-        _metacritic = metacritic;
+        _ratings = ratings;
     }
 
     [HttpGet("")]
@@ -47,22 +47,33 @@ public class MoviesController : Controller
         var movie = await _service.GetMovieDetailsAsync(id, ct);
         if (movie == null) return NotFound();
 
-        var metacriticDisplay = "—";
+        var metacriticDisplay = "Ще не оцінено критиками";
+        var rtDisplay = "Ще не оцінено критиками";
+        var imdbDisplay = "Ще не оцінено глядачами";
 
         if (movie.TmdbId.HasValue)
         {
             var ext = await _tmdb.GetExternalIdsAsync(movie.TmdbId.Value, ct);
+
             if (!string.IsNullOrWhiteSpace(ext.ImdbId))
             {
-                var meta = await _metacritic.GetMetacriticAsync(ext.ImdbId, ct);
-                if (!string.IsNullOrWhiteSpace(meta))
-                    metacriticDisplay = meta!;
+                var ratings = await _ratings.GetRatingsAsync(ext.ImdbId, ct);
+
+                if (!string.IsNullOrWhiteSpace(ratings.Imdb))
+                    imdbDisplay = ratings.Imdb;
+
+                if (!string.IsNullOrWhiteSpace(ratings.RottenTomatoes))
+                    rtDisplay = ratings.RottenTomatoes;
+
+                if (!string.IsNullOrWhiteSpace(ratings.Metacritic))
+                    metacriticDisplay = ratings.Metacritic;
             }
         }
-
         var vm = new MovieDetailsVm
         {
             Movie = movie,
+            ImdbRating = imdbDisplay,
+            RottenTomatoes = rtDisplay,
             Metacritic = metacriticDisplay
         };
 
