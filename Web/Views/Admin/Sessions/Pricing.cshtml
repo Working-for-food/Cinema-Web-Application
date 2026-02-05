@@ -22,11 +22,11 @@
         _ => "badge text-bg-secondary"
     };
 
-    string CardBgClass(SeatCategory c) => c switch
+    string SeatBgClass(SeatCategory c) => c switch
     {
-        SeatCategory.Vip => "bg-warning-subtle",
-        SeatCategory.Accessible => "bg-info-subtle",
-        _ => "bg-white"
+        SeatCategory.Vip => "seat-bg-vip",
+        SeatCategory.Accessible => "seat-bg-acc",
+        _ => "seat-bg-std"
     };
 
     var groupedSeats = (Model.Seats ?? new List<SessionPricingPageVm.SeatPriceVm>())
@@ -52,9 +52,6 @@
             <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
         }
 
-        <!-- =======================
-        ОКРЕМА КАРТКА: Управління цінами
-        ======================= -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-maroon text-white">
                 <h5 class="mb-0">
@@ -66,7 +63,6 @@
             <div class="card-body p-3 p-md-4" style="background-color:#fff9e6;">
                 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
 
-                    <!-- Деталі -->
                     <div>
                         <div class="small text-muted mb-1">
                             <i class="fa-solid fa-location-dot me-1"></i>
@@ -81,10 +77,8 @@
                         </div>
                     </div>
 
-                    <!-- Кнопки справа -->
                     <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
 
-                        <!-- Назад до сеансів -->
                         <a asp-controller="Sessions"
                            asp-action="Index"
                            class="btn btn-secondary">
@@ -92,7 +86,6 @@
                             НАЗАД
                         </a>
 
-                        <!-- Налаштування сеансу -->
                         <a asp-action="Edit"
                            asp-route-id="@Model.SessionId"
                            class="btn btn-maroon">
@@ -100,7 +93,6 @@
                             РЕДАГУВАТИ
                         </a>
 
-                        <!-- Деталі -->
                         <a asp-action="Details"
                            asp-route-id="@Model.SessionId"
                            class="btn btn-maroon">
@@ -114,15 +106,9 @@
             </div>
         </div>
 
-        <!-- =======================
-             ФОРМА (1) + (2)
-             ======================= -->
         <form asp-action="Pricing" asp-route-id="@Model.SessionId" method="post" id="pricingForm">
             @Html.AntiForgeryToken()
 
-            <!-- =======================
-                 1) Базові тарифи (жовтий, на всю ширину)
-                 ======================= -->
             <div class="card shadow-sm mb-4" style="background-color:#fff9e6;">
                 <div class="card-header bg-maroon text-white">
                     <h5 class="mb-0">
@@ -134,7 +120,6 @@
                 <div class="card-body p-4">
                     <div class="row g-4">
 
-                        <!-- Базова ціна за ряд -->
                         <div class="col-12 col-lg-6">
                             <label class="form-label text-muted">
                                 <i class="fa-solid fa-layer-group me-1"></i>
@@ -174,7 +159,6 @@
                             </div>
                         </div>
 
-                        <!-- Коефіцієнти категорій -->
                         <div class="col-12 col-lg-6">
                             <label class="form-label text-muted">
                                 <i class="fa-solid fa-tags me-1"></i>
@@ -237,9 +221,6 @@
                 </div>
             </div>
 
-            <!-- =======================
-                 2) Попередній перегляд (жовтий, на всю ширину)
-                 ======================= -->
             <div class="card shadow-sm" style="background-color:#fff9e6;">
                 <div class="card-header bg-maroon text-white">
                     <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
@@ -276,12 +257,13 @@
                             <small class="text-uppercase text-muted fw-semibold">Екран</small>
                         </div>
 
-                        <div class="d-flex justify-content-center">
-                            <table class="table table-borderless w-auto text-center"
+                        <!-- без justify-content-center, щоб sticky не перекривав першу колонку -->
+                        <div class="seat-preview-wrap">
+                            <table class="table table-borderless w-auto text-center seat-preview-table"
                                    style="border-spacing:4px; border-collapse:separate;">
                                 <thead>
                                     <tr>
-                                        <th class="text-muted fw-normal small">Ряд</th>
+                                        <th class="text-muted fw-normal small seat-sticky-col">Ряд</th>
                                         @for (int i = 1; i <= maxSeats; i++)
                                         {
                                             <th class="text-muted fw-normal small" style="width:50px;">@i</th>
@@ -292,7 +274,7 @@
                                     @foreach (var row in groupedSeats)
                                     {
                                         <tr>
-                                            <td class="fw-semibold text-secondary align-middle">@row.Key</td>
+                                            <td class="fw-semibold text-secondary align-middle seat-sticky-col">@row.Key</td>
 
                                             @for (int s = 1; s <= maxSeats; s++)
                                             {
@@ -304,14 +286,12 @@
                                                         var currentPrice = seat.Price;
                                                         var cat = (SeatCategory)seat.Category;
 
-                                                        <div class="card shadow-sm border-0 @CardBgClass(cat)"
+                                                        <div class="card shadow-sm border-0 seat-card @SeatBgClass(cat)"
                                                              style="width:50px; cursor:default;">
-                                                            <div class="@BadgeClass(cat) w-100 rounded-top-1"
-                                                                 style="height:6px; padding:0;"></div>
-
                                                             <div class="p-1">
-                                                                <div class="fw-bold small text-dark">@s</div>
-                                                                <div class="small fw-bold text-primary seat-price-display"
+                                                                <div class="fw-bold small seat-num">@s</div>
+
+                                                                <div class="small fw-bold seat-price-display"
                                                                      data-row="@seat.Row"
                                                                      data-cat="@seat.Category">
                                                                     @currentPrice.ToString("F0")

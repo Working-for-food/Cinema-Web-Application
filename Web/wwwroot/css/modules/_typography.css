@@ -8,17 +8,17 @@
     text-transform: uppercase;
 }
 
-    .section-title::after {
-        content: '';
-        width: 120px;
-        height: 5px;
-        background-color: #d4af37;
-        position: absolute;
-        bottom: -15px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 2px;
-    }
+.section-title::after {
+    content: '';
+    width: 120px;
+    height: 5px;
+    background-color: #d4af37;
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
 
 .page-title {
     font-weight: 800;

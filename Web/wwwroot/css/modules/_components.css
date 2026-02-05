@@ -77,19 +77,19 @@
     transition: all 0.2s ease-in-out;
 }
 
-    .btn-outline-maroon:hover {
-        background-color: #6c757d; 
-        color: #ffffff;
-        border-color: #6c757d;
-    }
+.btn-outline-maroon:hover {
+    background-color: #6c757d; 
+    color: #ffffff;
+    border-color: #6c757d;
+}
 
-    .btn-outline-maroon:focus,
-    .btn-outline-maroon:active {
-        background-color: #6c757d;
-        color: #ffffff;
-        border-color: #6c757d;
-        box-shadow: 0 0 0 0.15rem rgba(58, 58, 58, 0.35);
-    }
+.btn-outline-maroon:focus,
+.btn-outline-maroon:active {
+    background-color: #6c757d;
+    color: #ffffff;
+    border-color: #6c757d;
+    box-shadow: 0 0 0 0.15rem rgba(58, 58, 58, 0.35);
+}
 
 .btn-danger-second {
     background-color: #92000A;
@@ -99,16 +99,16 @@
     border-radius: 6px;
 }
 
-    .btn-danger-second:hover {
-        background-color: #8B0000;
-        border-color: #8B0000;
-        color: #ffffff;
-    }
+.btn-danger-second:hover {
+    background-color: #8B0000;
+    border-color: #8B0000;
+    color: #ffffff;
+}
 
-    .btn-danger-second:focus,
-    .btn-danger-second:active {
-        box-shadow: 0 0 0 0.15rem rgba(45, 168, 168, 0.35);
-    }
+.btn-danger-second:focus,
+.btn-danger-second:active {
+    box-shadow: 0 0 0 0.15rem rgba(45, 168, 168, 0.35);
+}
 
 .card-modern {
     border: 0;
@@ -183,9 +183,9 @@
     padding: .65rem 1rem;
 }
 
-    .btn-soft:hover {
-        background: #f8fafc;
-    }
+.btn-soft:hover {
+    background: #f8fafc;
+}
 
 .pill {
     display: inline-flex;
@@ -213,25 +213,24 @@
     border: 1px solid rgba(15,23,42,.08);
 }
 
-    .table-modern thead th {
-        background: #0f172a;
-        color: #fff;
-        font-weight: 700;
-        border-bottom: 0;
-        padding: .85rem .85rem;
-        white-space: nowrap;
-    }
+.table-modern thead th {
+    background: #0f172a;
+    color: #fff;
+    font-weight: 700;
+    border-bottom: 0;
+    padding: .85rem .85rem;
+    white-space: nowrap;
+}
 
-    .table-modern tbody td {
-        padding: .85rem .85rem;
-        border-top: 1px solid rgba(15,23,42,.06);
-    }
+.table-modern tbody td {
+    padding: .85rem .85rem;
+    border-top: 1px solid rgba(15,23,42,.06);
+}
 
-    .table-modern tbody tr:hover {
-        background: rgba(15,23,42,.02);
-    }
+.table-modern tbody tr:hover {
+    background: rgba(15,23,42,.02);
+}
 
-/* Seats table specifics */
 .col-row {
     width: 120px;
 }
@@ -262,7 +261,6 @@
     font-weight: 700;
 }
 
-/* Screen */
 .screen {
     height: 44px;
     border-radius: 999px;
@@ -280,7 +278,6 @@
     font-size: .85rem;
 }
 
-/* Empty state */
 .empty-state {
     text-align: center;
     padding: 26px 14px;
@@ -312,18 +309,13 @@
     font-size: .95rem;
 }
 
-/* =========================================================
-   ADMIN TABLE – light yellow / cream style
-   ========================================================= */
-
 .admin-table-card {
     border-radius: 16px;
     overflow: hidden;
-    border: 1px solid #f2e8c9; /* дуже світла жовта рамка */
-    background-color: #fffdf6; /* кремовий фон */
+    border: 1px solid #f2e8c9; 
+    background-color: #fffdf6; 
 }
 
-/* Table base */
 .admin-table {
     border-collapse: separate;
     border-spacing: 0;
@@ -331,99 +323,84 @@
     background-color: #fffdf6;
 }
 
-    /* Header */
-    .admin-table thead th {
-        background-color: #fff9e8; /* трохи темніший жовтий */
-        color: #4b4b4b;
-        font-weight: 600;
-        font-size: 0.9rem;
-        padding: 14px 20px;
-        border-bottom: 1px solid #f0e6c8;
-        white-space: nowrap;
-    }
-
-        /* Rounded header corners */
-        .admin-table thead th:first-child {
-            border-top-left-radius: 16px;
-        }
-
-        .admin-table thead th:last-child {
-            border-top-right-radius: 16px;
-        }
-
-    /* Body cells */
-    .admin-table tbody td {
-        padding: 14px 20px;
-        border-bottom: 1px solid #f4f0e3; /* дуже мʼяка лінія */
-        vertical-align: middle;
-        font-size: 0.95rem;
-        color: #2f2f2f;
-        background-color: #fffdf6;
-    }
-
-    /* Vertical separators (ультра-світкі) */
-    .admin-table th:not(:last-child),
-    .admin-table td:not(:last-child) {
-        border-right: 1px solid #f6efd8;
-    }
-
-    /* Hover */
-    .admin-table tbody tr:hover {
-        background-color: #fff8e1;
-    }
-
-    /* Remove last row border */
-    .admin-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* Actions column */
-    .admin-table td.text-end {
-        white-space: nowrap;
-    }
-
-    /* Buttons inside table */
-    .admin-table .btn-sm {
-        padding: 6px 10px;
-        border-radius: 8px;
-    }
-
-    /* Badges inside table */
-    .admin-table .badge {
-        font-weight: 500;
-        padding: 6px 10px;
-        border-radius: 8px;
-    }
+.admin-table thead th {
+    background-color: #fff9e8; 
+    color: #4b4b4b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0e6c8;
+    white-space: nowrap;
+}
 
 
-    /* ===== Ultra-light column grid ===== */
+.admin-table thead th:first-child {
+    border-top-left-radius: 16px;
+}
 
-    /* Vertical separators between columns */
-    .admin-table th:not(:last-child),
-    .admin-table td:not(:last-child) {
-        border-right: 1px solid #f1f3f5; /* дуже світло */
-    }
+.admin-table thead th:last-child {
+    border-top-right-radius: 16px;
+}
 
-    /* Header bottom line (чуть чіткіша) */
-    .admin-table thead th {
-        border-bottom: 1px solid #e9ecef;
-    }
+.admin-table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f4f0e3; 
+    vertical-align: middle;
+    font-size: 0.95rem;
+    color: #2f2f2f;
+    background-color: #fffdf6;
+}
 
-    /* Body row separators (ледь помітні) */
-    .admin-table tbody td {
-        border-bottom: 1px solid #f3f4f6;
-    }
+.admin-table th:not(:last-child),
+.admin-table td:not(:last-child) {
+    border-right: 1px solid #f6efd8;
+}
 
-    /* Remove double border at last row */
-    .admin-table tbody tr:last-child td {
-        border-bottom: none;
-    }
+.admin-table tbody tr:hover {
+    background-color: #fff8e1;
+}
 
-    .admin-table thead th,
-    .admin-table tbody td {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table td.text-end {
+    white-space: nowrap;
+}
+
+.admin-table .btn-sm {
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.admin-table .badge {
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.admin-table th:not(:last-child),
+.admin-table td:not(:last-child) {
+    border-right: 1px solid #f1f3f5; 
+}
+
+.admin-table thead th {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.admin-table tbody td {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table thead th,
+.admin-table tbody td {
+    padding-left: 20px;
+    padding-right: 20px;
+}
 
 .person-avatar {
     width: 44px;
@@ -437,14 +414,88 @@
     justify-content: center;
 }
 
-    .person-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+.person-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
 .person-avatar__placeholder {
     color: #9aa3af;
     font-size: 16px;
 }
+
+.seat-card.seat-bg-vip {
+    background-color: var(--bs-warning) !important;
+}
+
+.seat-card.seat-bg-acc {
+    background-color: var(--bs-info) !important;
+}
+
+.seat-card.seat-bg-std {
+    background-color: var(--bs-light) !important;
+    border: 1px solid rgba(0,0,0,.10) !important;
+}
+
+.seat-card .seat-num,
+.seat-card .seat-price-display {
+    color: #111 !important;
+}
+
+.seat-card {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08) !important;
+}
+
+.seat-preview-wrap {
+    display: block;
+}
+
+.seat-sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: #f8f9fa;
+    box-shadow: 6px 0 0 rgba(0,0,0,0.04);
+}
+
+thead .seat-sticky-col {
+    z-index: 4;
+}
+
+/* Фіксуємо висоту картки "Ціноутворення" */
+.pricing-card {
+    
+    display: flex;
+    flex-direction: column;
+}
+
+    /* Щоб header/footer не стискались */
+    .pricing-card .card-header,
+    .pricing-card .card-footer {
+        flex: 0 0 auto;
+    }
+
+    /* Body займає весь доступний простір між header і footer */
+    .pricing-card .card-body {
+        flex: 1 1 auto;
+        overflow: hidden; /* важливо: щоб скрол був всередині секцій */
+    }
+
+/* Скрол у секціях з цінами/множниками */
+.pricing-scroll {
+    max-height: 260px; /* висота одного блоку зі скролом */
+    overflow-y: auto;
+}
+
+    /* Трохи приємніший скрол (необов'язково) */
+    .pricing-scroll::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .pricing-scroll::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,.15);
+        border-radius: 10px;
+    }
 

@@ -9,7 +9,6 @@
 
         <h1 class="section-title text-center mb-5">Додати новий фільм</h1>
 
-        @* Якщо в новій логіці TempData немає — це не заважає, просто не показуватиме *@
         @if (TempData["Success"] is string ok)
         {
             <div class="alert alert-success mb-3">@ok</div>

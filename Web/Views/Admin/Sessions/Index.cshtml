@@ -212,7 +212,6 @@
             <div class="text-muted mb-2">Знайдено: @Model.TotalCount</div>
         }
 
-        <!-- КАРТКИ СЕАНСІВ: 2 В РЯД -->
         @if (Model.Sessions == null || Model.Sessions.Count == 0)
         {
             <div class="card shadow-sm col-lg-8 mx-auto">
@@ -241,7 +240,6 @@
                             <div class="card-body p-4">
 
                                 <div class="row align-items-start g-4">
-                                    <!-- Постер -->
                                     <div class="col-auto">
                                         <div class="card overflow-hidden" style="width:150px;">
                                             <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
@@ -261,7 +259,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Інфо -->
                                     <div class="col">
                                         <div class="mb-2">
                                             <div class="text-muted small">
@@ -317,9 +314,7 @@
                                             }
                                         </div>
 
-                                        <!-- Кнопки -->
                                         <div class="d-flex flex-wrap gap-2">
-                                            <!-- Деталі -->
                                             <a asp-action="Details"
                                                asp-route-id="@s.Id"
                                                class="btn btn-maroon"
@@ -328,7 +323,6 @@
                                                 <i class="fa-solid fa-circle-info"></i>
                                             </a>
 
-                                            <!-- Ціни -->
                                             @if (s.IsCancelled || isOver)
                                             {
                                                 <button class="btn btn-secondary"
@@ -350,7 +344,6 @@
                                                 </a>
                                             }
 
-                                            <!-- Редагувати -->
                                             @if (s.IsCancelled || isOver)
                                             {
                                                 <button class="btn btn-secondary"
@@ -372,7 +365,6 @@
                                                 </a>
                                             }
 
-                                            <!-- Скасувати / Відновити -->
                                             @if (!s.IsCancelled)
                                             {
                                                 if (isOver)
