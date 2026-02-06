@@ -8,9 +8,9 @@
 
     string CatLabel(SeatCategory c) => c switch
     {
-        SeatCategory.Standard => "Звичайне",
+        SeatCategory.Standard => "Звичайні",
         SeatCategory.Vip => "VIP",
-        SeatCategory.Accessible => "Інклюзивне",
+        SeatCategory.Accessible => "Інклюзивні",
         _ => c.ToString()
     };
 
@@ -22,7 +22,7 @@
         _ => "badge text-bg-secondary"
     };
 
-    string SeatBgClass(SeatCategory c) => c switch
+    string SeatUiClass(SeatCategory c) => c switch
     {
         SeatCategory.Vip => "seat-bg-vip",
         SeatCategory.Accessible => "seat-bg-acc",
@@ -40,7 +40,7 @@
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-5">ЦІНИ СЕАНСУ</h1>
+        <h1 class="section-title text-center mb-5">Ціни сеансу</h1>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
@@ -242,8 +242,7 @@
                     </div>
                 </div>
 
-                <div class="card-body p-4 bg-light overflow-auto">
-
+                <div class="card-body p-4">
                     @if (groupedSeats.Count == 0)
                     {
                         <div class="alert alert-warning mb-0">
@@ -252,66 +251,49 @@
                     }
                     else
                     {
-                        <div class="mb-4 mx-auto text-center" style="max-width:520px;">
-                            <div class="border-top border-4 border-secondary opacity-25 mb-2"></div>
-                            <small class="text-uppercase text-muted fw-semibold">Екран</small>
-                        </div>
+                        <div class="cinema-map-wrap">
+                            <div class="cinema-map">
 
-                        <!-- без justify-content-center, щоб sticky не перекривав першу колонку -->
-                        <div class="seat-preview-wrap">
-                            <table class="table table-borderless w-auto text-center seat-preview-table"
-                                   style="border-spacing:4px; border-collapse:separate;">
-                                <thead>
-                                    <tr>
-                                        <th class="text-muted fw-normal small seat-sticky-col">Ряд</th>
-                                        @for (int i = 1; i <= maxSeats; i++)
-                                        {
-                                            <th class="text-muted fw-normal small" style="width:50px;">@i</th>
-                                        }
-                                    </tr>
-                                </thead>
-                                <tbody>
+                                <div class="cinema-screen">
+                                    <div class="cinema-screen-arc"></div>
+                                    <div class="cinema-screen-title">ЕКРАН</div>
+                                </div>
+
+                                <div class="cinema-grid" style="--cols:@maxSeats;">
                                     @foreach (var row in groupedSeats)
                                     {
-                                        <tr>
-                                            <td class="fw-semibold text-secondary align-middle seat-sticky-col">@row.Key</td>
+                                        var seatsInRow = row.OrderBy(x => x.Number).ToList();
 
-                                            @for (int s = 1; s <= maxSeats; s++)
+                                        <div class="row-label">@row.Key</div>
+
+                                        @for (int s = 1; s <= maxSeats; s++)
+                                        {
+                                            var seat = seatsInRow.FirstOrDefault(x => x.Number == s);
+
+                                            if (seat == null)
                                             {
-                                                var seat = row.FirstOrDefault(x => x.Number == s);
-
-                                                <td>
-                                                    @if (seat != null)
-                                                    {
-                                                        var currentPrice = seat.Price;
-                                                        var cat = (SeatCategory)seat.Category;
-
-                                                        <div class="card shadow-sm border-0 seat-card @SeatBgClass(cat)"
-                                                             style="width:50px; cursor:default;">
-                                                            <div class="p-1">
-                                                                <div class="fw-bold small seat-num">@s</div>
-
-                                                                <div class="small fw-bold seat-price-display"
-                                                                     data-row="@seat.Row"
-                                                                     data-cat="@seat.Category">
-                                                                    @currentPrice.ToString("F0")
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div style="width:50px; height:40px;"></div>
-                                                    }
-                                                </td>
+                                                <div class="seat seat-empty"></div>
                                             }
-                                        </tr>
+                                            else
+                                            {
+                                                var cat = (SeatCategory)seat.Category;
+                                                var price = seat.Price;
+
+                                                <div class="seat @SeatUiClass(cat)"
+                                                     title="Ряд @seat.Row, місце @s — @price.ToString("0") грн">
+                                                    <div class="seat-text">
+                                                        <div class="seat-no">@s</div>
+                                                        <div class="seat-price">@price.ToString("0")</div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
                                     }
-                                </tbody>
-                            </table>
+                                </div>
+
+                            </div>
                         </div>
                     }
-
                 </div>
             </div>
 

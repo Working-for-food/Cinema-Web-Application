@@ -425,77 +425,171 @@
     font-size: 16px;
 }
 
-.seat-card.seat-bg-vip {
-    background-color: var(--bs-warning) !important;
+.cinema-map-wrap {
+    display: flex;
+    justify-content: center;
 }
 
-.seat-card.seat-bg-acc {
-    background-color: var(--bs-info) !important;
+.cinema-map {
+    width: min(1100px, 100%);
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 26px 26px 30px;
+    box-shadow: 0 18px 44px rgba(0,0,0,.15);
+    overflow: hidden;
 }
 
-.seat-card.seat-bg-std {
-    background-color: var(--bs-light) !important;
-    border: 1px solid rgba(0,0,0,.10) !important;
+.cinema-screen {
+    position: relative;
+    text-align: center;
+    margin-bottom: 18px;
+    padding-top: 6px;
 }
 
-.seat-card .seat-num,
-.seat-card .seat-price-display {
-    color: #111 !important;
+.cinema-screen-arc {
+    height: 18px;
+    width: 90%;
+    margin: 0 auto 8px;
+    border-radius: 999px;
+    background: radial-gradient(60% 140% at 50% 100%, rgba(255,135,0,.55), rgba(255,135,0,0));
+    box-shadow: 0 10px 26px rgba(255,120,0,.10);
 }
 
-.seat-card {
-    border-radius: 12px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08) !important;
+.cinema-screen-title {
+    color: #a9a9a9;
+    font-weight: 800;
+    letter-spacing: .14em;
+    opacity: .95;
 }
 
-.seat-preview-wrap {
-    display: block;
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
-.seat-sticky-col {
-    position: sticky;
-    left: 0;
-    z-index: 3;
-    background: #f8f9fa;
-    box-shadow: 6px 0 0 rgba(0,0,0,0.04);
+.legend-std {
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.18);
 }
 
-thead .seat-sticky-col {
-    z-index: 4;
+.legend-vip {
+    background: #f0b53a;
+    box-shadow: 0 0 0 2px rgba(240,181,58,.22);
 }
 
-/* Фіксуємо висоту картки "Ціноутворення" */
-.pricing-card {
-    
+.legend-acc {
+    background: #2fb5ff;
+    box-shadow: 0 0 0 2px rgba(47,181,255,.22);
+}
+
+.cinema-grid {
+    display: grid;
+    grid-template-columns: 44px repeat(var(--cols), var(--cell));
+    gap: var(--gap);
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px 2px;
+    --cell: 34px;
+    --gap: 12px;
+}
+
+@media (min-width: 1200px) {
+    .cinema-grid {
+        --cell: 38px;
+        --gap: 13px;
+    }
+}
+
+@media (max-width: 992px) {
+    .cinema-map {
+        padding: 18px;
+    }
+
+    .cinema-grid {
+        --cell: clamp(20px, 3.0vw, 32px);
+        --gap: clamp(6px, 1.2vw, 10px);
+    }
+}
+
+.row-label {
+    color: #a9a9a9;
+    font-weight: 800;
+    opacity: .95;
+    text-align: left;
+    padding-left: 2px;
+    font-size: 14px;
+}
+
+.seat {
+    width: var(--cell);
+    height: var(--cell);
+    border-radius: 8px;
+    background: #ffffff;
+    border: 0;
+    box-shadow: 0 8px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.95);
+    position: relative;
+}
+
+.seat::before {
+    content: "";
+    position: absolute;
+    inset: 3px 3px auto 3px;
+    height: 40%;
+    border-radius: 7px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.95), rgba(255,255,255,0));
+    opacity: .95;
+    pointer-events: none;
+}
+
+.seat-bg-std {
+    background: #ffffff;
+    outline: 1px solid rgba(255,255,255,.25);
+    outline-offset: -1px;
+}
+
+.seat-bg-vip {
+    background: #ffffff;
+    outline: 2px solid rgba(240,181,58,.95);
+    outline-offset: -2px;
+    box-shadow: 0 8px 14px rgba(0,0,0,.18), 0 0 0 3px rgba(240,181,58,.14), inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+.seat-bg-acc {
+    background: #ffffff;
+    outline: 2px solid rgba(47,181,255,.95);
+    outline-offset: -2px;
+    box-shadow: 0 8px 14px rgba(0,0,0,.18), 0 0 0 3px rgba(47,181,255,.14), inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+.seat-empty {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.seat-text {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.05;
+    font-weight: 900;
+    color: #4a4949;
+    text-shadow: 0 1px 0 rgba(255,255,255,.6);
+    pointer-events: none;
 }
 
-    /* Щоб header/footer не стискались */
-    .pricing-card .card-header,
-    .pricing-card .card-footer {
-        flex: 0 0 auto;
-    }
-
-    /* Body займає весь доступний простір між header і footer */
-    .pricing-card .card-body {
-        flex: 1 1 auto;
-        overflow: hidden; /* важливо: щоб скрол був всередині секцій */
-    }
-
-/* Скрол у секціях з цінами/множниками */
-.pricing-scroll {
-    max-height: 260px; /* висота одного блоку зі скролом */
-    overflow-y: auto;
+.seat-text .seat-no {
+    font-size: 12px;
+    margin-bottom: 2px;
 }
 
-    /* Трохи приємніший скрол (необов'язково) */
-    .pricing-scroll::-webkit-scrollbar {
-        width: 10px;
-    }
+.seat-text .seat-price {
+    font-size: 11px;
+    opacity: .9;
+    font-weight: 800;
 
-    .pricing-scroll::-webkit-scrollbar-thumb {
-        background: rgba(0,0,0,.15);
-        border-radius: 10px;
-    }
-
+}
