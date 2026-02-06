@@ -2,140 +2,265 @@
 @model Web.ViewModels.Admin.MovieIndexVm
 
 @{
-    ViewData["Title"] = "List of movies";
+    ViewData["Title"] = "Фільми";
 }
 
-<div class="container mt-4">
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Movies</h2>
-        <div class="d-flex gap-2">
-            <a asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Add a movie
-            </a>
-            <a asp-action="AddFromTmdb" class="btn btn-outline-primary">
-                <i class="bi bi-cloud-download"></i> Import a movie
-            </a>
+        <h1 class="section-title text-center mb-5">Фільми</h1>
+
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success mb-3">@ok</div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger mb-3">@err</div>
+        }
+
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-lg-end gap-2">
+                <a asp-action="AddFromTmdb" class="btn btn-outline-maroon">
+                    <i class="fa-solid fa-cloud-arrow-down me-1"></i>
+                    ІМПОРТУВАТИ (TMDB)
+                </a>
+                <a asp-action="Create" class="btn btn-maroon">
+                    <i class="fa-solid fa-plus me-1"></i>
+                    ДОДАТИ НОВИЙ ФІЛЬМ
+                </a>
+            </div>
         </div>
+
+        <div class="card shadow-sm col-12 mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-filter me-2"></i>
+                    Фільтри
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="get" asp-action="Index" class="row g-3 align-items-end">
+
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>
+                            Пошук
+                        </label>
+                        <input name="search"
+                               value="@Model.SearchTerm"
+                               class="form-control"
+                               placeholder="Пошук за назвою..." />
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-arrow-down-a-z me-1"></i>
+                            Сортування
+                        </label>
+
+                        <select name="sortBy" class="form-select">
+                            <option value="">За замовчуванням</option>
+                            <option value="title" selected="@(Model.SortBy == "title")">Назва (А-Я)</option>
+                            <option value="title_desc" selected="@(Model.SortBy == "title_desc")">Назва (Я-А)</option>
+                            <option value="date_asc" selected="@(Model.SortBy == "date_asc")">Дата релізу (↑)</option>
+                            <option value="date_desc" selected="@(Model.SortBy == "date_desc")">Дата релізу (↓)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <div class="d-flex gap-2 justify-content-lg-end">
+                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">
+                                ЗАСТОСУВАТИ
+                            </button>
+
+                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">
+                                СКИНУТИ
+                            </a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        @if (Model.Movies == null || !Model.Movies.Any())
+        {
+            <div class="card shadow-sm col-lg-8 mx-auto">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        Немає результатів
+                    </h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="mb-0">Фільми не знайдено.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm col-12 admin-table-card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table admin-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width: 96px;">Постер</th>
+
+                                    <th scope="col">
+                                        <a asp-action="Index"
+                                           asp-route-sortBy="@(Model.SortBy == "title_desc" ? "title" : "title_desc")"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-page="@Model.Page"
+                                           class="text-decoration-none text-reset">
+                                            Назва @(Model.SortBy == "title_desc" ? "▼" : "▲")
+                                        </a>
+                                    </th>
+
+                                    <th scope="col" style="width: 160px;">
+                                        <a asp-action="Index"
+                                           asp-route-sortBy="@(Model.SortBy == "date_desc" ? "date_asc" : "date_desc")"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-page="@Model.Page"
+                                           class="text-decoration-none text-reset">
+                                            Дата релізу
+                                        </a>
+                                    </th>
+
+                                    <th scope="col" style="width: 140px;">Тривалість</th>
+                                    <th scope="col">Жанри</th>
+                                    <th scope="col" style="width: 130px;">Сеанси</th>
+                                    <th scope="col" class="text-end" style="width: 260px;">Дії</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var movie in Model.Movies)
+                                {
+                                    var posterUrl = TmdbImage.Build(movie.PosterPath, "w92");
+
+                                    <tr>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(posterUrl))
+                                            {
+                                                <img src="@posterUrl"
+                                                     alt="Poster"
+                                                     class="img-thumbnail"
+                                                     style="width:72px" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+                                                     style="width:72px;height:108px">
+                                                    <span class="text-muted" style="font-size:12px">No poster</span>
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <td class="fw-semibold">@movie.Title</td>
+
+                                        <td>@(movie.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+
+                                        <td>@(movie.Duration.HasValue ? $"{movie.Duration} хв" : "-")</td>
+
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(movie.GenreNames))
+                                            {
+                                                <span class="badge bg-info text-dark">@movie.GenreNames</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            @if (movie.SessionsCount > 0)
+                                            {
+                                                <span class="badge bg-secondary">@movie.SessionsCount</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">0</span>
+                                            }
+                                        </td>
+
+                                        <td class="text-end">
+                                            <a asp-action="Details"
+                                               asp-route-id="@movie.Id"
+                                               class="btn btn-sm btn-maroon me-1"
+                                               title="Деталі">
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            </a>
+
+                                            <a asp-action="Edit"
+                                               asp-route-id="@movie.Id"
+                                               class="btn btn-sm btn-secondary me-1"
+                                               title="Редагувати">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+
+                                            @if (movie.SessionsCount > 0)
+                                            {
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger"
+                                                        disabled
+                                                        title="Цей фільм має сеанси">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="Delete"
+                                                      asp-route-id="@movie.Id"
+                                                      method="post"
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('Ви впевнені, що хочете видалити цей фільм?');">
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Видалити">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(Model.Page - 1)"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-sortBy="@Model.SortBy">
+                            Prev
+                        </a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <span class="page-link">Сторінка @Model.Page з @Model.TotalPages</span>
+                    </li>
+
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(Model.Page + 1)"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-sortBy="@Model.SortBy">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+
     </div>
-
-    <form method="get" asp-action="Index" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="search" class="form-control" placeholder="Search by name..." value="@Model.SearchTerm">
-            <button class="btn btn-primary" type="submit">Search</button>
-            @if (!string.IsNullOrEmpty(Model.SearchTerm))
-            {
-                <a asp-action="Index" class="btn btn-secondary">Reset</a>
-            }
-        </div>
-    </form>
-
-    <table class="table table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>
-                    Poster
-                </th>
-                <th>
-                    <a asp-action="Index"
-                       asp-route-sortBy="@(Model.SortBy == "title_desc" ? "title" : "title_desc")"
-                       asp-route-search="@Model.SearchTerm"
-                       class="text-white text-decoration-none">
-                        Name @(Model.SortBy == "title_desc" ? "▼" : "▲")
-                    </a>
-                </th>
-                <th>
-                    <a asp-action="Index"
-                       asp-route-sortBy="@(Model.SortBy == "date_desc" ? "date_asc" : "date_desc")"
-                       asp-route-search="@Model.SearchTerm"
-                       class="text-white text-decoration-none">
-                        Release date
-                    </a>
-                </th>
-                <th>Duration</th>
-                <th>Genres</th>
-                <th>Sessions</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var movie in Model.Movies)
-            {
-                <tr>
-                    <td>
-                        @{
-                            var posterUrl = TmdbImage.Build(movie.PosterPath, "w92");
-                        }
-                        @if (!string.IsNullOrWhiteSpace(posterUrl))
-                        {
-                            <img src="@posterUrl" alt="Poster" class="img-thumbnail" style="width:72px" />
-                        }
-                        else
-                        {
-                            <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="width:72px;height:108px">
-                                <span class="text-muted" style="font-size:12px">No poster</span>
-                            </div>
-                        }
-
-                    </td>
-                    <td>@movie.Title</td>
-                    <td>@movie.ReleaseDate?.ToString("dd.MM.yyyy")</td>
-                    <td>@(movie.Duration.HasValue ? $"{movie.Duration} min" : "-")</td>
-                    <td>
-                        <span class="badge bg-info text-dark">@movie.GenreNames</span>
-                    </td>
-                    <td>
-                        @if (movie.SessionsCount > 0)
-                        {
-                            <span class="badge bg-secondary">@movie.SessionsCount</span>
-                        }
-                        else
-                        {
-                            <span class="text-muted">0</span>
-                        }
-                    </td>
-                    <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@movie.Id" class="btn btn-sm btn-info">Details</a>
-                        <a asp-action="Edit" asp-route-id="@movie.Id" class="btn btn-sm btn-warning">Edit</a>
-
-                        @if (movie.SessionsCount > 0)
-                        {
-                            <button type="button" class="btn btn-sm btn-danger" disabled title="This movie has sessions">Delete</button>
-                        }
-                        else
-                        {
-                            <form asp-action="Delete" asp-route-id="@movie.Id" method="post" class="d-inline"
-                                  onsubmit="return confirm('Are you sure you want to delete this movie?');">
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <nav>
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.SearchTerm" asp-route-sortBy="@Model.SortBy">Prev</a>
-            </li>
-
-            <li class="page-item disabled">
-                <span class="page-link">Сторінка @Model.Page з @Model.TotalPages</span>
-            </li>
-
-            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.SearchTerm" asp-route-sortBy="@Model.SortBy">Next</a>
-            </li>
-        </ul>
-    </nav>
-</div>
+</section>
