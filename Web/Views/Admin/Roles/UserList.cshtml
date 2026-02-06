@@ -1,7 +1,10 @@
 ﻿@using Web.ViewModels.Roles
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @model IEnumerable<UserWithRolesVm>
 @{
     ViewData["Title"] = "Список користувачів";
+    string superAdminEmail = Configuration["SuperAdmin:Email"];
 }
 
 <div class="container mt-4">
@@ -26,8 +29,16 @@
                 <tbody>
                     @foreach (var user in Model)
                     {
-                        <tr>
-                            <td class="ps-4 fw-bold">@user.Username</td>
+                        bool isSuperAdmin = user.Email == superAdminEmail;
+
+                        <tr class="@(isSuperAdmin ? "table-warning" : "")">
+                            <td class="ps-4 fw-bold">
+                                @user.Username
+                                @if (isSuperAdmin)
+                                {
+                                    <i class="fas fa-crown text-warning ms-1" title="Super Admin"></i>
+                                }
+                            </td>
 
                             <td>@user.Email</td>
 
@@ -54,9 +65,16 @@
                                 }
                             </td>
                             <td class="text-end pe-4">
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-userId="@user.UserId">
-                                    <i class="fas fa-user-cog"></i> Налаштувати
-                                </a>
+                                @if (isSuperAdmin)
+                                {
+                                    <span class="text-muted small"><i class="fas fa-lock"></i> Захищено</span>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-userId="@user.UserId">
+                                        <i class="fas fa-user-cog"></i> Налаштувати
+                                    </a>
+                                }
                             </td>
                         </tr>
                     }

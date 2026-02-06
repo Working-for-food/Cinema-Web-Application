@@ -12,11 +12,16 @@ public class RolesController : Controller
 {
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IConfiguration _configuration;
 
-    public RolesController(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+    public RolesController(
+        RoleManager<IdentityRole> roleManager,
+        UserManager<ApplicationUser> userManager,
+        IConfiguration configuration)
     {
         _roleManager = roleManager;
         _userManager = userManager;
+        _configuration = configuration;
     }
 
     public IActionResult Index() => View(_roleManager.Roles.ToList());
@@ -52,12 +57,11 @@ public class RolesController : Controller
         return RedirectToAction("Index");
     }
 
-
     [HttpGet]
     public async Task<IActionResult> UserList()
     {
+        string superAdminEmail = _configuration["SuperAdmin:Email"];
         var users = _userManager.Users.ToList();
-
         var model = new List<UserWithRolesVm>();
 
         foreach (var user in users)
@@ -69,11 +73,16 @@ public class RolesController : Controller
                 UserId = user.Id,
                 Email = user.Email,
                 Username = user.UserName,
-                Roles = roles 
+                Roles = roles
             });
         }
 
-        return View(model);
+        var sortedModel = model
+            .OrderByDescending(u => u.Email == superAdminEmail)
+            .ThenBy(u => u.Username)
+            .ToList();
+
+        return View(sortedModel);
     }
 
     public async Task<IActionResult> Edit(string userId)
@@ -81,6 +90,12 @@ public class RolesController : Controller
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
+            string superAdminEmail = _configuration["SuperAdmin:Email"];
+            if (user.Email == superAdminEmail)
+            {
+                return RedirectToAction("UserList");
+            }
+
             var userRoles = await _userManager.GetRolesAsync(user);
             var allRoles = _roleManager.Roles.ToList();
 
@@ -104,6 +119,12 @@ public class RolesController : Controller
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
+            string superAdminEmail = _configuration["SuperAdmin:Email"];
+            if (user.Email == superAdminEmail)
+            {
+                return RedirectToAction("UserList");
+            }
+
             if (roles.Contains("admin") && !roles.Contains("user"))
             {
                 roles.Add("user");
