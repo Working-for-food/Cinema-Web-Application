@@ -4,23 +4,32 @@
 
 @{
     ViewData["Title"] = "Редагування шаблону";
+
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var hasLocalReturn = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
+    var backHref = hasLocalReturn ? returnUrl! : Url.Action("Index", new { hallId = Model.HallId })!;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Редагування шаблону: @Model.Name</h1>
-    <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-hallId="@Model.HallId">Назад</a>
+    <a class="btn btn-outline-secondary btn-sm" href="@backHref">Назад</a>
 </div>
 
-@if (TempData["Error"] is string err)
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
 {
     <div class="alert alert-danger">@err</div>
 }
 
-<form asp-action="Edit" method="post" id="editForm">
+<form asp-action="Edit"
+      asp-route-id="@Model.Id"
+      asp-route-returnUrl="@returnUrl"
+      method="post"
+      id="editForm">
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
 
+    <input type="hidden" asp-for="Id" />
     <input type="hidden" asp-for="HallId" />
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
 
     <div class="row">
         <div class="col-lg-4">
@@ -34,9 +43,14 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Зал</label>
-                        <select asp-for="HallId" asp-items="ViewBag.Halls" class="form-select bg-light" disabled>
+
+                        <select asp-for="HallId"
+                                asp-items="ViewBag.Halls"
+                                class="form-select bg-light"
+                                disabled>
                             <option value="">-- Оберіть зал --</option>
                         </select>
+
                         <div class="form-text text-muted">
                             <i class="bi bi-lock-fill"></i> Зал не можна змінити.
                         </div>
@@ -47,6 +61,7 @@
                         <label class="form-check-label" for="isActive">Активний шаблон</label>
                     </div>
                 </div>
+
                 <div class="card-footer bg-white border-top-0">
                     <button type="submit" class="btn btn-primary w-100">Зберегти зміни</button>
                 </div>
@@ -58,6 +73,7 @@
                 <div class="card-header bg-primary bg-opacity-10">
                     <h5 class="card-title mb-0 text-primary fs-6 fw-bold">Налаштування цін</h5>
                 </div>
+
                 <div class="card-body">
                     <div class="alert alert-info py-2 px-3 small mb-3">
                         <i class="bi bi-info-circle me-1"></i>
@@ -92,13 +108,22 @@
 
     <script>
         (function () {
-            const rowPricesData = @Html.Raw(JsonSerializer.Serialize(Model.RowPrices));
-            const catMultipliersData = @Html.Raw(JsonSerializer.Serialize(Model.CategoryMultipliers));
+            const rowPricesData = @Html.Raw(JsonSerializer.Serialize(Model.RowPrices ?? new()));
+            const catMultipliersData = @Html.Raw(JsonSerializer.Serialize(Model.CategoryMultipliers ?? new()));
 
             const els = {
                 rowWrap: document.getElementById('rowPricesWrap'),
                 catWrap: document.getElementById('catMultipliersWrap')
             };
+
+            function escapeHtml(s) {
+                return String(s ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
 
             function renderRowPrices(rows) {
                 if (!els.rowWrap) return;
@@ -111,23 +136,26 @@
                 els.rowWrap.innerHTML = `
                 <table class="table table-sm table-borderless align-middle mb-0">
                   <thead class="table-light border-bottom">
-                    <tr><th class="ps-3 text-secondary small">Ряд</th><th class="text-end pe-3 text-secondary small">Ціна</th></tr>
+                    <tr>
+                      <th class="ps-3 text-secondary small">Ряд</th>
+                      <th class="text-end pe-3 text-secondary small">Ціна</th>
+                    </tr>
                   </thead>
                   <tbody>
                     ${rows.map((row, i) => {
-                        const rowNum = (row.Row !== undefined) ? row.Row : row.row;
-                        const price = (row.BasePrice !== undefined) ? row.BasePrice : row.basePrice;
+                        const rowNum = (row.Row ?? row.row ?? '');
+                        const price = (row.BasePrice ?? row.basePrice ?? 0);
 
                         return `
                         <tr>
-                          <td class="ps-3 small fw-bold text-muted">Ряд ${rowNum}</td>
+                          <td class="ps-3 small fw-bold text-muted">Ряд ${escapeHtml(rowNum)}</td>
                           <td class="text-end pe-2 py-1">
-                            <input type="hidden" name="RowPrices[${i}].Row" value="${rowNum}" />
+                            <input type="hidden" name="RowPrices[${i}].Row" value="${escapeHtml(rowNum)}" />
                             <input class="form-control form-control-sm text-end"
-                                   style="max-width: 80px; display: inline-block;"
+                                   style="max-width: 100px; display: inline-block;"
                                    type="number" step="1" min="0"
                                    name="RowPrices[${i}].BasePrice"
-                                   value="${price}" required />
+                                   value="${escapeHtml(price)}" required />
                           </td>
                         </tr>`;
                     }).join('')}
@@ -144,35 +172,38 @@
                 }
 
                 const categoryNames = {
-                    0: "Standard",
+                    0: "Стандарт",
                     1: "VIP",
-                    2: "Lux"
+                    2: "Доступне"
                 };
 
                 els.catWrap.innerHTML = `
                 <table class="table table-sm table-borderless align-middle mb-0">
                   <thead class="table-light border-bottom">
-                    <tr><th class="ps-3 text-secondary small">Категорія</th><th class="text-end pe-3 text-secondary small">Множ.</th></tr>
+                    <tr>
+                      <th class="ps-3 text-secondary small">Категорія</th>
+                      <th class="text-end pe-3 text-secondary small">Множ.</th>
+                    </tr>
                   </thead>
                   <tbody>
                     ${cats.map((cat, i) => {
-                        const catId = (cat.Category !== undefined) ? cat.Category : cat.category;
-                        const mult = (cat.Multiplier !== undefined) ? cat.Multiplier : cat.multiplier;
+                        const catId = (cat.Category ?? cat.category ?? 0);
+                        const mult = (cat.Multiplier ?? cat.multiplier ?? 1);
 
                         const catName = categoryNames[catId] || ("Category " + catId);
 
                         return `
                         <tr>
-                          <td class="ps-3 small fw-bold text-muted text-truncate" title="${catName}">
-                             ${catName}
+                          <td class="ps-3 small fw-bold text-muted text-truncate" title="${escapeHtml(catName)}">
+                             ${escapeHtml(catName)}
                           </td>
                           <td class="text-end pe-2 py-1">
-                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${catId}" />
+                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${escapeHtml(catId)}" />
                             <input class="form-control form-control-sm text-end"
-                                   style="max-width: 80px; display: inline-block;"
+                                   style="max-width: 100px; display: inline-block;"
                                    type="number" step="0.1" min="0.1"
                                    name="CategoryMultipliers[${i}].Multiplier"
-                                   value="${mult}" required />
+                                   value="${escapeHtml(mult)}" required />
                           </td>
                         </tr>`;
                     }).join('')}

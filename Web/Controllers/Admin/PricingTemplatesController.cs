@@ -1,4 +1,5 @@
-﻿using Application.DTOs.Pricing;
+﻿using Application.DTOs;
+using Application.DTOs.Pricing;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,83 +24,128 @@ namespace Web.Controllers.Admin
             _lookups = lookups;
         }
 
+
+        private async Task FillIndexLookupsAsync(PricingTemplatesIndexVm vm, CancellationToken ct)
+        {
+            var cinemas = await _lookups.GetCinemasAsync(ct);
+            vm.Cinemas = ToSelectList(cinemas, vm.CinemaId);
+
+            if (!vm.CinemaId.HasValue)
+            {
+                vm.HallId = null;
+                vm.Halls = new List<SelectListItem>();
+            }
+            else
+            {
+                var halls = await _lookups.GetHallsByCinemaAsync(vm.CinemaId.Value, ct);
+                vm.Halls = ToSelectList(halls, vm.HallId);
+
+                if (vm.HallId.HasValue && !vm.Halls.Any(h => h.Value == vm.HallId.Value.ToString()))
+                    vm.HallId = null;
+            }
+        }
+
+        private async Task FillEditLookupsAsync(PricingTemplateEditVm vm, CancellationToken ct)
+        {
+            var cinemas = await _lookups.GetCinemasAsync(ct);
+            vm.Cinemas = cinemas.Select(c => new SelectListItem(c.Title, c.Id.ToString(), c.Id == vm.CinemaId)).ToList();
+
+            if (vm.CinemaId.HasValue)
+            {
+                var halls = await _lookups.GetHallsByCinemaAsync(vm.CinemaId.Value, ct);
+                vm.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString(), h.Id == vm.HallId)).ToList();
+            }
+            else
+            {
+                vm.Halls = new List<SelectListItem>();
+            }
+        }
+
+        private static List<SelectListItem> ToSelectList(IEnumerable<LookupItemDto> items, int? selectedId)
+             => items.Select(x => new SelectListItem
+             {
+                 Value = x.Id.ToString(),
+                 Text = x.Title,
+                 Selected = selectedId.HasValue && x.Id == selectedId.Value
+             }).ToList();
+
+
         // GET: /Admin/PricingTemplates/Index
         [HttpGet]
-        public async Task<IActionResult> Index(int? hallId, CancellationToken ct)
+        public async Task<IActionResult> Index(PricingTemplatesIndexVm vm, CancellationToken ct)
         {
-            var halls = await _lookups.GetHallsAsync(ct);
+            await FillIndexLookupsAsync(vm, ct);
 
-            ViewBag.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString(), h.Id == hallId));
+            if (vm.HallId.HasValue)
+            {
+                vm.Templates = await _service.GetListForHallAsync(vm.HallId.Value, ct);
+            }
+            else
+            {
+                vm.Templates = new List<PricingTemplateListItemDto>();
+            }
 
-            var list = hallId.HasValue
-                ? await _service.GetListForHallAsync(hallId.Value, ct)
-                : new List<PricingTemplateListItemDto>();
-
-            return View(IndexViewPath, list);
+            return View(IndexViewPath, vm);
         }
 
         // GET: /Admin/PricingTemplates/Create
         [HttpGet]
-        public async Task<IActionResult> Create(CancellationToken ct)
+        public async Task<IActionResult> Create(int? cinemaId, int? hallId, string? returnUrl, CancellationToken ct)
         {
-            var halls = await _lookups.GetHallsAsync(ct);
-
             var vm = new PricingTemplateEditVm
             {
-                IsActive = true
+                IsActive = true,
+                CinemaId = cinemaId,
+                HallId = cinemaId.HasValue ? hallId : null
             };
 
-            ViewBag.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString()));
+            await FillEditLookupsAsync(vm, ct);
 
+            if (vm.HallId.HasValue && !vm.Halls.Any(h => h.Value == vm.HallId.Value.ToString()))
+                vm.HallId = null;
+
+            ViewBag.ReturnUrl = returnUrl;
             return View(CreateViewPath, vm);
         }
 
-        // POST: /Admin/PricingTemplates/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(PricingTemplateEditVm vm, CancellationToken ct)
+        public async Task<IActionResult> Create(PricingTemplateEditVm vm, string? returnUrl, CancellationToken ct)
         {
             if (!ModelState.IsValid)
             {
-                await ReloadLookupsAsync(ct);
+                await FillEditLookupsAsync(vm, ct);
+                ViewBag.ReturnUrl = returnUrl;
                 return View(CreateViewPath, vm);
             }
 
-            try
+            var dto = new PricingTemplateEditDto
             {
-                var dto = new PricingTemplateEditDto
-                {
-                    Id = vm.Id,
-                    Name = vm.Name,
-                    IsActive = vm.IsActive,
-                    HallId = vm.HallId,
-                    RowPrices = vm.RowPrices,
-                    CategoryMultipliers = vm.CategoryMultipliers
-                };
+                Name = vm.Name,
+                IsActive = vm.IsActive,
+                HallId = vm.HallId,
+                RowPrices = vm.RowPrices,
+                CategoryMultipliers = vm.CategoryMultipliers
+            };
 
-                await _service.CreateAsync(dto, ct);
+            await _service.CreateAsync(dto, ct);
 
-                TempData["Success"] = "Шаблон успішно створено.";
-                return RedirectToAction(nameof(Index), new { hallId = vm.HallId });
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                await ReloadLookupsAsync(ct);
-                return View(CreateViewPath, vm);
-            }
+            TempData["Success"] = "Шаблон успішно створено.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return LocalRedirect(returnUrl);
+
+            return RedirectToAction(nameof(Index), new { CinemaId = vm.CinemaId, HallId = vm.HallId });
         }
 
         // GET: /Admin/PricingTemplates/Edit/5
         [HttpGet]
-        public async Task<IActionResult> Edit(int id, CancellationToken ct)
+        public async Task<IActionResult> Edit(int id, string? returnUrl, CancellationToken ct)
         {
             var dto = await _service.GetForEditAsync(id, ct);
             if (dto == null) return NotFound();
 
-            var halls = await _lookups.GetHallsAsync(ct);
-
-            ViewBag.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString()));
+            await ReloadLookupsAsync(ct);
 
             var vm = new PricingTemplateEditVm
             {
@@ -107,10 +153,11 @@ namespace Web.Controllers.Admin
                 Name = dto.Name,
                 IsActive = dto.IsActive,
                 HallId = dto.HallId,
-
                 RowPrices = dto.RowPrices,
                 CategoryMultipliers = dto.CategoryMultipliers
             };
+
+            ViewBag.ReturnUrl = returnUrl;
 
             return View(EditViewPath, vm);
         }
@@ -118,23 +165,23 @@ namespace Web.Controllers.Admin
         // POST: /Admin/PricingTemplates/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(PricingTemplateEditVm vm, CancellationToken ct)
+        public async Task<IActionResult> Edit(int id, PricingTemplateEditVm vm, string? returnUrl, CancellationToken ct)
         {
-
             if (!ModelState.IsValid)
             {
                 await ReloadLookupsAsync(ct);
-
                 TempData["Error"] = "Перевірте правильність введених даних.";
 
-                return View("~/Views/Admin/PricingTemplates/Edit.cshtml", vm);
+                ViewBag.ReturnUrl = returnUrl;
+
+                return View(EditViewPath, vm);
             }
 
             try
             {
                 var dto = new PricingTemplateEditDto
                 {
-                    Id = vm.Id,
+                    Id = id,
                     Name = vm.Name,
                     IsActive = vm.IsActive,
                     HallId = vm.HallId,
@@ -145,40 +192,37 @@ namespace Web.Controllers.Admin
                 await _service.UpdateAsync(dto, ct);
 
                 TempData["Success"] = "Шаблон успішно оновлено.";
+
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
+                }
                 return RedirectToAction(nameof(Index), new { hallId = vm.HallId });
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
                 await ReloadLookupsAsync(ct);
+
+                ViewBag.ReturnUrl = returnUrl;
+
                 return View(EditViewPath, vm);
             }
         }
 
-        // POST: /Admin/PricingTemplates/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id, CancellationToken ct)
+        public async Task<IActionResult> Delete(int id, string? returnUrl, CancellationToken ct)
         {
-            int? returnHallId = null;
-            var dto = await _service.GetForEditAsync(id, ct);
+            await _service.DeleteAsync(id, ct);
+            TempData["Success"] = "Шаблон видалено.";
 
-            if (dto != null)
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
-                returnHallId = dto.HallId;
+                return LocalRedirect(returnUrl);
             }
 
-            try
-            {
-                await _service.DeleteAsync(id, ct);
-                TempData["Success"] = "Шаблон успішно видалено.";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Помилка видалення: {ex.Message}";
-            }
-
-            return RedirectToAction(nameof(Index), new { hallId = returnHallId });
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: /Admin/PricingTemplates/ToggleStatus?id=5

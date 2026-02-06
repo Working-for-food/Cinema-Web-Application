@@ -1,13 +1,25 @@
-﻿@model List<Application.DTOs.Pricing.PricingTemplateListItemDto>
+﻿@using Application.DTOs.Pricing
+@using Web.ViewModels.Admin.PricingTemplates
+@model PricingTemplatesIndexVm
 
 @{
     ViewData["Title"] = "Шаблони цін";
+
+    var isHallDisabled = !Model.CinemaId.HasValue;
+    var hallPlaceholder = Model.CinemaId.HasValue ? "— Оберіть зал —" : "— Спершу оберіть кінотеатр —";
+
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Шаблони цін</h1>
-    <a class="btn btn-primary" asp-action="Create">
-        Створити шаблон
+
+    <a class="btn btn-primary"
+       asp-action="Create"
+       asp-route-cinemaId="@Model.CinemaId"
+       asp-route-hallId="@Model.HallId"
+       asp-route-returnUrl="@returnUrl">
+        <i class="bi bi-plus-lg"></i> Створити шаблон
     </a>
 </div>
 
@@ -19,27 +31,69 @@
     </div>
 }
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body bg-light">
-        <form method="get" class="row g-2 align-items-center">
-            <div class="col-auto">
-                <label class="col-form-label fw-bold">Фільтр по залу:</label>
-            </div>
-            <div class="col-auto">
-                <select name="hallId" class="form-select" asp-items="ViewBag.Halls" onchange="this.form.submit()">
-                    <option value="">-- Оберіть зал --</option>
-                </select>
-            </div>
-        </form>
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+        @err
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-</div>
+}
+
+<form method="get" id="filtersForm" class="mb-4">
+    <div class="card shadow-sm">
+        <div class="card-body py-3">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-5 col-lg-4">
+                    <label class="form-label fw-semibold text-uppercase small mb-1" asp-for="CinemaId">Кінотеатр</label>
+                    <select class="form-select"
+                            asp-for="CinemaId"
+                            asp-items="Model.Cinemas"
+                            id="cinemaSelect">
+                        <option value="">— Усі —</option>
+                    </select>
+                </div>
+
+                <div class="col-md-5 col-lg-4">
+                    <label class="form-label fw-semibold text-uppercase small mb-1" asp-for="HallId">Зал</label>
+                    <select class="form-select"
+                            asp-for="HallId"
+                            asp-items="Model.Halls"
+                            id="hallSelect"
+                            disabled="@isHallDisabled">
+                        <option value="">@hallPlaceholder</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Очистити</a>
+                </div>
+
+            </div>
+
+            @if (!Model.HallId.HasValue)
+            {
+                <div class="text-muted small mt-2">
+                    <i class="bi bi-info-circle"></i> Оберіть кінотеатр, а потім зал, щоб побачити шаблони.
+                </div>
+            }
+        </div>
+    </div>
+</form>
 
 <div class="card shadow-sm">
     <div class="card-body p-0">
-        @if (Model == null || !Model.Any())
+        @if (Model.Templates == null || !Model.Templates.Any())
         {
             <div class="text-center py-5 text-muted">
-                Шаблонів не знайдено. Оберіть зал або створіть новий.
+                @if (Model.HallId.HasValue)
+                {
+                    <span>У цьому залі ще немає шаблонів цін.</span>
+                }
+                else
+                {
+                    <span>Оберіть зал зі списку вище.</span>
+                }
             </div>
         }
         else
@@ -53,7 +107,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model)
+                    @foreach (var item in Model.Templates)
                     {
                         <tr>
                             <td class="ps-4 fw-medium">@item.Name</td>
@@ -70,16 +124,21 @@
                             </td>
 
                             <td class="text-end pe-4 text-nowrap">
-
-                                <a asp-action="Edit" asp-route-id="@item.Id"
-                                   class="btn btn-sm btn-primary me-1">
+                                <a asp-action="Edit"
+                                   asp-route-id="@item.Id"
+                                   asp-route-returnUrl="@returnUrl"
+                                   class="btn btn-sm btn-outline-primary me-1">
                                     Редагувати
                                 </a>
 
-                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline-block">
+                                <form asp-action="Delete"
+                                      asp-route-id="@item.Id"
+                                      asp-route-returnUrl="@returnUrl"
+                                      method="post"
+                                      class="d-inline-block">
                                     @Html.AntiForgeryToken()
                                     <button type="submit"
-                                            class="btn btn-sm btn-danger"
+                                            class="btn btn-sm btn-outline-danger"
                                             onclick="return confirm('Видалити шаблон «@item.Name»?');">
                                         Видалити
                                     </button>
@@ -96,11 +155,32 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
+            const form = document.getElementById('filtersForm');
+            const cinemaSelect = document.getElementById('cinemaSelect');
+            const hallSelect = document.getElementById('hallSelect');
+
+            if (cinemaSelect && form) {
+                cinemaSelect.addEventListener('change', () => {
+                    if (hallSelect) hallSelect.value = '';
+                    form.submit();
+                });
+            }
+
+            if (hallSelect && form) {
+                hallSelect.addEventListener('change', () => {
+                    form.submit();
+                });
+            }
+
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : '';
+
             const toggles = document.querySelectorAll('.toggle-status-btn');
             const url = '@Url.Action("ToggleStatus", "PricingTemplates", new { Area = "Admin" })';
 
             toggles.forEach(toggle => {
-                toggle.addEventListener('change', async function (e) {
+                toggle.addEventListener('change', async function () {
                     const id = this.dataset.id;
                     const originalState = !this.checked;
 
@@ -108,10 +188,6 @@
                     this.style.opacity = '0.5';
 
                     try {
-                        let token = '';
-                        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-                        if (tokenInput) token = tokenInput.value;
-
                         const response = await fetch(url + '?id=' + id, {
                             method: 'POST',
                             headers: {
@@ -120,7 +196,6 @@
                         });
 
                         if (!response.ok) throw new Error('Server error');
-
                     } catch (error) {
                         console.error(error);
                         alert('Не вдалося змінити статус.');

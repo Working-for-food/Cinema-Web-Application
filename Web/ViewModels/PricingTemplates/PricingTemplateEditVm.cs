@@ -1,11 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Application.DTOs.Pricing;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Web.ViewModels.Admin.PricingTemplates;
 
 public class PricingTemplateEditVm
 {
-    public int Id { get; set; }
+    public int? Id { get; set; }
 
     [Required(ErrorMessage = "Вкажіть назву шаблону")]
     [Display(Name = "Назва шаблону")]
@@ -14,10 +15,17 @@ public class PricingTemplateEditVm
     [Display(Name = "Активний шаблон")]
     public bool IsActive { get; set; } = true;
 
+    [Display(Name = "Кінотеатр")]
+    public int? CinemaId { get; set; }
+
+    public List<SelectListItem> Cinemas { get; set; } = new();
+
     [Required(ErrorMessage = "Оберіть зал")]
     [Range(1, int.MaxValue, ErrorMessage = "Оберіть зал")]
     [Display(Name = "Зал")]
     public int? HallId { get; set; }
+
+    public List<SelectListItem> Halls { get; set; } = new();
 
     public List<RowPriceDto> RowPrices { get; set; } = new();
     public List<CategoryMultiplierDto> CategoryMultipliers { get; set; } = new();

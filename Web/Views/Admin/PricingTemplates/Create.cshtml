@@ -3,11 +3,22 @@
 
 @{
     ViewData["Title"] = "Створити шаблон цін";
+
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var hasLocalReturn = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
+    var backHref = hasLocalReturn ? returnUrl! : Url.Action("Index")!;
+
+    var isHallDisabled = !Model.CinemaId.HasValue;
+    var hallPlaceholder = Model.CinemaId.HasValue ? "— Оберіть зал —" : "— Спершу оберіть кінотеатр —";
+
+    var hasExistingPrices = (Model.RowPrices?.Any() ?? false) || (Model.CategoryMultipliers?.Any() ?? false);
+
+    var createUrl = Url.Action("Create", "PricingTemplates", new { Area = "Admin" });
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Новий шаблон цін</h1>
-    <a class="btn btn-outline-secondary btn-sm" asp-action="Index">Назад</a>
+    <a class="btn btn-outline-secondary btn-sm" href="@backHref">Назад</a>
 </div>
 
 @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
@@ -19,23 +30,42 @@
     <div class="alert alert-danger mb-3" role="alert">@err</div>
 }
 
-<form asp-action="Create" method="post" id="templateForm">
+<form asp-action="Create"
+      asp-route-returnUrl="@returnUrl"
+      method="post"
+      id="templateForm">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
 
     <div class="row">
         <div class="col-lg-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Назва шаблону</label>
+                        <label class="form-label fw-bold" asp-for="Name">Назва шаблону</label>
                         <input asp-for="Name" class="form-control" placeholder="Напр: Прем'єра (Зал 1)" />
                         <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Зал</label>
-                        <select asp-for="HallId" asp-items="ViewBag.Halls" class="form-select" id="hallSelect">
-                            <option value="">-- Оберіть зал --</option>
+                        <label class="form-label fw-bold" asp-for="CinemaId">Кінотеатр</label>
+                        <select asp-for="CinemaId"
+                                asp-items="Model.Cinemas"
+                                class="form-select"
+                                id="cinemaSelect">
+                            <option value="">— Оберіть кінотеатр —</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" asp-for="HallId">Зал</label>
+                        <select asp-for="HallId"
+                                asp-items="Model.Halls"
+                                class="form-select"
+                                id="hallSelect"
+                                disabled="@isHallDisabled">
+                            <option value="">@hallPlaceholder</option>
                         </select>
                         <div class="form-text">Ціни залежать від конфігурації залу.</div>
                         <span asp-validation-for="HallId" class="text-danger small"></span>
@@ -45,7 +75,9 @@
                         <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActive">
                         <label class="form-check-label" for="isActive">Активний шаблон</label>
                     </div>
+
                 </div>
+
                 <div class="card-footer bg-white border-top-0">
                     <button type="submit" class="btn btn-primary w-100">Створити шаблон</button>
                 </div>
@@ -57,19 +89,104 @@
                 <div class="card-header bg-primary bg-opacity-10">
                     <h5 class="card-title mb-0 text-primary fs-6 fw-bold">Налаштування цін</h5>
                 </div>
+
                 <div class="card-body">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ціна квитка = <strong>База ряду</strong> × <strong>Множник категорії</strong>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <label class="form-label fw-bold small">Базові ціни (ряд)</label>
-                            <div id="rowPricesWrap" class="border rounded p-3 bg-light text-center text-muted small">
-                                Оберіть зал
+
+                            <div id="rowPricesWrap" class="bg-white border rounded overflow-hidden p-3 bg-light">
+                                @if (Model.HallId is null)
+                                {
+                                    <div class="text-center text-muted small">Оберіть зал</div>
+                                }
+                                else if (Model.RowPrices != null && Model.RowPrices.Any())
+                                {
+                                    <table class="table table-sm table-borderless align-middle mb-0">
+                                        <thead class="table-light border-bottom">
+                                            <tr>
+                                                <th class="ps-3 text-secondary small">Ряд</th>
+                                                <th class="text-end pe-3 text-secondary small">Ціна</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < Model.RowPrices.Count; i++)
+                                            {
+                                                <tr>
+                                                    <td class="ps-3 small fw-bold text-muted">Ряд @Model.RowPrices[i].Row</td>
+                                                    <td class="text-end pe-2 py-1">
+                                                        <input type="hidden" name="RowPrices[@i].Row" value="@Model.RowPrices[i].Row" />
+                                                        <input class="form-control form-control-sm text-end"
+                                                               style="max-width: 100px; display: inline-block;"
+                                                               type="number" step="1" min="0"
+                                                               name="RowPrices[@i].BasePrice"
+                                                               value="@Model.RowPrices[i].BasePrice"
+                                                               required />
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <div class="text-center text-muted small">Завантаження...</div>
+                                }
                             </div>
+
+                            <span class="text-danger small" asp-validation-for="RowPrices"></span>
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label fw-bold small">Множники (категорія)</label>
-                            <div id="catMultipliersWrap" class="border rounded p-3 bg-light text-center text-muted small">
-                                Оберіть зал
+
+                            <div id="catMultipliersWrap" class="bg-white border rounded overflow-hidden p-3 bg-light">
+                                @if (Model.HallId is null)
+                                {
+                                    <div class="text-center text-muted small">Оберіть зал</div>
+                                }
+                                else if (Model.CategoryMultipliers != null && Model.CategoryMultipliers.Any())
+                                {
+                                    <table class="table table-sm table-borderless align-middle mb-0">
+                                        <thead class="table-light border-bottom">
+                                            <tr>
+                                                <th class="ps-3 text-secondary small">Категорія</th>
+                                                <th class="text-end pe-3 text-secondary small">Множ.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < Model.CategoryMultipliers.Count; i++)
+                                            {
+                                                <tr>
+                                                    <td class="ps-3 small fw-bold text-muted">
+                                                        Категорія @Model.CategoryMultipliers[i].Category
+                                                    </td>
+                                                    <td class="text-end pe-2 py-1">
+                                                        <input type="hidden" name="CategoryMultipliers[@i].Category" value="@Model.CategoryMultipliers[i].Category" />
+                                                        <input class="form-control form-control-sm text-end"
+                                                               style="max-width: 100px; display: inline-block;"
+                                                               type="number" step="0.1" min="0.1"
+                                                               name="CategoryMultipliers[@i].Multiplier"
+                                                               value="@Model.CategoryMultipliers[i].Multiplier"
+                                                               required />
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <div class="text-center text-muted small">Завантаження...</div>
+                                }
                             </div>
+
+                            <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
                         </div>
                     </div>
                 </div>
@@ -81,80 +198,139 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        (function() {
-            const metaUrl = '@Url.Action("PricingMeta", "Sessions")';
+        (function () {
+            const createUrl = '@createUrl';
+            const returnUrl = '@(returnUrl ?? "")';
 
+            const cinemaSelect = document.getElementById('cinemaSelect');
             const hallSelect = document.getElementById('hallSelect');
+
+            cinemaSelect?.addEventListener('change', function () {
+                const cinemaId = this.value || '';
+                const url = new URL(createUrl, window.location.origin);
+
+                if (cinemaId) url.searchParams.set('cinemaId', cinemaId);
+                if (returnUrl) url.searchParams.set('returnUrl', returnUrl);
+
+                window.location.assign(url.toString());
+            });
+
+            const metaUrl = '@Url.Action("PricingMeta", "Sessions")';
             const rowWrap = document.getElementById('rowPricesWrap');
             const catWrap = document.getElementById('catMultipliersWrap');
 
+            const hasExisting = @((hasExistingPrices) ? "true" : "false");
+
+            function escapeHtml(s) {
+                return String(s ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
             function renderRows(rows) {
-                if(!rows || rows.length === 0) {
-                    rowWrap.innerHTML = '<div class="text-muted small">Немає рядів</div>';
+                if (!rowWrap) return;
+
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    rowWrap.innerHTML = `<div class="text-muted small text-center py-3">Дані відсутні</div>`;
                     return;
                 }
 
-                let html = '<table class="table table-sm table-borderless align-middle mb-0">';
-                rows.forEach((r, i) => {
-                    html += `
+                rowWrap.innerHTML = `
+                <table class="table table-sm table-borderless align-middle mb-0">
+                  <thead class="table-light border-bottom">
                     <tr>
-                        <td class="small fw-bold text-muted">Ряд ${r}</td>
-                        <td>
-                            <input type="hidden" name="RowPrices[${i}].Row" value="${r}" />
-                            <input type="number" name="RowPrices[${i}].BasePrice" value="100" class="form-control form-control-sm" step="1" min="0" required />
+                      <th class="ps-3 text-secondary small">Ряд</th>
+                      <th class="text-end pe-3 text-secondary small">Ціна</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows.map((r, i) => `
+                      <tr>
+                        <td class="ps-3 small fw-bold text-muted">Ряд ${escapeHtml(r)}</td>
+                        <td class="text-end pe-2 py-1">
+                          <input type="hidden" name="RowPrices[${i}].Row" value="${escapeHtml(r)}" />
+                          <input class="form-control form-control-sm text-end"
+                                 style="max-width: 100px; display: inline-block;"
+                                 type="number" step="1" min="0"
+                                 name="RowPrices[${i}].BasePrice"
+                                 value="100" required />
                         </td>
-                    </tr>`;
-                });
-                html += '</table>';
-                rowWrap.innerHTML = html;
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>`;
             }
 
             function renderCats(cats) {
-                if(!cats || cats.length === 0) {
-                    catWrap.innerHTML = '<div class="text-muted small">Немає категорій</div>';
+                if (!catWrap) return;
+
+                if (!Array.isArray(cats) || cats.length === 0) {
+                    catWrap.innerHTML = `<div class="text-muted small text-center py-3">Дані відсутні</div>`;
                     return;
                 }
 
-                let html = '<table class="table table-sm table-borderless align-middle mb-0">';
-                cats.forEach((c, i) => {
-                    html += `
+                catWrap.innerHTML = `
+                <table class="table table-sm table-borderless align-middle mb-0">
+                  <thead class="table-light border-bottom">
                     <tr>
-                        <td class="small fw-bold text-muted">${c.title}</td>
-                        <td>
-                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${c.id}" />
-                            <input type="number" name="CategoryMultipliers[${i}].Multiplier" value="1" class="form-control form-control-sm" step="0.1" min="0.1" required />
+                      <th class="ps-3 text-secondary small">Категорія</th>
+                      <th class="text-end pe-3 text-secondary small">Множ.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${cats.map((c, i) => `
+                      <tr>
+                        <td class="ps-3 small fw-bold text-muted text-truncate" title="${escapeHtml(c.title)}">
+                          ${escapeHtml(c.title)}
                         </td>
-                    </tr>`;
-                });
-                html += '</table>';
-                catWrap.innerHTML = html;
+                        <td class="text-end pe-2 py-1">
+                          <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${escapeHtml(c.id)}" />
+                          <input class="form-control form-control-sm text-end"
+                                 style="max-width: 100px; display: inline-block;"
+                                 type="number" step="0.1" min="0.1"
+                                 name="CategoryMultipliers[${i}].Multiplier"
+                                 value="1" required />
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>`;
             }
 
             async function loadMeta(hallId) {
-                if(!hallId) {
-                    rowWrap.innerHTML = 'Оберіть зал';
-                    catWrap.innerHTML = 'Оберіть зал';
+                if (!hallId) {
+                    if (rowWrap) rowWrap.innerHTML = '<div class="text-center text-muted small">Оберіть зал</div>';
+                    if (catWrap) catWrap.innerHTML = '<div class="text-center text-muted small">Оберіть зал</div>';
                     return;
                 }
 
                 try {
-                    const res = await fetch(metaUrl + '?hallId=' + hallId);
-                    if(!res.ok) throw new Error();
-                    const data = await res.json();
+                    if (rowWrap) rowWrap.innerHTML = '<div class="text-center text-muted small">Завантаження...</div>';
+                    if (catWrap) catWrap.innerHTML = '<div class="text-center text-muted small">Завантаження...</div>';
 
+                    const res = await fetch(metaUrl + '?hallId=' + hallId);
+                    if (!res.ok) throw new Error();
+
+                    const data = await res.json();
                     renderRows(data.rows);
                     renderCats(data.categories);
-                } catch(e) {
+                } catch (e) {
                     console.error(e);
-                    rowWrap.innerHTML = '<span class="text-danger">Помилка</span>';
+                    if (rowWrap) rowWrap.innerHTML = '<span class="text-danger">Помилка завантаження</span>';
+                    if (catWrap) catWrap.innerHTML = '<span class="text-danger">Помилка завантаження</span>';
                 }
             }
 
-            hallSelect.addEventListener('change', function() {
+            hallSelect?.addEventListener('change', function () {
                 loadMeta(this.value);
             });
 
-            if(hallSelect.value) loadMeta(hallSelect.value);
+            if (hallSelect?.value && !hasExisting) {
+                loadMeta(hallSelect.value);
+            }
         })();
     </script>
 }
