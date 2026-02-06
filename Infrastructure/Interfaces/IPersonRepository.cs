@@ -16,4 +16,6 @@ public interface IPersonRepository
     Task DeleteAsync(Person person, CancellationToken ct = default);
     Task<IReadOnlyList<Person>> GetDirectorsAsync(CancellationToken ct = default);
     Task<bool> IsUsedAsync(int personId, CancellationToken ct = default);
+    Task<Person?> GetByFullNameAsync(string fullName, CancellationToken ct = default);
+
 }

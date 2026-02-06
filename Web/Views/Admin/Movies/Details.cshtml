@@ -1,4 +1,5 @@
-﻿@model Infrastructure.Entities.Movie
+﻿@using Web.Helpers
+@model Infrastructure.Entities.Movie
 
 @{
     ViewData["Title"] = "Movie details";
@@ -6,6 +7,9 @@
     var countries = Model.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).ToList() ?? new();
     var actors = Model.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).ToList() ?? new();
     var directors = Model.MovieDirectors?.OrderBy(x => x.BillingOrder).Select(x => x.Director?.FullName ?? x.DirectorId.ToString()).ToList() ?? new();
+    var posterUrl = TmdbImage.Build(Model.PosterPath, "w342");
+    var backdropUrl = TmdbImage.Build(Model.BackdropPath, "w1280");
+
 }
 
 <div class="container mt-4">
@@ -17,8 +21,24 @@
         </div>
     </div>
 
-    <div class="card shadow">
+    <div class="card shadow overflow-hidden">
+        @if (!string.IsNullOrWhiteSpace(backdropUrl))
+        {
+            <img src="@backdropUrl" alt="Backdrop" class="w-100" style="max-height:320px;object-fit:cover" />
+        }
         <div class="card-body">
+                <div class="col-md-4">
+                    @if (!string.IsNullOrWhiteSpace(posterUrl))
+                    {
+                        <img src="@posterUrl" alt="Poster" class="img-fluid rounded shadow-sm" />
+                    }
+                    else
+                    {
+                        <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height:420px">
+                            <span class="text-muted">No poster</span>
+                        </div>
+                    }
+                </div>
             <dl class="row mb-0">
                 <dt class="col-sm-3">Release date</dt>
                 <dd class="col-sm-9">@(Model.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</dd>

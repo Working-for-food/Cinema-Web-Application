@@ -79,7 +79,7 @@
 
                         <div class="mb-4">
                             <label asp-for="SelectedDirectorIds" class="form-label">Directors</label>
-                            <select asp-for="SelectedDirectorIds" asp-items="Model.DirectorMultiList" class="form-control" multiple size="6"></select>
+                            <select asp-for="SelectedDirectorIds" asp-items="Model.DirectorMultiList" class="form-control js-people-select" multiple></select>
                             <span asp-validation-for="SelectedDirectorIds" class="text-danger"></span>
                             <div class="form-text">Ctrl/Command для множинного вибору.</div>
                         </div>
@@ -93,7 +93,7 @@
 
                         <div class="mb-4">
                             <label asp-for="SelectedActorIds" class="form-label">Actors</label>
-                            <select asp-for="SelectedActorIds" asp-items="Model.ActorList" class="form-control" multiple size="6"></select>
+                            <select asp-for="SelectedActorIds" asp-items="Model.ActorList" class="form-control js-people-select" multiple></select>
                             <span asp-validation-for="SelectedActorIds" class="text-danger"></span>
                             <div class="form-text">Ctrl/Command для множинного вибору.</div>
                         </div>
@@ -121,4 +121,42 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        .select2-container .select2-selection--multiple {
+            min-height: 38px;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid #ced4da;
+            border-radius: .375rem;
+        }
+    </style>
+
+    <script>
+        $(function () {
+            $('.js-people-select').select2({
+                width: '100%',
+                minimumInputLength: 3,
+                ajax: {
+                    url: '/admin/movies/people/search',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function (params) {
+                        return {
+                            term: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Type 3+ letters...',
+                closeOnSelect: false
+            });
+        });
+    </script>
 }
+

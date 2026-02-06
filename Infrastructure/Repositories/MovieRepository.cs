@@ -151,11 +151,22 @@ public class MovieRepository : IMovieRepository
             existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
 
         // actors
+        var oldActors = existing.MovieActors.ToList();
+        _db.MovieActors.RemoveRange(oldActors);
         existing.MovieActors.Clear();
+
+        await _db.SaveChangesAsync(ct);
+
         var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
         short actorOrder = 1;
         foreach (var aId in aIds)
-            existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = actorOrder++ });
+            existing.MovieActors.Add(new MovieActor
+            {
+                MovieId = existing.Id,
+                ActorId = aId,
+                CustOrder = actorOrder++
+            });
+
 
         // countries
         existing.MovieCountries.Clear();
