@@ -1,11 +1,15 @@
 ﻿using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration; 
 
 namespace Infrastructure.Data.Seed;
 
 public static class RoleInitializer
 {
-    public static async Task InitializeAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    public static async Task InitializeAsync(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration)
     {
         string[] roleNames = { "admin", "user" };
 
@@ -17,8 +21,13 @@ public static class RoleInitializer
             }
         }
 
-        string adminEmail = "superadmin@gmail.com";
-        string adminPassword = "SuperAdmin123@";
+        string adminEmail = configuration["SuperAdmin:Email"];
+        string adminPassword = configuration["SuperAdmin:Password"];
+
+        if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
+        {
+            return;
+        }
 
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
@@ -26,7 +35,7 @@ public static class RoleInitializer
         {
             var newAdmin = new ApplicationUser
             {
-                UserName = "superadmin",
+                UserName = "superadmin", 
                 Email = adminEmail,
                 EmailConfirmed = true,
                 DateOfBirth = new DateOnly(1990, 1, 1)

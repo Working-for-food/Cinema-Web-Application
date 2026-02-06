@@ -45,10 +45,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedAccount = true;
 })
 .AddEntityFrameworkStores<CinemaDbContext>()
 .AddDefaultTokenProviders()
 .AddErrorDescriber<UkrainianIdentityErrorDescriber>();
+
+builder.Services.AddTransient<Application.Interfaces.IEmailService, Application.Services.EmailService>();
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -125,7 +128,8 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await RoleInitializer.InitializeAsync(userManager, roleManager);
+        var configuration = services.GetRequiredService<IConfiguration>();
+        await Infrastructure.Data.Seed.RoleInitializer.InitializeAsync(userManager, roleManager, configuration);
         logger.LogInformation("Roles and SuperAdmin seeded.");
     }
     catch (Exception ex)

@@ -68,6 +68,7 @@ public class RolesController : Controller
             {
                 UserId = user.Id,
                 Email = user.Email,
+                Username = user.UserName,
                 Roles = roles 
             });
         }
@@ -88,6 +89,7 @@ public class RolesController : Controller
                 UserId = user.Id,
                 UserEmail = user.Email ?? "",
                 UserRoles = userRoles,
+                Username = user.UserName,
                 AllRoles = allRoles
             };
             return View(model);
@@ -102,6 +104,11 @@ public class RolesController : Controller
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
+            if (roles.Contains("admin") && !roles.Contains("user"))
+            {
+                roles.Add("user");
+            }
+
             var userRoles = await _userManager.GetRolesAsync(user);
 
             var addedRoles = roles.Except(userRoles);

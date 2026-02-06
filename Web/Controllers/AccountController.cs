@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Infrastructure.Entities;
 using Web.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
+using Application.Interfaces;
 
 namespace Web.Controllers;
 
@@ -10,11 +11,16 @@ public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IEmailService _emailService; 
 
-    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    public AccountController(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        IEmailService emailService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _emailService = emailService;
     }
 
     // GET: /Account/Register
@@ -33,8 +39,8 @@ public class AccountController : Controller
         {
             var user = new ApplicationUser
             {
-                UserName = model.Username, 
-                Email = model.Email,      
+                UserName = model.Username,
+                Email = model.Email,
                 DateOfBirth = model.DateOfBirth
             };
 
@@ -43,8 +49,19 @@ public class AccountController : Controller
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, "user");
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home");
+
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                var callbackUrl = Url.Action(
+                    "ConfirmEmail",
+                    "Account",
+                    new { userId = user.Id, code = token },
+                    protocol: HttpContext.Request.Scheme);
+
+                await _emailService.SendEmailAsync(model.Email, "Підтвердження реєстрації",
+                    $"Будь ласка, підтвердіть ваш акаунт, натиснувши <a href='{callbackUrl}'>тут</a>.");
+
+                return View("RegisterConfirmation");
             }
 
             foreach (var error in result.Errors)
@@ -108,6 +125,17 @@ public class AccountController : Controller
                 return RedirectToAction("Index", "Home");
             }
 
+            if (result.IsNotAllowed)
+            {
+                var user = await _userManager.FindByNameAsync(model.Username);
+
+                if (user != null && !await _userManager.IsEmailConfirmedAsync(user))
+                {
+                    ModelState.AddModelError(string.Empty, "Ви не підтвердили електронну пошту. Перевірте вашу скриньку.");
+                    return View(model);
+                }
+            }
+
             ModelState.AddModelError(string.Empty, "Невірна спроба входу (логін або пароль).");
         }
 
@@ -123,9 +151,58 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    // GET: /Account/ChangePassword
+    [HttpGet]
+    [Authorize]
+    public IActionResult ChangePassword()
+    {
+        return View();
+    }
+
+    // POST: /Account/ChangePassword
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordVm model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        if (model.NewPassword == model.CurrentPassword)
+        {
+            ModelState.AddModelError("NewPassword", "Новий пароль не може співпадати з поточним.");
+            return View(model);
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return RedirectToAction("Login");
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+        if (result.Succeeded)
+        {
+            await _signInManager.RefreshSignInAsync(user);
+
+            TempData["StatusMessage"] = "Ваш пароль успішно змінено.";
+            return RedirectToAction("Profile");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return View(model);
+    }
+
     // GET: /Account/Profile
     [HttpGet]
-    [Authorize] 
+    [Authorize]
     public async Task<IActionResult> Profile()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -142,6 +219,15 @@ public class AccountController : Controller
             Roles = await _userManager.GetRolesAsync(user),
             StatusMessage = TempData["StatusMessage"] as string
         };
+
+        bool isAdmin = await _userManager.IsInRoleAsync(user, "admin");
+
+        string adminMode = HttpContext.Session.GetString("AdminMode");
+
+        if (isAdmin && adminMode != "user")
+        {
+            return View("AdminProfile", model);
+        }
 
         return View(model);
     }
@@ -181,26 +267,31 @@ public class AccountController : Controller
         }
 
         model.Roles = await _userManager.GetRolesAsync(user);
+
+        if (User.IsInRole("admin"))
+        {
+            return View("AdminProfile", model);
+        }
+
         return View("Profile", model);
     }
 
-    // POST: /Account/Toggle2FA
+    // POST: /Account/ToggleAdminMode
     [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Toggle2FA()
+    [Authorize(Roles = "admin")] 
+    public IActionResult ToggleAdminMode()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null) return NotFound();
+        var currentMode = HttpContext.Session.GetString("AdminMode");
 
-        user.TwoFactorEnabled = !user.TwoFactorEnabled;
-        await _userManager.UpdateAsync(user);
-
-        TempData["StatusMessage"] = user.TwoFactorEnabled
-            ? "Two-Factor Authentication enabled."
-            : "Two-Factor Authentication disabled.";
-
-        return RedirectToAction("Profile");
+        if (currentMode == "user")
+        {
+            HttpContext.Session.Remove("AdminMode");
+        }
+        else
+        {
+            HttpContext.Session.SetString("AdminMode", "user");
+        }
+        return Redirect(Request.Headers["Referer"].ToString());
     }
 
     // REMOTE VALIDATION: Email Check
@@ -229,6 +320,33 @@ public class AccountController : Controller
         }
 
         return Json(true);
+    }
+
+    // Handles the link click from the email
+    [HttpGet]
+    public async Task<IActionResult> ConfirmEmail(string userId, string code)
+    {
+        if (userId == null || code == null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound($"Unable to load user with ID '{userId}'.");
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, code);
+
+        if (result.Succeeded)
+        {
+            return View("ConfirmEmail"); 
+        }
+        else
+        {
+            return View("Error");
+        }
     }
 }
 

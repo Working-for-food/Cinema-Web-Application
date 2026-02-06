@@ -98,7 +98,10 @@
                 const password = passwordInput.val();
                 let errors = [];
 
-                if (!password) return; 
+                if (!password) return;
+                if (/[^\x00-\x7F]/.test(password)) {
+                    errors.push("тільки англійські літери");
+                }
                 if (password.length < 8) {
                     errors.push("мінімум 8 символів");
                 }

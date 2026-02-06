@@ -71,6 +71,22 @@
                     icon.removeClass('fa-eye-slash').addClass('fa-eye'); 
                 }
             });
-        });
+        const passwordInput = $('#Password'); 
+             const errorSpan = $('span[data-valmsg-for="Password"]');
+
+             passwordInput.on('keyup input', function () {
+                 const val = $(this).val();
+
+                 if (/[^\x00-\x7F]/.test(val)) {
+                     errorSpan.text("Увага: використовуйте лише англійську розкладку!");
+                     errorSpan.addClass("text-warning fw-bold"); 
+                 } else {
+                     if (errorSpan.text() === "Увага: використовуйте лише англійську розкладку!") {
+                         errorSpan.text("");
+                         errorSpan.removeClass("text-warning fw-bold");
+                     }
+                 }
+             });
+         });
     </script>
 }
