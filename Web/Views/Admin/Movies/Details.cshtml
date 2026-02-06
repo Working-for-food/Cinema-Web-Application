@@ -1,6 +1,8 @@
-﻿@model Infrastructure.Entities.Movie
+﻿@using Web.Helpers
+@model Infrastructure.Entities.Movie
 
 @{
+<<<<<<< HEAD
     ViewData["Title"] = "Деталі фільму";
 
     var genres = Model.MovieGenres?
@@ -24,6 +26,16 @@
         .Select(x => x.Director?.FullName ?? x.DirectorId.ToString())
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .ToList() ?? new();
+=======
+    ViewData["Title"] = "Movie details";
+    var genres = Model.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
+    var countries = Model.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).ToList() ?? new();
+    var actors = Model.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).ToList() ?? new();
+    var directors = Model.MovieDirectors?.OrderBy(x => x.BillingOrder).Select(x => x.Director?.FullName ?? x.DirectorId.ToString()).ToList() ?? new();
+    var posterUrl = TmdbImage.Build(Model.PosterPath, "w342");
+    var backdropUrl = TmdbImage.Build(Model.BackdropPath, "w1280");
+
+>>>>>>> main
 }
 
 <section class="py-5 gray-bg">
@@ -219,3 +231,115 @@
     </div>
 </section>
 
+<<<<<<< HEAD
+=======
+    <div class="card shadow overflow-hidden">
+        @if (!string.IsNullOrWhiteSpace(backdropUrl))
+        {
+            <img src="@backdropUrl" alt="Backdrop" class="w-100" style="max-height:320px;object-fit:cover" />
+        }
+        <div class="card-body">
+                <div class="col-md-4">
+                    @if (!string.IsNullOrWhiteSpace(posterUrl))
+                    {
+                        <img src="@posterUrl" alt="Poster" class="img-fluid rounded shadow-sm" />
+                    }
+                    else
+                    {
+                        <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height:420px">
+                            <span class="text-muted">No poster</span>
+                        </div>
+                    }
+                </div>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Release date</dt>
+                <dd class="col-sm-9">@(Model.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</dd>
+
+                <dt class="col-sm-3">Duration</dt>
+                <dd class="col-sm-9">@(Model.Duration.HasValue ? $"{Model.Duration} min" : "-")</dd>
+
+                <dt class="col-sm-3">Directors</dt>
+                <dd class="col-sm-9">
+                    @if (directors.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        @string.Join(", ", directors)
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Genres</dt>
+                <dd class="col-sm-9">
+                    @if (genres.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        foreach (var g in genres)
+                        {
+                            <span class="badge bg-info text-dark me-1">@g</span>
+                        }
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Countries</dt>
+                <dd class="col-sm-9">
+                    @if (countries.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        @string.Join(", ", countries)
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Actors</dt>
+                <dd class="col-sm-9">
+                    @if (actors.Count == 0)
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        @string.Join(", ", actors)
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Sessions</dt>
+                <dd class="col-sm-9">@(Model.Sessions?.Count ?? 0)</dd>
+
+                <dt class="col-sm-3">Original name</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.OriginalName) ? "-" : Model.OriginalName)</dd>
+
+                <dt class="col-sm-3">Language</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Language) ? "-" : Model.Language)</dd>
+
+                <dt class="col-sm-3">Trailer</dt>
+                <dd class="col-sm-9">
+                    @if (string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        <a href="@Model.TrailerUrl" target="_blank" rel="noopener">Open trailer</a>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">PosterPath</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.PosterPath) ? "-" : Model.PosterPath)</dd>
+
+                <dt class="col-sm-3">BackdropPath</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.BackdropPath) ? "-" : Model.BackdropPath)</dd>
+
+                <dt class="col-sm-3">Description</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+>>>>>>> main

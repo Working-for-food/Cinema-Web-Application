@@ -75,5 +75,7 @@ public class PersonRepository : IPersonRepository
             .ToListAsync(ct);
     }
 
+    public Task<Person?> GetByFullNameAsync(string fullName, CancellationToken ct = default) =>
+    _db.People.AsNoTracking().FirstOrDefaultAsync(p => p.FullName == fullName, ct);
 
 }

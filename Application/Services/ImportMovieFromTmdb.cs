@@ -41,15 +41,20 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
             movie.IsDeleted = false; // restore
         }
 
-        movie.Title = details.Title ?? "(no title)";
-        movie.OriginalName = details.OriginalTitle;
-        movie.Description = details.Overview;
+        movie.Title = TrimTo(details.Title, 200) ?? "(no title)";
+        movie.OriginalName = TrimTo(details.OriginalTitle, 200);
+        movie.Description = TrimTo(details.Overview, 4000);
+
         movie.ReleaseDate = releaseDate;
-        movie.Duration = details.Runtime;
-        movie.PosterPath = details.PosterPath;
-        movie.BackdropPath = details.BackdropPath;
-        movie.Rating = details.VoteAverage;
-        movie.TrailerUrl = trailerUrl;
+
+        movie.Duration = (details.Runtime is >= 1 and <= 600) ? details.Runtime : null;
+
+        movie.PosterPath = TrimTo(details.PosterPath, 200);
+        movie.BackdropPath = TrimTo(details.BackdropPath, 200);
+
+        movie.Rating = details.VoteAverage.HasValue ? Math.Round(details.VoteAverage.Value, 1) : null;
+
+        movie.TrailerUrl = TrimTo(trailerUrl, 700);
 
         await _repo.SaveChangesAsync(ct); // щоб отримати movie.Id
 
@@ -126,4 +131,12 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         await _repo.SaveChangesAsync(ct);
         return movie.Id;
     }
+
+    private static string? TrimTo(string? s, int maxLen)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        s = s.Trim();
+        return s.Length <= maxLen ? s : s[..maxLen];
+    }
+
 }
