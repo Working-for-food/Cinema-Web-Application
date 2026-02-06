@@ -17,9 +17,12 @@ public class BookingRepository : IBookingRepository
     public async Task<Booking?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _db.Bookings
-            .Include(b => b.SessionSeats)
-                .ThenInclude(ss => ss.Seat)
-            .FirstOrDefaultAsync(b => b.Id == id, ct);
+        .AsNoTracking()
+        .Include(b => b.Session)
+            .ThenInclude(s => s.Movie)
+        .Include(b => b.SessionSeats)
+            .ThenInclude(ss => ss.Seat)
+        .FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 
     public async Task<IReadOnlyList<Booking>> GetMyBookingsAsync(string userId, CancellationToken ct)
@@ -43,14 +46,12 @@ public class BookingRepository : IBookingRepository
         if (seatIds.Count == 0)
             throw new InvalidOperationException("Оберіть хоча б одне місце.");
 
-        // Важно: транзакция, чтобы check + update были атомарными
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
         var session = await _db.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
         if (session is null || session.IsCancelled)
             throw new InvalidOperationException("Сеанс не знайдено або його скасовано.");
 
-        // Берём только выбранные места для этого сеанса
         var sessionSeats = await _db.SessionSeats
             .Include(x => x.Seat)
             .Where(x => x.SessionId == sessionId && seatIds.Contains(x.SeatId))
@@ -59,7 +60,6 @@ public class BookingRepository : IBookingRepository
         if (sessionSeats.Count != seatIds.Count)
             throw new InvalidOperationException("Деякі місця некоректні для цього сеансу.");
 
-        // Проверка занятости
         if (sessionSeats.Any(x => x.BookingId != null))
             throw new InvalidOperationException("Деякі місця вже зайняті. Оновіть сторінку та спробуйте ще раз.");
 
@@ -72,7 +72,7 @@ public class BookingRepository : IBookingRepository
         };
 
         _db.Bookings.Add(booking);
-        await _db.SaveChangesAsync(ct); // получить booking.Id
+        await _db.SaveChangesAsync(ct);
 
         foreach (var ss in sessionSeats)
             ss.BookingId = booking.Id;

@@ -11,7 +11,7 @@ namespace Web.Controllers.User;
 // Тимчасово без [Authorize], щоб тестити без Login/Register
 public class BookingController : Controller
 {
-    private readonly SessionService _sessions; // concrete, щоб був GetSeatsForBookingAsync
+    private readonly SessionService _sessions;
     private readonly IBookingService _bookings;
     private readonly UserManager<ApplicationUser> _userManager;
 
