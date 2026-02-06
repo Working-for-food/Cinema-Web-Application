@@ -11,9 +11,7 @@
         <div class="afisha-row">
             @foreach (var m in Model.NowShowing)
             {
-                <a asp-area=""
-                   asp-controller="Movies"
-                   asp-action="Details"
+                <a asp-route="MovieDetails"
                    asp-route-id="@m.Id"
                    class="movie-card movie-card-link">
 
@@ -52,9 +50,7 @@
         <div class="afisha-row">
             @foreach (var m in Model.ComingSoon)
             {
-                <a asp-area=""
-                   asp-controller="Movies"
-                   asp-action="Details"
+                <a asp-route="MovieDetails"
                    asp-route-id="@m.Id"
                    class="movie-card movie-card-soon movie-card-link">
 

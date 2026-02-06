@@ -24,4 +24,16 @@ public class UserMovieRepository : IUserMovieRepository
                 .ThenInclude(mc => mc.Country)
             .FirstOrDefaultAsync(m => m.Id == id, ct);
     }
+    public Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default) =>
+    _db.Movies
+        .AsNoTracking()
+        .Where(m => m.Id == id && !m.IsDeleted)
+        .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
+        .Include(m => m.MovieActors).ThenInclude(ma => ma.Actor)
+        .Include(m => m.MovieDirectors).ThenInclude(md => md.Director)
+        .Include(m => m.MovieCountries).ThenInclude(mc => mc.Country)
+        .Include(m => m.Sessions)
+            .ThenInclude(s => s.Hall)
+                .ThenInclude(h => h.Cinema)
+        .FirstOrDefaultAsync(ct);
 }

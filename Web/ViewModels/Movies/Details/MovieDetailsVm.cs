@@ -1,6 +1,6 @@
-﻿namespace Web.ViewModels.Movies;
+﻿namespace Web.ViewModels.Movies.Details;
 
-public class MovieDetailsVm
+public sealed class MovieDetailsVm
 {
     public int Id { get; set; }
     public string Title { get; set; } = "";
@@ -14,4 +14,9 @@ public class MovieDetailsVm
     public string PosterUrl { get; set; } = "";
     public IReadOnlyList<string> Directors { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> Countries { get; set; } = Array.Empty<string>();
+    public DateOnly? SelectedDate { get; set; }
+    public IReadOnlyList<string> Actors { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> Genres { get; set; } = Array.Empty<string>();
+    public int? AgeRating { get; set; }
+    public IReadOnlyList<MovieCinemaScheduleVm> Schedule { get; set; } = Array.Empty<MovieCinemaScheduleVm>();
 }

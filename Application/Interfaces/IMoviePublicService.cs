@@ -4,5 +4,5 @@ namespace Application.Interfaces;
 
 public interface IMoviePublicService
 {
-    Task<MovieDetailsDto?> GetDetailsAsync(int id, CancellationToken ct = default);
+    Task<MovieDetailsDto?> GetDetailsAsync(int movieId, DateOnly? date, CancellationToken ct = default);
 }

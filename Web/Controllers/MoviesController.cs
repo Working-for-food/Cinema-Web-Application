@@ -1,9 +1,10 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Web.ViewModels.Movies;
+using Web.ViewModels.Movies.Details;
 
 namespace Web.Controllers;
 
+[Route("movies")]
 public class MoviesController : Controller
 {
     private readonly IMoviePublicService _moviePublicService;
@@ -12,11 +13,17 @@ public class MoviesController : Controller
     {
         _moviePublicService = moviePublicService;
     }
-
-    public async Task<IActionResult> Details(int id, CancellationToken ct)
+    [HttpGet("{id:int}", Name = "MovieDetails")]
+    public async Task<IActionResult> Details(int id, [FromQuery] DateOnly? date, CancellationToken ct)
     {
-        var dto = await _moviePublicService.GetDetailsAsync(id, ct);
+        var dto = await _moviePublicService.GetDetailsAsync(id, date, ct);
         if (dto is null) return NotFound();
+
+        var firstDay = dto.Schedule
+            .SelectMany(c => c.Days)
+            .Select(d => (DateOnly?)d.Date)
+            .Min();
+        var selected = date ?? firstDay;
 
         var vm = new MovieDetailsVm
         {
@@ -29,11 +36,49 @@ public class MoviesController : Controller
             Duration = dto.Duration,
             TrailerUrl = dto.TrailerUrl,
             Rating = dto.Rating,
-            PosterUrl = string.IsNullOrWhiteSpace(dto.PosterUrl) ? "/images/no-poster.png" : dto.PosterUrl,
-            Directors = dto.Directors,
-            Countries = dto.Countries
+            PosterUrl = NormalizePosterUrl(dto.PosterPath),
+
+            Directors = dto.Directors.Select(d => d.Name).ToList(),
+            Countries = dto.Countries.ToList(),
+            Genres = dto.Genres.ToList(),
+            Actors = dto.Actors.Select(a => a.Name).ToList(),
+
+            AgeRating = dto.AgeRating,
+            SelectedDate = selected,
+            Schedule = dto.Schedule.Select(c => new MovieCinemaScheduleVm
+            {
+                CinemaId = c.CinemaId,
+                CinemaName = c.CinemaName,
+                Days = c.Days.Select(d => new MovieScheduleDayVm
+                {
+                    Date = d.Date,
+                    Sessions = d.Slots.Select(s => new MovieSessionVm
+                    {
+                        Id = s.Id,
+                        StartTime = s.Start,
+                        EndTime = s.End,
+                        HallName = s.HallName,
+                        Presentation = s.Presentation
+                    }).ToList()
+                }).ToList()
+            }).ToList()
         };
 
         return View(vm);
     }
+    static string NormalizePosterUrl(string? poster)
+    {
+        if (string.IsNullOrWhiteSpace(poster))
+            return "/images/no-poster.png";
+
+        if (poster.StartsWith("http://") || poster.StartsWith("https://"))
+            return poster;
+
+        // TMDB relative path
+        if (poster.StartsWith("/"))
+            return "https://image.tmdb.org/t/p/w500" + poster;
+
+        return "/" + poster.TrimStart('/');
+    }
+
 }
