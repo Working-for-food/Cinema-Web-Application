@@ -1,29 +1,71 @@
 ﻿@model Infrastructure.Entities.Genre
 
-<style>
-    .container { max-width: 720px; margin: 30px auto; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
-    .alert-error { background: #fee2e2; padding: 10px; border-radius: 8px; margin-bottom: 12px; color: #7f1d1d; }
-    .actions { margin-top: 14px; display: flex; gap: 10px; }
-    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; border: 0; cursor: pointer; }
-    .btn-danger { background: #fecaca; color: #7f1d1d; }
-    .btn-secondary { background: #e5e7eb; color: #111; }
-</style>
+@{
+    ViewData["Title"] = "Видалення жанру";
+}
 
-<div class="container">
-    <h2>Видалити жанр</h2>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert-error">@TempData["Error"]</div>
-    }
+        <h1 class="section-title text-center mb-5">Видалити жанр</h1>
 
-    <div class="card">
-        <p>Ти точно хочеш видалити жанр <strong>@Model.Name</strong>?</p>
+        <div class="card shadow-sm col-lg-6 mx-auto">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    Підтвердження видалення
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger mb-3">
+                        @TempData["Error"]
+                    </div>
+                }
+
+                <div class="alert alert-warning mb-4">
+                    Ви впевнені, що хочете видалити цей жанр?
+                    <strong>Цю дію неможливо скасувати.</strong>
+                </div>
+
+                <div class="mb-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-tags me-1"></i>
+                            Назва жанру
+                        </label>
+                        <div class="fw-semibold fs-5">@Model.Name</div>
+                    </div>
+                </div>
+
+                <form asp-controller="Genres"
+                      asp-action="Delete"
+                      asp-route-id="@Model.Id"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a asp-controller="Genres"
+                           asp-action="Index"
+                           class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            Скасувати
+                        </a>
+
+                        <button type="submit" class="btn btn-maroon">
+                            <i class="fa-solid fa-trash me-1"></i>
+                            Видалити жанр
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
     </div>
+</section>
 
-    <form asp-controller="Genres" asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="actions">
-        <button type="submit" class="btn btn-danger">Видалити</button>
-        <a class="btn btn-secondary" asp-controller="Genres" asp-action="Index">Скасувати</a>
-    </form>
-</div>

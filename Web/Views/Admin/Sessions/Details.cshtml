@@ -16,114 +16,206 @@
     var isFinished = !Model.IsCancelled && isOver;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="mb-0">Сеанс №@Model.Id</h1>
-    <a class="btn btn-outline-secondary" asp-action="Index">До списку</a>
-</div>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
-{
-    <div class="alert alert-success mb-3">@ok</div>
-}
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger mb-3">@err</div>
-}
+        <h1 class="section-title text-center mb-5">Деталі сеансу</h1>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <dl class="row mb-0">
-            <dt class="col-sm-3">Фільм</dt>
-            <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.MovieTitle) ? Model.MovieTitle : "—")</dd>
+        @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+        {
+            <div class="alert alert-success mb-3">@ok</div>
+        }
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div class="alert alert-danger mb-3">@err</div>
+        }
 
-            <dt class="col-sm-3">Кінотеатр</dt>
-            <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.CinemaName) ? Model.CinemaName : "—")</dd>
+        <div class="card shadow-sm col-lg-8 mx-auto">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Інформація про сеанс №@Model.Id
+                </h5>
+            </div>
 
-            <dt class="col-sm-3">Зал</dt>
-            <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.HallName) ? Model.HallName : "—")</dd>
+            <div class="card-body p-4">
+                <div class="mb-4">
 
-            <dt class="col-sm-3">Початок</dt>
-            <dd class="col-sm-9">@Model.StartTime.ToString("dd.MM.yyyy HH:mm")</dd>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-clapperboard me-1"></i>
+                            Фільм
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @(!string.IsNullOrWhiteSpace(Model.MovieTitle) ? Model.MovieTitle : "—")
+                        </div>
+                    </div>
 
-            <dt class="col-sm-3">Кінець</dt>
-            <dd class="col-sm-9">@Model.EndTime.ToString("dd.MM.yyyy HH:mm")</dd>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-film me-1"></i>
+                            Кінотеатр
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @(!string.IsNullOrWhiteSpace(Model.CinemaName) ? Model.CinemaName : "—")
+                        </div>
+                    </div>
 
-            <dt class="col-sm-3">Тип показу</dt>
-            <dd class="col-sm-9">@PtText(Model.PresentationType)</dd>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-chair me-1"></i>
+                            Зал
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @(!string.IsNullOrWhiteSpace(Model.HallName) ? Model.HallName : "—")
+                        </div>
+                    </div>
 
-            <dt class="col-sm-3">Стан</dt>
-            <dd class="col-sm-9">
-                @if (Model.IsCancelled)
-                {
-                    <span class="badge bg-danger">Скасовано</span>
-                }
-                else if (isFinished)
-                {
-                    <span class="badge bg-dark">Завершено</span>
-                }
-                else
-                {
-                    <span class="badge bg-success">Активний</span>
-                }
-            </dd>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-clock me-1"></i>
+                            Початок
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @Model.StartTime.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    </div>
 
-            <dt class="col-sm-3">Створено</dt>
-            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-clock-rotate-left me-1"></i>
+                            Кінець
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @Model.EndTime.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    </div>
 
-            <dt class="col-sm-3">Оновлено</dt>
-            <dd class="col-sm-9">@((Model.UpdatedAt.HasValue) ? Model.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm") : "—")</dd>
-        </dl>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-tv me-1"></i>
+                            Тип показу
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @PtText(Model.PresentationType)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-signal me-1"></i>
+                            Стан
+                        </label>
+                        <div class="fw-semibold">
+                            @if (Model.IsCancelled)
+                            {
+                                <span class="badge bg-danger">Скасовано</span>
+                            }
+                            else if (isFinished)
+                            {
+                                <span class="badge bg-dark">Завершено</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Активний</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-calendar-plus me-1"></i>
+                            Створено
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-calendar-check me-1"></i>
+                            Оновлено
+                        </label>
+                        <div class="fw-semibold fs-5">
+                            @((Model.UpdatedAt.HasValue) ? Model.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm") : "—")
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Назад
+                    </a>
+
+                    @if (isFinished)
+                    {
+                        <button class="btn btn-secondary" type="button" disabled title="Не можна редагувати завершений сеанс.">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>
+                            Редагувати
+                        </button>
+
+                        <button class="btn btn-maroon" type="button" disabled title="Не можна скасувати завершений сеанс.">
+                            <i class="fa-solid fa-ban me-1"></i>
+                            Скасувати
+                        </button>
+                    }
+                    else if (!Model.IsCancelled)
+                    {
+                        <a class="btn btn-maroon" asp-action="Edit" asp-route-id="@Model.Id">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>
+                            Редагувати
+                        </a>
+
+                        <form asp-action="Cancel"
+                              asp-route-id="@Model.Id"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Скасувати цей сеанс?');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-maroon" type="submit">
+                                <i class="fa-solid fa-ban me-1"></i>
+                                Скасувати
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary" type="button" disabled title="Не можна редагувати скасований сеанс. Спочатку відновіть його.">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>
+                            Редагувати
+                        </button>
+
+                        @if (isOver)
+                        {
+                            <button class="btn btn-maroon" type="button" disabled title="Не можна відновити завершений сеанс.">
+                                <i class="fa-solid fa-rotate-left me-1"></i>
+                                Відновити
+                            </button>
+                        }
+                        else
+                        {
+                            <form asp-action="Restore"
+                                  asp-route-id="@Model.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-maroon" type="submit">
+                                    <i class="fa-solid fa-rotate-left me-1"></i>
+                                    Відновити
+                                </button>
+                            </form>
+                        }
+                    }
+
+                </div>
+
+            </div>
+        </div>
+
     </div>
-</div>
-
-<div class="d-flex gap-2 mt-3">
-    @if (isFinished)
-    {
-        <span title="Не можна редагувати завершений сеанс.">
-            <button class="btn btn-outline-secondary" type="button" disabled>
-                Редагувати
-            </button>
-        </span>
-
-        <span title="Не можна скасувати завершений сеанс.">
-            <button class="btn btn-outline-danger" type="button" disabled>
-                Скасувати
-            </button>
-        </span>
-    }
-    else if (!Model.IsCancelled)
-    {
-        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Редагувати</a>
-
-        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline"
-              onsubmit="return confirm('Скасувати цей сеанс?');">
-            @Html.AntiForgeryToken()
-            <button class="btn btn-outline-danger" type="submit">Скасувати</button>
-        </form>
-    }
-    else
-    {
-        <span title="Не можна редагувати скасований сеанс. Спочатку відновіть його.">
-            <button class="btn btn-outline-secondary" type="button" disabled>
-                Редагувати
-            </button>
-        </span>
-
-        @if (isOver)
-        {
-            <span title="Не можна відновити завершений сеанс.">
-                <button class="btn btn-outline-success" type="button" disabled>
-                    Відновити
-                </button>
-            </span>
-        }
-        else
-        {
-            <form asp-action="Restore" asp-route-id="@Model.Id" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button class="btn btn-outline-success" type="submit">Відновити</button>
-            </form>
-        }
-    }
-</div>
+</section>
 
