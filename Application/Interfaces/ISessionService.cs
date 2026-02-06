@@ -1,34 +1,35 @@
 ﻿using Application.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Application.DTOs.Pricing;
 
-namespace Application.Interfaces
+namespace Application.Interfaces;
+
+public interface ISessionService
 {
-    public interface ISessionService
-    {
-        Task<SessionDetailsDto?> GetByIdAsync(int id, CancellationToken ct);
+    Task<SessionDetailsDto?> GetByIdAsync(int id, CancellationToken ct);
 
-        Task<PagedResult<SessionListDto>> GetAllPagedAsync(
-            DateTime? from,
-            DateTime? to,
-            int? cinemaId,
-            int? hallId,
-            int? movieId,
-            bool includeCancelled,
-            bool includeFinished,
-            string? sort,
-            int page,
-            CancellationToken ct);
+    Task<SessionEditDto?> GetForEditAsync(int id, CancellationToken ct);
 
-        Task<int> CreateAsync(SessionEditDto dto, CancellationToken ct);
+    Task<PagedResult<SessionListDto>> GetAllPagedAsync(
+        DateTime? from,
+        DateTime? to,
+        int? cinemaId,
+        int? hallId,
+        int? movieId,
+        bool includeCancelled,
+        bool includeFinished,
+        string? sort,
+        int page,
+        CancellationToken ct);
 
-        Task<bool> UpdateAsync(int id, SessionEditDto dto, CancellationToken ct);
+    Task<int> CreateAsync(SessionEditDto dto, CancellationToken ct);
+    Task<bool> UpdateAsync(int id, SessionEditDto dto, CancellationToken ct);
+    Task<bool> CancelAsync(int id, CancellationToken ct);
+    Task<bool> RestoreAsync(int id, CancellationToken ct);
 
-        Task<bool> CancelAsync(int id, CancellationToken ct);
+    Task EnsureSessionSeatsAsync(int sessionId, CancellationToken ct);
 
-        Task<bool> RestoreAsync(int id, CancellationToken ct);
-    }
+    Task<SessionPricingDto> GetPricingAsync(int sessionId, CancellationToken ct);
+    Task ApplyPricingAsync(int sessionId, SessionPricingDto pricing, CancellationToken ct);
+
+    Task<IReadOnlyList<SessionSeatPriceDto>> GetSeatPricesAsync(int sessionId, CancellationToken ct);
 }

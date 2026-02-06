@@ -32,6 +32,10 @@ public class SessionEditVm : IValidatableObject
     public List<SelectListItem> Movies { get; set; } = new();
     public List<SelectListItem> Halls { get; set; } = new();
     public List<SelectListItem> PresentationTypes { get; set; } = new();
+
+    public List<RowPriceVm> RowPrices { get; set; } = new();
+    public List<CategoryMultiplierVm> CategoryMultipliers { get; set; } = new();
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (StartTime.HasValue && EndTime.HasValue && StartTime.Value >= EndTime.Value)
@@ -40,5 +44,47 @@ public class SessionEditVm : IValidatableObject
                 "Час початку має бути раніше часу завершення.",
                 new[] { nameof(StartTime), nameof(EndTime) });
         }
+
+        if (HallId <= 0)
+            yield break;
+
+        if (RowPrices.Count == 0)
+            yield return new ValidationResult("Заповніть ціни по рядах.", new[] { nameof(RowPrices) });
+
+        if (CategoryMultipliers.Count == 0)
+            yield return new ValidationResult("Заповніть множники по категоріях.", new[] { nameof(CategoryMultipliers) });
+
+        if (RowPrices.Count > 0)
+        {
+            if (RowPrices.Any(x => x.RowNumber <= 0))
+                yield return new ValidationResult("Некоректний номер ряду у цінах.", new[] { nameof(RowPrices) });
+
+            if (RowPrices.Any(x => x.BasePrice <= 0))
+                yield return new ValidationResult("Ціна ряду має бути > 0.", new[] { nameof(RowPrices) });
+
+            if (RowPrices.Select(x => x.RowNumber).Distinct().Count() != RowPrices.Count)
+                yield return new ValidationResult("Ряди в цінах дублюються.", new[] { nameof(RowPrices) });
+        }
+
+        if (CategoryMultipliers.Count > 0)
+        {
+            if (CategoryMultipliers.Any(x => x.Multiplier <= 0))
+                yield return new ValidationResult("Множник категорії має бути > 0.", new[] { nameof(CategoryMultipliers) });
+
+            if (CategoryMultipliers.Select(x => x.Category).Distinct().Count() != CategoryMultipliers.Count)
+                yield return new ValidationResult("Категорії в множниках дублюються.", new[] { nameof(CategoryMultipliers) });
+        }
+    }
+
+    public sealed class RowPriceVm
+    {
+        public int RowNumber { get; set; }
+        public decimal BasePrice { get; set; }
+    }
+
+    public sealed class CategoryMultiplierVm
+    {
+        public int Category { get; set; }
+        public decimal Multiplier { get; set; }
     }
 }
