@@ -145,13 +145,12 @@
                                                         <div class="schedule-format">@s.Presentation</div>
                                                     }
                                                 </div>
-
-                                                <a class="btn-details schedule-cta"
-                                                   asp-controller="Sessions"
-                                                   asp-action="Details"
-                                                   asp-route-id="@s.Id">
-                                                    Обрати
-                                                </a>
+                                                    <a class="btn-details schedule-cta"
+                                                       asp-controller="Booking"
+                                                       asp-action="Create"
+                                                       asp-route-sessionId="@s.Id">
+                                                        Обрати
+                                                    </a>
                                             </div>
                                         }
                                     </div>
