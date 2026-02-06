@@ -41,6 +41,7 @@ public class MovieService : IMovieService
         {
             Id = m.Id,
             Title = m.Title,
+            PosterPath = m.PosterPath,
             ReleaseDate = m.ReleaseDate,
             Duration = m.Duration,
             GenreNames = string.Join(", ", m.MovieGenres.Select(mg => mg.Genre.Name)),
@@ -67,11 +68,15 @@ public class MovieService : IMovieService
             Description = movie.Description,
             Duration = movie.Duration,
             ReleaseDate = movie.ReleaseDate,
-            ProductionCountryCode = movie.ProductionCountryCode,
-            DirectorId = movie.DirectorId,
+            PosterPath = movie.PosterPath,
+            BackdropPath = movie.BackdropPath,
+            OriginalName = movie.OriginalName,
+            Language = movie.Language,
+            TrailerUrl = movie.TrailerUrl,
             GenreIds = movie.MovieGenres.Select(mg => mg.GenreId).ToList(),
             ActorIds = movie.MovieActors.Select(ma => ma.ActorId).ToList(),
-            CountryCodes = movie.MovieCountries.Select(mc => mc.CountryCode).ToList()
+            CountryCodes = movie.MovieCountries.Select(mc => mc.CountryCode).ToList(),
+            DirectorIds = movie.MovieDirectors.Select(md => md.DirectorId).ToList()
         };
     }
 
@@ -86,11 +91,14 @@ public class MovieService : IMovieService
             Description = NormalizeNullable(dto.Description),
             ReleaseDate = dto.ReleaseDate,
             Duration = dto.Duration,
-            ProductionCountryCode = NormalizeCountryCode(dto.ProductionCountryCode),
-            DirectorId = dto.DirectorId
+            PosterPath = dto.PosterPath,
+            BackdropPath = dto.BackdropPath,
+            OriginalName = dto.OriginalName,
+            Language = dto.Language,
+            TrailerUrl = dto.TrailerUrl
         };
 
-        await _movies.AddAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), ct);
+        await _movies.AddAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), DistinctIds(dto.DirectorIds), ct);
         return (true, null);
     }
 
@@ -108,11 +116,14 @@ public class MovieService : IMovieService
             Description = NormalizeNullable(dto.Description),
             ReleaseDate = dto.ReleaseDate,
             Duration = dto.Duration,
-            ProductionCountryCode = NormalizeCountryCode(dto.ProductionCountryCode),
-            DirectorId = dto.DirectorId
+            PosterPath = dto.PosterPath,
+            BackdropPath = dto.BackdropPath,
+            OriginalName = dto.OriginalName,
+            Language = dto.Language,
+            TrailerUrl = dto.TrailerUrl
         };
 
-        await _movies.UpdateAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), ct);
+        await _movies.UpdateAsync(movie, DistinctIds(dto.GenreIds), DistinctIds(dto.ActorIds), DistinctCodesStrict(dto.CountryCodes, out _), DistinctIds(dto.DirectorIds), ct);
         return (true, null);
     }
 
@@ -149,7 +160,11 @@ public class MovieService : IMovieService
     {
         dto.Title = (dto.Title ?? "").Trim();
         dto.Description = NormalizeNullable(dto.Description);
-        dto.ProductionCountryCode = NormalizeCountryCode(dto.ProductionCountryCode);
+        dto.PosterPath = NormalizeNullable(dto.PosterPath);
+        dto.BackdropPath = NormalizeNullable(dto.BackdropPath);
+        dto.OriginalName = NormalizeNullable(dto.OriginalName);
+        dto.Language = NormalizeLanguage(dto.Language);
+        dto.TrailerUrl = NormalizeNullable(dto.TrailerUrl);
 
         if (string.IsNullOrWhiteSpace(dto.Title))
             return "Title is required.";
@@ -158,6 +173,34 @@ public class MovieService : IMovieService
 
         if (dto.Description != null && dto.Description.Length > 4000)
             return "Description is too long (max 4000 characters).";
+
+        if (dto.PosterPath != null && !IsTmdbPathOrHttpUrl(dto.PosterPath, 200))
+            return "PosterPath must be a TMDB path like /abc.jpg or an absolute http(s) URL and <= 200 characters.";
+
+        if (dto.BackdropPath != null && !IsTmdbPathOrHttpUrl(dto.BackdropPath, 200))
+            return "BackdropPath must be a TMDB path like /abc.jpg or an absolute http(s) URL and <= 200 characters.";
+
+        if (dto.OriginalName != null && dto.OriginalName.Length > 200)
+            return "Original name must be <= 200 characters.";
+
+        if (dto.Language != null)
+        {
+            if (dto.Language.Length > 50)
+                return "Language must be <= 50 characters.";
+
+            // Ми нормалізуємо до ISO 639-1: 2 літери
+            if (dto.Language.Length != 2 || !dto.Language.All(char.IsLetter))
+                return "Language must be 2 letters (ISO 639-1), e.g. en, uk.";
+        }
+
+        if (dto.TrailerUrl != null)
+        {
+            if (dto.TrailerUrl.Length > 700)
+                return "Trailer URL must be <= 700 characters.";
+
+            if (!IsHttpUrl(dto.TrailerUrl))
+                return "Trailer URL must be a valid absolute http(s) URL.";
+        }
 
         if (dto.Duration.HasValue && dto.Duration.Value <= 0)
             return "Duration must be positive.";
@@ -183,25 +226,15 @@ public class MovieService : IMovieService
         if (genreIds.Any(id => !existingGenreIds.Contains(id)))
             return "Some selected genres do not exist.";
 
-        if (dto.ProductionCountryCode != null)
+
+        var directorIds = DistinctIds(dto.DirectorIds);
+        foreach (var directorId in directorIds)
         {
-            if (dto.ProductionCountryCode.Length != 2 || !dto.ProductionCountryCode.All(char.IsLetter))
-                return "Production country code must be 2 letters (e.g. UA).";
-
-            var c = await _countries.GetByCodeAsync(dto.ProductionCountryCode, ct);
-            if (c == null)
-                return "Selected production country does not exist.";
-        }
-
-        if (dto.DirectorId.HasValue)
-        {
-            if (dto.DirectorId.Value <= 0)
-                return "Invalid director id.";
-
-            var director = await _people.GetByIdAsync(dto.DirectorId.Value, ct);
+            var director = await _people.GetByIdAsync(directorId, ct);
             if (director == null)
-                return "Selected director does not exist.";
+                return "Some selected directors do not exist.";
         }
+
 
         var actorIds = DistinctIds(dto.ActorIds);
         foreach (var actorId in actorIds)
@@ -263,4 +296,31 @@ public class MovieService : IMovieService
 
         return normalized.Distinct().ToList();
     }
+
+    private static string? NormalizeLanguage(string? lang)
+    {
+        if (string.IsNullOrWhiteSpace(lang)) return null;
+        return lang.Trim().ToLowerInvariant();
+    }
+
+    private static bool IsHttpUrl(string value)
+    {
+        if (value.Any(char.IsWhiteSpace)) return false;
+
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+
+    private static bool IsTmdbPathOrHttpUrl(string value, int maxLen)
+    {
+        if (value.Length > maxLen) return false;
+        if (value.Any(char.IsWhiteSpace)) return false;
+
+        
+        if (value.StartsWith('/')) return true;
+
+        
+        return IsHttpUrl(value);
+    }
+
 }

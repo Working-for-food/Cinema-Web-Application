@@ -250,9 +250,6 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<int?>("DirectorId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("Duration")
                         .HasColumnType("int");
 
@@ -271,9 +268,6 @@ namespace Infrastructure.Data.Migrations
                     b.Property<string>("PosterPath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ProductionCountryCode")
-                        .HasColumnType("nchar(2)");
 
                     b.Property<decimal?>("Rating")
                         .HasPrecision(4, 1)
@@ -294,10 +288,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(700)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DirectorId");
-
-                    b.HasIndex("ProductionCountryCode");
 
                     b.HasIndex("TmdbId")
                         .IsUnique()
@@ -446,6 +436,63 @@ namespace Infrastructure.Data.Migrations
                     b.ToTable("People");
                 });
 
+            modelBuilder.Entity("Infrastructure.Entities.PricingTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("HallId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PricingTemplates");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateCategoryMultiplier", b =>
+                {
+                    b.Property<int>("PricingTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Multiplier")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("PricingTemplateId", "Category");
+
+                    b.ToTable("PricingTemplateCategoryMultipliers");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateRowPrice", b =>
+                {
+                    b.Property<int>("PricingTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Row")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("PricingTemplateId", "Row");
+
+                    b.ToTable("PricingTemplateRowPrices");
+                });
+
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
                 {
                     b.Property<int>("Id")
@@ -517,6 +564,40 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId");
 
                     b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.SessionCategoryMultiplier", b =>
+                {
+                    b.Property<int>("SessionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Multiplier")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("SessionId", "Category");
+
+                    b.ToTable("SessionCategoryMultipliers");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.SessionRowPrice", b =>
+                {
+                    b.Property<int>("SessionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("SessionId", "RowNumber");
+
+                    b.ToTable("SessionRowPrices");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.SessionSeat", b =>
@@ -715,23 +796,6 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Cinema");
                 });
 
-            modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
-                {
-                    b.HasOne("Infrastructure.Entities.Person", "Director")
-                        .WithMany("DirectedMoviesMain")
-                        .HasForeignKey("DirectorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Infrastructure.Entities.Country", "ProductionCountry")
-                        .WithMany("ProducedMovies")
-                        .HasForeignKey("ProductionCountryCode")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Director");
-
-                    b.Navigation("ProductionCountry");
-                });
-
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>
                 {
                     b.HasOne("Infrastructure.Entities.Person", "Actor")
@@ -818,6 +882,28 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Country");
                 });
 
+            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateCategoryMultiplier", b =>
+                {
+                    b.HasOne("Infrastructure.Entities.PricingTemplate", "PricingTemplate")
+                        .WithMany()
+                        .HasForeignKey("PricingTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingTemplate");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateRowPrice", b =>
+                {
+                    b.HasOne("Infrastructure.Entities.PricingTemplate", "PricingTemplate")
+                        .WithMany()
+                        .HasForeignKey("PricingTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingTemplate");
+                });
+
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
                 {
                     b.HasOne("Infrastructure.Entities.Hall", "Hall")
@@ -846,6 +932,28 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Hall");
 
                     b.Navigation("Movie");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.SessionCategoryMultiplier", b =>
+                {
+                    b.HasOne("Infrastructure.Entities.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.SessionRowPrice", b =>
+                {
+                    b.HasOne("Infrastructure.Entities.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.SessionSeat", b =>
@@ -940,8 +1048,6 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("MovieCountries");
 
                     b.Navigation("People");
-
-                    b.Navigation("ProducedMovies");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Genre", b =>
@@ -971,8 +1077,6 @@ namespace Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Infrastructure.Entities.Person", b =>
                 {
-                    b.Navigation("DirectedMoviesMain");
-
                     b.Navigation("MovieActors");
 
                     b.Navigation("MovieDirectors");
