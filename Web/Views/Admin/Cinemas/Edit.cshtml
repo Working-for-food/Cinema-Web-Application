@@ -31,10 +31,12 @@
                 <form asp-area="Admin"
                       asp-controller="Cinemas"
                       asp-action="Edit"
-                      method="post">
+                      method="post"
+                      enctype="multipart/form-data"> @* ✅ додано *@
 
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="ImageUrl" /> @* ✅ додано *@
 
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -63,6 +65,28 @@
                         </label>
                         <input asp-for="Address" class="form-control" />
                         <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+
+                    @* ✅ додано: блок зображення *@
+                    <div class="mb-4">
+                        <label asp-for="Image" class="form-label text-muted">
+                            <i class="fa-solid fa-image me-1"></i>
+                            Постер кінотеатру
+                        </label>
+
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <div class="mb-2">
+                                <span class="badge bg-secondary mb-1">Поточне фото:</span><br />
+                                <img src="@Model.ImageUrl"
+                                     alt="Current Poster"
+                                     style="max-height:150px;border-radius:5px;border:1px solid #ddd;" />
+                            </div>
+                        }
+
+                        <input asp-for="Image" type="file" class="form-control" accept="image/*" />
+                        <div class="form-text">Залиште порожнім, якщо не хочете змінювати фото.</div>
+                        <span asp-validation-for="Image" class="text-danger"></span>
                     </div>
 
                     <!-- Actions -->

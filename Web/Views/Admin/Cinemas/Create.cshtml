@@ -7,7 +7,7 @@
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-5">Створити кінотеатр</h1>
+        <h1 class="section-title">Створити кінотеатр</h1>
 
         <div class="card shadow-sm col-lg-8 mx-auto">
             <div class="card-header">
@@ -21,11 +21,14 @@
                 <form asp-area="Admin"
                       asp-controller="Cinemas"
                       asp-action="Create"
-                      method="post">
+                      method="post"
+                      enctype="multipart/form-data">
 
                     @Html.AntiForgeryToken()
 
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input asp-for="ImageUrl" type="hidden" />
 
                     <div class="mb-3">
                         <label asp-for="Name" class="form-label text-muted">
@@ -53,6 +56,24 @@
                         <input asp-for="Address" class="form-control" placeholder="вул. Кінозіркова, 123" />
                         <span asp-validation-for="Address" class="text-danger"></span>
                     </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Image" class="form-label text-muted">
+                            <i class="fa-solid fa-image me-1"></i>
+                            Постер кінотеатру
+                        </label>
+                        <input asp-for="Image" type="file" class="form-control" accept="image/*" />
+                        <span asp-validation-for="Image" class="text-danger"></span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                    {
+                        <div class="mb-3">
+                            <img src="@Model.ImageUrl"
+                                 class="img-fluid rounded"
+                                 style="max-height:180px;object-fit:cover;" />
+                        </div>
+                    }
 
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <a asp-area="Admin"

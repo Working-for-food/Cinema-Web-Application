@@ -1,5 +1,7 @@
 using Application.Interfaces;
+using Application.Options;
 using Application.Services;
+using CloudinaryDotNet;
 using Infrastructure.Data;
 using Infrastructure.Data.Seed;
 using Infrastructure.Entities;
@@ -8,7 +10,6 @@ using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Application.Options;
 using Microsoft.Extensions.Options;
 using Web.Helpers;
 
@@ -52,6 +53,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddErrorDescriber<UkrainianIdentityErrorDescriber>();
 
 builder.Services.AddTransient<Application.Interfaces.IEmailService, Application.Services.EmailService>();
+
+builder.Services.AddSingleton(provider =>
+{
+    var config = provider.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+    return new Cloudinary(new Account(config.CloudName, config.ApiKey, config.ApiSecret));
+});
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
