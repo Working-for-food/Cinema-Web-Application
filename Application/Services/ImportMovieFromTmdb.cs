@@ -45,16 +45,13 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         movie.Title = TrimTo(details.Title, 200) ?? "(no title)";
         movie.OriginalName = TrimTo(details.OriginalTitle, 200);
         movie.Description = TrimTo(details.Overview, 4000);
-
         movie.ReleaseDate = releaseDate;
-<<<<<<< HEAD
         movie.Duration = details.Runtime;
         movie.PosterPath = details.PosterPath;
         movie.BackdropPath = details.BackdropPath;
         movie.Rating = details.VoteAverage;
         movie.TrailerUrl = trailerUrl;
         movie.AgeRating = TmdbAgeRatingHelper.GetAgeRating(releaseDates);
-=======
 
         movie.Duration = (details.Runtime is >= 1 and <= 600) ? details.Runtime : null;
 
@@ -64,7 +61,6 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         movie.Rating = details.VoteAverage.HasValue ? Math.Round(details.VoteAverage.Value, 1) : null;
 
         movie.TrailerUrl = TrimTo(trailerUrl, 700);
->>>>>>> feature/auth
 
         await _repo.SaveChangesAsync(ct); // щоб отримати movie.Id
 

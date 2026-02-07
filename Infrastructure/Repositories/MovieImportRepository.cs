@@ -142,11 +142,7 @@ public sealed class MovieImportRepository : IMovieImportRepository
             .ToList();
 
         short cust = 1;
-<<<<<<< HEAD
-        foreach (var a in sorted)
-=======
         foreach (var a in unique)
->>>>>>> feature/auth
         {
             _db.MovieActors.Add(new MovieActor
             {
@@ -163,12 +159,6 @@ public sealed class MovieImportRepository : IMovieImportRepository
     {
         var old = await _db.MovieDirectors.Where(x => x.MovieId == movieId).ToListAsync(ct);
         _db.MovieDirectors.RemoveRange(old);
-<<<<<<< HEAD
-        var sorted = directors.OrderBy(a => a.order).ToList();
-        short cust = 1;
-        foreach (var d in sorted)
-=======
-
         var unique = directors
             .Where(d => d.person != null)
             .GroupBy(d => d.person.Id)
@@ -178,17 +168,12 @@ public sealed class MovieImportRepository : IMovieImportRepository
 
         short billing = 1;
         foreach (var d in unique)
->>>>>>> feature/auth
         {
             _db.MovieDirectors.Add(new MovieDirector
             {
                 MovieId = movieId,
                 DirectorId = d.person.Id,
-<<<<<<< HEAD
-                BillingOrder = cust++
-=======
                 BillingOrder = billing++
->>>>>>> feature/auth
             });
         }
     }

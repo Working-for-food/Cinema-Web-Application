@@ -40,12 +40,6 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-<<<<<<< HEAD
-// Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<CinemaDbContext>()
-    .AddDefaultTokenProviders();
-=======
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
@@ -61,7 +55,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddErrorDescriber<UkrainianIdentityErrorDescriber>();
 
 builder.Services.AddTransient<Application.Interfaces.IEmailService, Application.Services.EmailService>();
->>>>>>> feature/auth
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -152,18 +145,11 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-<<<<<<< HEAD
-// Seed: Countries + Test User
-using (var scope = app.Services.CreateScope())
-{
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Seeder");
-=======
-// Seed Countries and Roles
+// Seed Countries and Roles + Test User
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Seeder");
->>>>>>> feature/auth
 
     try
     {
