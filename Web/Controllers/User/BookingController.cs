@@ -30,7 +30,7 @@ public class BookingController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int sessionId, CancellationToken ct)
     {
-        await _sessions.EnsureSessionSeatsAsync(sessionId, ct);
+        await _sessions.EnsureSessionSeatsCreatedAsync(sessionId, ct);
 
         var seats = await _sessions.GetSeatsForBookingAsync(sessionId, ct);
 
@@ -72,7 +72,7 @@ public class BookingController : Controller
         {
             ModelState.AddModelError("", ex.Message);
 
-            await _sessions.EnsureSessionSeatsAsync(vm.SessionId, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(vm.SessionId, ct);
             var seats = await _sessions.GetSeatsForBookingAsync(vm.SessionId, ct);
 
             vm.Seats = seats.Select(s => new BookingCreateVm.SeatVm

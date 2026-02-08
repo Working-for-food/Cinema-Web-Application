@@ -198,8 +198,6 @@ namespace Web.Controllers.Admin
             });
         }
 
-
-
         // GET: /Admin/Sessions/HallsByCinema?cinemaId=1
         [HttpGet]
         public async Task<IActionResult> HallsByCinema(int cinemaId, CancellationToken ct)
@@ -243,7 +241,7 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Details(int id, CancellationToken ct)
         {
-            await _sessions.EnsureSessionSeatsAsync(id, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(id, ct);
 
             var dto = await _sessions.GetByIdAsync(id, ct);
             if (dto is null) return NotFound();
@@ -320,7 +318,7 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Edit(int id, CancellationToken ct)
         {
-            await _sessions.EnsureSessionSeatsAsync(id, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(id, ct);
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
@@ -429,7 +427,7 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Pricing(int id, CancellationToken ct)
         {
-            await _sessions.EnsureSessionSeatsAsync(id, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(id, ct);
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
@@ -496,6 +494,12 @@ namespace Web.Controllers.Admin
 
             if (!ModelState.IsValid)
                 return await ReturnWithViewModelAsync();
+
+            if (await _sessions.HasBookingsAsync(id, ct))
+            {
+                ModelState.AddModelError(string.Empty, "Неможливо змінити ціни, оскільки на цей сеанс вже є продані квитки.");
+                return await ReturnWithViewModelAsync();
+            }
 
             try
             {
