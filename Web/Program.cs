@@ -170,42 +170,6 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
-
-    try
-    {
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-        var email = "test@local.com";
-        var user = await userManager.FindByEmailAsync(email);
-
-        if (user == null)
-        {
-            user = new ApplicationUser
-            {
-                UserName = email,
-                Email = email
-            };
-
-            var created = await userManager.CreateAsync(user, "Test1234!");
-            if (!created.Succeeded)
-            {
-                var errors = string.Join("; ", created.Errors.Select(e => e.Description));
-                logger.LogError("Test user create failed: {Errors}", errors);
-            }
-            else
-            {
-                logger.LogInformation("Test user created: {Email}", email);
-            }
-        }
-        else
-        {
-            logger.LogInformation("Test user exists: {Email}", email);
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Test user seeding failed.");
-    }
 }
 
 app.Run();

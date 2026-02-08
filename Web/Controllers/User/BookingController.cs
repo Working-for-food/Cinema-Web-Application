@@ -2,20 +2,19 @@
 using Application.Interfaces;
 using Application.Services;
 using Infrastructure.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels;
 
 namespace Web.Controllers.User;
 
-// Тимчасово без [Authorize], щоб тестити без Login/Register
+[Authorize]
 public class BookingController : Controller
 {
     private readonly SessionService _sessions;
     private readonly IBookingService _bookings;
     private readonly UserManager<ApplicationUser> _userManager;
-
-    private const string TestEmail = "test@local.com";
 
     public BookingController(
         SessionService sessions,
@@ -26,15 +25,7 @@ public class BookingController : Controller
         _bookings = bookings;
         _userManager = userManager;
     }
-
-    private async Task<string> GetTestUserIdAsync(CancellationToken ct)
-    {
-        var user = await _userManager.FindByEmailAsync(TestEmail);
-        if (user == null)
-            throw new InvalidOperationException($"Test user not found: {TestEmail}");
-
-        return user.Id;
-    }
+    private string UserId => _userManager.GetUserId(User)!;
 
     [HttpGet]
     public async Task<IActionResult> Create(int sessionId, CancellationToken ct)
@@ -72,9 +63,9 @@ public class BookingController : Controller
 
         try
         {
-            var userId = await GetTestUserIdAsync(ct);
 
-            var result = await _bookings.CreateAsync(userId, dto, ct);
+            var result = await _bookings.CreateAsync(UserId, dto, ct);
+
             return RedirectToAction(nameof(Success), new { id = result.BookingId });
         }
         catch (Exception ex)
@@ -118,9 +109,9 @@ public class BookingController : Controller
     [HttpGet]
     public async Task<IActionResult> My(CancellationToken ct)
     {
-        var userId = await GetTestUserIdAsync(ct);
+        //var userId = GetUserIdOrThrow();
 
-        var items = await _bookings.GetMyAsync(userId, ct);
+        var items = await _bookings.GetMyAsync(UserId, ct);
         return View("~/Views/Bookings/My.cshtml", items);
     }
 
@@ -128,11 +119,11 @@ public class BookingController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id, CancellationToken ct)
     {
-        var userId = await GetTestUserIdAsync(ct);
+        //var userId = GetUserIdOrThrow();
 
         try
         {
-            await _bookings.CancelAsync(userId, id, ct);
+            await _bookings.CancelAsync(UserId, id, ct);
             TempData["Success"] = $"Бронювання №{id} скасовано.";
         }
         catch (Exception ex)
