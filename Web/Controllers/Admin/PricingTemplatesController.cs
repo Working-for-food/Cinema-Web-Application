@@ -24,6 +24,13 @@ namespace Web.Controllers.Admin
             _lookups = lookups;
         }
 
+        private static List<SelectListItem> ToSelectList(IEnumerable<LookupItemDto> items, int? selectedId)
+             => items.Select(x => new SelectListItem
+             {
+                 Value = x.Id.ToString(),
+                 Text = x.Title,
+                 Selected = selectedId.HasValue && x.Id == selectedId.Value
+             }).ToList();
 
         private async Task FillIndexLookupsAsync(PricingTemplatesIndexVm vm, CancellationToken ct)
         {
@@ -48,27 +55,18 @@ namespace Web.Controllers.Admin
         private async Task FillEditLookupsAsync(PricingTemplateEditVm vm, CancellationToken ct)
         {
             var cinemas = await _lookups.GetCinemasAsync(ct);
-            vm.Cinemas = cinemas.Select(c => new SelectListItem(c.Title, c.Id.ToString(), c.Id == vm.CinemaId)).ToList();
+            vm.Cinemas = ToSelectList(cinemas, vm.CinemaId);
 
             if (vm.CinemaId.HasValue)
             {
                 var halls = await _lookups.GetHallsByCinemaAsync(vm.CinemaId.Value, ct);
-                vm.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString(), h.Id == vm.HallId)).ToList();
+                vm.Halls = ToSelectList(halls, vm.HallId);
             }
             else
             {
                 vm.Halls = new List<SelectListItem>();
             }
         }
-
-        private static List<SelectListItem> ToSelectList(IEnumerable<LookupItemDto> items, int? selectedId)
-             => items.Select(x => new SelectListItem
-             {
-                 Value = x.Id.ToString(),
-                 Text = x.Title,
-                 Selected = selectedId.HasValue && x.Id == selectedId.Value
-             }).ToList();
-
 
         // GET: /Admin/PricingTemplates/Index
         [HttpGet]
@@ -108,6 +106,7 @@ namespace Web.Controllers.Admin
             return View(CreateViewPath, vm);
         }
 
+        // POST: /Admin/PricingTemplates/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PricingTemplateEditVm vm, string? returnUrl, CancellationToken ct)
@@ -119,23 +118,33 @@ namespace Web.Controllers.Admin
                 return View(CreateViewPath, vm);
             }
 
-            var dto = new PricingTemplateEditDto
+            try
             {
-                Name = vm.Name,
-                IsActive = vm.IsActive,
-                HallId = vm.HallId,
-                RowPrices = vm.RowPrices,
-                CategoryMultipliers = vm.CategoryMultipliers
-            };
+                var dto = new PricingTemplateEditDto
+                {
+                    Name = vm.Name,
+                    IsActive = vm.IsActive,
+                    HallId = vm.HallId,
+                    RowPrices = vm.RowPrices,
+                    CategoryMultipliers = vm.CategoryMultipliers
+                };
 
-            await _service.CreateAsync(dto, ct);
+                await _service.CreateAsync(dto, ct);
 
-            TempData["Success"] = "Шаблон успішно створено.";
+                TempData["Success"] = "Шаблон успішно створено.";
 
-            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return LocalRedirect(returnUrl);
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return LocalRedirect(returnUrl);
 
-            return RedirectToAction(nameof(Index), new { CinemaId = vm.CinemaId, HallId = vm.HallId });
+                return RedirectToAction(nameof(Index), new { CinemaId = vm.CinemaId, HallId = vm.HallId });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await FillEditLookupsAsync(vm, ct);
+                ViewBag.ReturnUrl = returnUrl;
+                return View(CreateViewPath, vm);
+            }
         }
 
         // GET: /Admin/PricingTemplates/Edit/5
@@ -144,8 +153,6 @@ namespace Web.Controllers.Admin
         {
             var dto = await _service.GetForEditAsync(id, ct);
             if (dto == null) return NotFound();
-
-            await ReloadLookupsAsync(ct);
 
             var vm = new PricingTemplateEditVm
             {
@@ -157,8 +164,20 @@ namespace Web.Controllers.Admin
                 CategoryMultipliers = dto.CategoryMultipliers
             };
 
-            ViewBag.ReturnUrl = returnUrl;
+            if (vm.HallId.HasValue)
+            {
+                var allHalls = await _lookups.GetHallsAsync(ct);
+                var currentHall = allHalls.FirstOrDefault(h => h.Id == vm.HallId.Value);
 
+            }
+
+            var cinemas = await _lookups.GetCinemasAsync(ct);
+            vm.Cinemas = ToSelectList(cinemas, null);
+
+            var allPossibleHalls = await _lookups.GetHallsAsync(ct);
+            vm.Halls = ToSelectList(allPossibleHalls, vm.HallId);
+
+            ViewBag.ReturnUrl = returnUrl;
             return View(EditViewPath, vm);
         }
 
@@ -167,13 +186,13 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, PricingTemplateEditVm vm, string? returnUrl, CancellationToken ct)
         {
+            if (id != vm.Id) vm.Id = id;
+
             if (!ModelState.IsValid)
             {
-                await ReloadLookupsAsync(ct);
-                TempData["Error"] = "Перевірте правильність введених даних.";
+                await FillEditLookupsAsync(vm, ct);
 
                 ViewBag.ReturnUrl = returnUrl;
-
                 return View(EditViewPath, vm);
             }
 
@@ -197,19 +216,19 @@ namespace Web.Controllers.Admin
                 {
                     return LocalRedirect(returnUrl);
                 }
-                return RedirectToAction(nameof(Index), new { hallId = vm.HallId });
+
+                return RedirectToAction(nameof(Index), new { CinemaId = vm.CinemaId, HallId = vm.HallId });
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await ReloadLookupsAsync(ct);
-
+                await FillEditLookupsAsync(vm, ct);
                 ViewBag.ReturnUrl = returnUrl;
-
                 return View(EditViewPath, vm);
             }
         }
 
+        // POST: /Admin/PricingTemplates/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id, string? returnUrl, CancellationToken ct)
@@ -225,9 +244,9 @@ namespace Web.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: /Admin/PricingTemplates/ToggleStatus?id=5
+        // POST: /Admin/PricingTemplates/ToggleStatus
         [HttpPost]
-        [ValidateAntiForgeryToken] 
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatus(int id, CancellationToken ct)
         {
             try
@@ -239,12 +258,6 @@ namespace Web.Controllers.Admin
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
-        }
-
-        private async Task ReloadLookupsAsync(CancellationToken ct)
-        {
-            var halls = await _lookups.GetHallsAsync(ct);
-            ViewBag.Halls = halls.Select(h => new SelectListItem(h.Title, h.Id.ToString()));
         }
     }
 }

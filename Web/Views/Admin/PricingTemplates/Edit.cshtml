@@ -1,5 +1,5 @@
-﻿@using System.Text.Json
-@using Web.ViewModels.Admin.PricingTemplates
+﻿@using Web.ViewModels.Admin.PricingTemplates
+@using System.Text.Json
 @model PricingTemplateEditVm
 
 @{
@@ -7,17 +7,20 @@
 
     var returnUrl = ViewBag.ReturnUrl as string;
     var hasLocalReturn = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
-    var backHref = hasLocalReturn ? returnUrl! : Url.Action("Index", new { hallId = Model.HallId })!;
+    var backHref = hasLocalReturn ? returnUrl! : Url.Action("Index", new { cinemaId = Model.CinemaId, hallId = Model.HallId })!;
+
+    var jsonRowPrices = JsonSerializer.Serialize(Model.RowPrices ?? new List<Application.DTOs.Pricing.RowPriceDto>());
+    var jsonCategoryMultipliers = JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Application.DTOs.Pricing.CategoryMultiplierDto>());
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Редагування шаблону: @Model.Name</h1>
+    <h1 class="h3 mb-0">Редагування шаблону</h1>
     <a class="btn btn-outline-secondary btn-sm" href="@backHref">Назад</a>
 </div>
 
 @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
 {
-    <div class="alert alert-danger">@err</div>
+    <div class="alert alert-danger mb-3" role="alert">@err</div>
 }
 
 <form asp-action="Edit"
@@ -25,34 +28,46 @@
       asp-route-returnUrl="@returnUrl"
       method="post"
       id="editForm">
-    @Html.AntiForgeryToken()
 
+    @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="HallId" />
     <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+    <input type="hidden" asp-for="CinemaId" />
+    <input type="hidden" asp-for="HallId" />
 
     <div class="row">
         <div class="col-lg-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Назва шаблону</label>
-                        <input asp-for="Name" class="form-control" />
+                        <label class="form-label fw-bold" asp-for="Name">Назва шаблону</label>
+                        <input asp-for="Name" class="form-control" placeholder="Напр: Стандарт (Вечір)" />
                         <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Зал</label>
-
-                        <select asp-for="HallId"
-                                asp-items="ViewBag.Halls"
+                        <label class="form-label fw-bold">Кінотеатр</label>
+                        <select asp-for="CinemaId"
+                                asp-items="Model.Cinemas"
                                 class="form-select bg-light"
                                 disabled>
-                            <option value="">-- Оберіть зал --</option>
+                            <option value="">— Кінотеатр —</option>
                         </select>
+                    </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Зал</label>
+                        <select asp-for="HallId"
+                                asp-items="Model.Halls"
+                                class="form-select bg-light"
+                                id="hallSelect"
+                                disabled>
+                            <option value="">— Зал —</option>
+                        </select>
                         <div class="form-text text-muted">
-                            <i class="bi bi-lock-fill"></i> Зал не можна змінити.
+                            <i class="bi bi-lock-fill"></i> Зал не можна змінити після створення.
                         </div>
                     </div>
 
@@ -60,6 +75,7 @@
                         <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActive">
                         <label class="form-check-label" for="isActive">Активний шаблон</label>
                     </div>
+
                 </div>
 
                 <div class="card-footer bg-white border-top-0">
@@ -81,19 +97,24 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Базові ціни (ряд)</label>
-                            <div id="rowPricesWrap" class="bg-white border rounded overflow-hidden p-3 bg-light">
-                                <div class="text-center text-muted small">Завантаження...</div>
+                        <div class="col-md-6 border-end">
+                            <label class="form-label fw-bold small">Базові ціни</label>
+
+                            <div id="rowPricesUi" class="bg-white border rounded p-3 bg-light" style="min-height: 200px;">
+                                <div class="text-center text-muted small mt-4">Завантаження даних...</div>
                             </div>
+                            <div id="hiddenRowPrices"></div>
+
                             <span class="text-danger small" asp-validation-for="RowPrices"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold small">Множники (категорія)</label>
-                            <div id="catMultipliersWrap" class="bg-white border rounded overflow-hidden p-3 bg-light">
-                                <div class="text-center text-muted small">Завантаження...</div>
+
+                            <div id="catMultipliersWrap" class="bg-white border rounded overflow-hidden p-3 bg-light" style="min-height: 200px;">
+                                <div class="text-center text-muted small mt-4">Завантаження даних...</div>
                             </div>
+
                             <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
                         </div>
                     </div>
@@ -105,114 +126,230 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script>
         (function () {
-            const rowPricesData = @Html.Raw(JsonSerializer.Serialize(Model.RowPrices ?? new()));
-            const catMultipliersData = @Html.Raw(JsonSerializer.Serialize(Model.CategoryMultipliers ?? new()));
+            const metaUrl = '@Url.Action("PricingMeta", "Sessions")';
 
-            const els = {
-                rowWrap: document.getElementById('rowPricesWrap'),
-                catWrap: document.getElementById('catMultipliersWrap')
-            };
+            const existingRowPrices = @Html.Raw(jsonRowPrices);
+            const existingCatMultipliers = @Html.Raw(jsonCategoryMultipliers);
 
-            function escapeHtml(s) {
-                return String(s ?? '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
+            const currentHallId = '@Model.HallId';
+
+            const rowUi = document.getElementById('rowPricesUi');
+            const hiddenContainer = document.getElementById('hiddenRowPrices');
+            const catWrap = document.getElementById('catMultipliersWrap');
+
+            // State
+            let allRows = [];
+            let pricesMap = new Map();
+            let currentBasePrice = 100;
+
+            function renderRowUi() {
+                if (!rowUi) return;
+
+                let html = `
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-dark" for="basePriceInput">Загальна ціна</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₴</span>
+                            <input type="number" id="basePriceInput" class="form-control fw-bold" value="${currentBasePrice}" min="0" />
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25 my-3">
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small text-dark mb-2">Винятки</label>
+                        <div id="exceptionsContainer" class="d-flex flex-column gap-2 mb-3">
+                `;
+
+                if (pricesMap.size === 0) {
+                    html += `<div class="text-muted small fst-italic ms-1 py-2">Винятків немає. Всі ряди коштують ${currentBasePrice} грн.</div>`;
+                } else {
+                    pricesMap.forEach((price, row) => {
+                        html += `
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary fw-normal" style="min-width: 60px;">Ряд ${row}</span>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">₴</span>
+                                    <input type="number" class="form-control text-end js-ex-price" data-row="${row}" value="${price}" />
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger js-remove-ex" data-row="${row}" title="Видалити виняток">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-2 rounded border border-light">
+                        <label class="form-label small text-muted mb-1">Додати новий виняток:</label>
+                        <div class="d-flex gap-2">
+                            <select id="exceptionRowSelect" class="form-select form-select-sm">
+                                <option value="">-- Оберіть ряд --</option>
+                `;
+
+                allRows.forEach(r => {
+                    if (!pricesMap.has(r)) {
+                        html += `<option value="${r}">Ряд ${r}</option>`;
+                    }
+                });
+
+                html += `
+                            </select>
+                            <button type="button" id="addExceptionBtn" class="btn btn-sm btn-secondary text-nowrap px-3">
+                                <i class="bi bi-plus-lg me-1"></i> Додати
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                rowUi.innerHTML = html;
+
+                generateHiddenInputs();
+
+                attachEvents();
             }
 
-            function renderRowPrices(rows) {
-                if (!els.rowWrap) return;
+            function generateHiddenInputs() {
+                hiddenContainer.innerHTML = '';
+                allRows.forEach((r, index) => {
+                    const price = pricesMap.has(r) ? pricesMap.get(r) : currentBasePrice;
 
-                if (!Array.isArray(rows) || rows.length === 0) {
-                    els.rowWrap.innerHTML = `<div class="text-muted small text-center py-3">Дані відсутні</div>`;
+                    const inputRow = document.createElement('input');
+                    inputRow.type = 'hidden';
+                    inputRow.name = `RowPrices[${index}].Row`;
+                    inputRow.value = r;
+
+                    const inputPrice = document.createElement('input');
+                    inputPrice.type = 'hidden';
+                    inputPrice.name = `RowPrices[${index}].BasePrice`;
+                    inputPrice.value = price;
+
+                    hiddenContainer.appendChild(inputRow);
+                    hiddenContainer.appendChild(inputPrice);
+                });
+            }
+
+            function attachEvents() {
+                document.getElementById('basePriceInput')?.addEventListener('input', function() {
+                    const val = parseInt(this.value);
+                    if (!isNaN(val)) {
+                        currentBasePrice = val;
+                        generateHiddenInputs();
+                        const noExText = document.querySelector('#exceptionsContainer .fst-italic');
+                        if (noExText) noExText.textContent = `Винятків немає. Всі ряди коштують ${currentBasePrice} грн.`;
+                    }
+                });
+
+                document.getElementById('addExceptionBtn')?.addEventListener('click', function() {
+                    const select = document.getElementById('exceptionRowSelect');
+                    const row = parseInt(select.value);
+                    if (row) {
+                        pricesMap.set(row, currentBasePrice);
+                        renderRowUi();
+                    }
+                });
+
+                document.querySelectorAll('.js-remove-ex').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const row = parseInt(this.dataset.row);
+                        pricesMap.delete(row);
+                        renderRowUi();
+                    });
+                });
+
+                document.querySelectorAll('.js-ex-price').forEach(input => {
+                    input.addEventListener('input', function() {
+                        const row = parseInt(this.dataset.row);
+                        const val = parseInt(this.value) || 0;
+                        pricesMap.set(row, val);
+                        generateHiddenInputs();
+                    });
+                });
+            }
+
+            function initRowData(rows) {
+                allRows = rows || [];
+                pricesMap.clear();
+
+                if (existingRowPrices && existingRowPrices.length > 0 && allRows.length > 0) {
+                    const counts = {};
+                    existingRowPrices.forEach(p => {
+                        counts[p.BasePrice] = (counts[p.BasePrice] || 0) + 1;
+                    });
+
+                    const sortedPrices = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                    const modePrice = sortedPrices[0];
+                    currentBasePrice = parseInt(modePrice);
+
+                    existingRowPrices.forEach(p => {
+                        if (p.BasePrice != currentBasePrice && allRows.includes(p.Row)) {
+                            pricesMap.set(p.Row, p.BasePrice);
+                        }
+                    });
+                } else {
+                    currentBasePrice = 100;
+                }
+
+                renderRowUi();
+            }
+
+            function renderCats(apiCategories) {
+                if (!catWrap) return;
+                if (!apiCategories || apiCategories.length === 0) {
+                    catWrap.innerHTML = '<div class="text-muted small text-center py-3">Дані відсутні</div>';
                     return;
                 }
 
-                els.rowWrap.innerHTML = `
-                <table class="table table-sm table-borderless align-middle mb-0">
-                  <thead class="table-light border-bottom">
-                    <tr>
-                      <th class="ps-3 text-secondary small">Ряд</th>
-                      <th class="text-end pe-3 text-secondary small">Ціна</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${rows.map((row, i) => {
-                        const rowNum = (row.Row ?? row.row ?? '');
-                        const price = (row.BasePrice ?? row.basePrice ?? 0);
-
-                        return `
-                        <tr>
-                          <td class="ps-3 small fw-bold text-muted">Ряд ${escapeHtml(rowNum)}</td>
-                          <td class="text-end pe-2 py-1">
-                            <input type="hidden" name="RowPrices[${i}].Row" value="${escapeHtml(rowNum)}" />
-                            <input class="form-control form-control-sm text-end"
-                                   style="max-width: 100px; display: inline-block;"
-                                   type="number" step="1" min="0"
-                                   name="RowPrices[${i}].BasePrice"
-                                   value="${escapeHtml(price)}" required />
-                          </td>
-                        </tr>`;
-                    }).join('')}
-                  </tbody>
-                </table>`;
-            }
-
-            function renderCategoryMultipliers(cats) {
-                if (!els.catWrap) return;
-
-                if (!Array.isArray(cats) || cats.length === 0) {
-                    els.catWrap.innerHTML = `<div class="text-muted small text-center py-3">Дані відсутні</div>`;
-                    return;
+                const savedMults = {};
+                if (existingCatMultipliers) {
+                    existingCatMultipliers.forEach(m => {
+                        savedMults[m.Category] = m.Multiplier;
+                    });
                 }
 
-                const categoryNames = {
-                    0: "Стандарт",
-                    1: "VIP",
-                    2: "Доступне"
-                };
+                catWrap.innerHTML = `
+                 <table class="table table-sm table-borderless align-middle mb-0">
+                   <thead class="table-light border-bottom"><tr><th class="ps-3 small">Категорія</th><th class="text-end pe-3 small">Множник</th></tr></thead>
+                   <tbody>
+                     ${apiCategories.map((c, i) => {
+                       const val = savedMults[c.id] !== undefined ? savedMults[c.id] : 1;
 
-                els.catWrap.innerHTML = `
-                <table class="table table-sm table-borderless align-middle mb-0">
-                  <thead class="table-light border-bottom">
-                    <tr>
-                      <th class="ps-3 text-secondary small">Категорія</th>
-                      <th class="text-end pe-3 text-secondary small">Множ.</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${cats.map((cat, i) => {
-                        const catId = (cat.Category ?? cat.category ?? 0);
-                        const mult = (cat.Multiplier ?? cat.multiplier ?? 1);
-
-                        const catName = categoryNames[catId] || ("Category " + catId);
-
-                        return `
-                        <tr>
-                          <td class="ps-3 small fw-bold text-muted text-truncate" title="${escapeHtml(catName)}">
-                             ${escapeHtml(catName)}
-                          </td>
-                          <td class="text-end pe-2 py-1">
-                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${escapeHtml(catId)}" />
-                            <input class="form-control form-control-sm text-end"
-                                   style="max-width: 100px; display: inline-block;"
-                                   type="number" step="0.1" min="0.1"
-                                   name="CategoryMultipliers[${i}].Multiplier"
-                                   value="${escapeHtml(mult)}" required />
-                          </td>
-                        </tr>`;
-                    }).join('')}
-                  </tbody>
-                </table>`;
+                       return `
+                       <tr><td class="ps-3 small fw-bold text-muted">${c.title}</td>
+                       <td class="text-end pe-2 py-1">
+                         <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${c.id}" />
+                         <input class="form-control form-control-sm text-end" style="width:70px; display:inline;" type="number" step="0.1" name="CategoryMultipliers[${i}].Multiplier" value="${val}" />
+                       </td></tr>
+                     `}).join('')}
+                   </tbody></table>`;
             }
 
-            renderRowPrices(rowPricesData);
-            renderCategoryMultipliers(catMultipliersData);
+            async function loadMeta(hallId) {
+                if (!hallId) return;
+
+                try {
+                    const res = await fetch(metaUrl + '?hallId=' + hallId);
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+
+                    initRowData(data.rows);
+                    renderCats(data.categories);
+
+                } catch (e) {
+                    console.error(e);
+                    if (rowUi) rowUi.innerHTML = '<div class="text-danger small text-center mt-4">Помилка завантаження даних</div>';
+                }
+            }
+
+            if (currentHallId) {
+                loadMeta(currentHallId);
+            }
         })();
     </script>
 }
