@@ -159,7 +159,6 @@ public sealed class MovieImportRepository : IMovieImportRepository
     {
         var old = await _db.MovieDirectors.Where(x => x.MovieId == movieId).ToListAsync(ct);
         _db.MovieDirectors.RemoveRange(old);
-
         var unique = directors
             .Where(d => d.person != null)
             .GroupBy(d => d.person.Id)

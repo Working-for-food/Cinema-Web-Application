@@ -19,6 +19,7 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         var details = await _tmdb.GetMovieDetailsAsync(tmdbId, ct);
         var credits = await _tmdb.GetCreditsAsync(tmdbId, ct);
         var videos = await _tmdb.GetVideosAsync(tmdbId, ct);
+        var releaseDates = await _tmdb.GetReleaseDatesAsync(tmdbId, ct);
 
         var trailer = videos.Results.FirstOrDefault(v =>
             v.Site == "YouTube" && v.Type == "Trailer" && !string.IsNullOrWhiteSpace(v.Key));
@@ -44,8 +45,13 @@ public sealed class ImportMovieFromTmdb : IImportMovieFromTmdb
         movie.Title = TrimTo(details.Title, 200) ?? "(no title)";
         movie.OriginalName = TrimTo(details.OriginalTitle, 200);
         movie.Description = TrimTo(details.Overview, 4000);
-
         movie.ReleaseDate = releaseDate;
+        movie.Duration = details.Runtime;
+        movie.PosterPath = details.PosterPath;
+        movie.BackdropPath = details.BackdropPath;
+        movie.Rating = details.VoteAverage;
+        movie.TrailerUrl = trailerUrl;
+        movie.AgeRating = TmdbAgeRatingHelper.GetAgeRating(releaseDates);
 
         movie.Duration = (details.Runtime is >= 1 and <= 600) ? details.Runtime : null;
 

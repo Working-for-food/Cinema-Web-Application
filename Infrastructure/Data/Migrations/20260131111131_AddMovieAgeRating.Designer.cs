@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Data.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    partial class CinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260131111131_AddMovieAgeRating")]
+    partial class AddMovieAgeRating
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,9 +36,6 @@ namespace Infrastructure.Data.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -194,20 +194,12 @@ namespace Infrastructure.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<int?>("TmdbId")
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .IsUnique();
-
-                    b.HasIndex("TmdbId")
-                        .IsUnique()
-                        .HasFilter("[TmdbId] IS NOT NULL");
 
                     b.ToTable("Genres");
                 });
@@ -242,10 +234,6 @@ namespace Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BackdropPath")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<short?>("AgeRating")
                         .HasColumnType("smallint");
 
@@ -253,13 +241,11 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<int?>("Duration")
+                    b.Property<int?>("DirectorId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                    b.Property<int?>("Duration")
+                        .HasColumnType("int");
 
                     b.Property<string>("Language")
                         .HasMaxLength(50)
@@ -271,6 +257,11 @@ namespace Infrastructure.Data.Migrations
                     b.Property<string>("PosterPath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ProductionCountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("nchar(2)")
+                        .IsFixedLength();
 
                     b.Property<decimal?>("Rating")
                         .HasPrecision(4, 1)
@@ -292,9 +283,9 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TmdbId")
-                        .IsUnique()
-                        .HasFilter("[TmdbId] IS NOT NULL");
+                    b.HasIndex("DirectorId");
+
+                    b.HasIndex("ProductionCountryCode");
 
                     b.ToTable("Movies");
                 });
@@ -316,6 +307,9 @@ namespace Infrastructure.Data.Migrations
                     b.HasKey("MovieId", "ActorId");
 
                     b.HasIndex("ActorId");
+
+                    b.HasIndex("MovieId", "ActorId")
+                        .IsUnique();
 
                     b.HasIndex("MovieId", "CustOrder")
                         .IsUnique();
@@ -361,6 +355,9 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId", "BillingOrder")
                         .IsUnique();
 
+                    b.HasIndex("MovieId", "DirectorId")
+                        .IsUnique();
+
                     b.ToTable("MovieDirectors");
                 });
 
@@ -378,6 +375,9 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("MovieId");
 
+                    b.HasIndex("MovieId", "GenreId")
+                        .IsUnique();
+
                     b.ToTable("MovieGenres");
                 });
 
@@ -389,10 +389,6 @@ namespace Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Bio")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
                     b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date");
 
@@ -402,15 +398,15 @@ namespace Infrastructure.Data.Migrations
                         .IsFixedLength();
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
@@ -422,78 +418,11 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(700)
                         .HasColumnType("nvarchar(700)");
 
-                    b.Property<int?>("TmdbId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("TmdbLastSyncAt")
-                        .HasColumnType("datetimeoffset");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CountryCode");
 
-                    b.HasIndex("TmdbId")
-                        .IsUnique()
-                        .HasFilter("[TmdbId] IS NOT NULL");
-
                     b.ToTable("People");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.PricingTemplate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("HallId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PricingTemplates");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateCategoryMultiplier", b =>
-                {
-                    b.Property<int>("PricingTemplateId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Multiplier")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.HasKey("PricingTemplateId", "Category");
-
-                    b.ToTable("PricingTemplateCategoryMultipliers");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateRowPrice", b =>
-                {
-                    b.Property<int>("PricingTemplateId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Row")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("BasePrice")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.HasKey("PricingTemplateId", "Row");
-
-                    b.ToTable("PricingTemplateRowPrices");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
@@ -567,40 +496,6 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("MovieId");
 
                     b.ToTable("Sessions");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.SessionCategoryMultiplier", b =>
-                {
-                    b.Property<int>("SessionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Multiplier")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.HasKey("SessionId", "Category");
-
-                    b.ToTable("SessionCategoryMultipliers");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.SessionRowPrice", b =>
-                {
-                    b.Property<int>("SessionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RowNumber")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("BasePrice")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.HasKey("SessionId", "RowNumber");
-
-                    b.ToTable("SessionRowPrices");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.SessionSeat", b =>
@@ -799,6 +694,23 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Cinema");
                 });
 
+            modelBuilder.Entity("Infrastructure.Entities.Movie", b =>
+                {
+                    b.HasOne("Infrastructure.Entities.Person", "Director")
+                        .WithMany("DirectedMoviesMain")
+                        .HasForeignKey("DirectorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Infrastructure.Entities.Country", "ProductionCountry")
+                        .WithMany("ProducedMovies")
+                        .HasForeignKey("ProductionCountryCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Director");
+
+                    b.Navigation("ProductionCountry");
+                });
+
             modelBuilder.Entity("Infrastructure.Entities.MovieActor", b =>
                 {
                     b.HasOne("Infrastructure.Entities.Person", "Actor")
@@ -885,28 +797,6 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Country");
                 });
 
-            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateCategoryMultiplier", b =>
-                {
-                    b.HasOne("Infrastructure.Entities.PricingTemplate", "PricingTemplate")
-                        .WithMany()
-                        .HasForeignKey("PricingTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PricingTemplate");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.PricingTemplateRowPrice", b =>
-                {
-                    b.HasOne("Infrastructure.Entities.PricingTemplate", "PricingTemplate")
-                        .WithMany()
-                        .HasForeignKey("PricingTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PricingTemplate");
-                });
-
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
                 {
                     b.HasOne("Infrastructure.Entities.Hall", "Hall")
@@ -935,28 +825,6 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Hall");
 
                     b.Navigation("Movie");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.SessionCategoryMultiplier", b =>
-                {
-                    b.HasOne("Infrastructure.Entities.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.SessionRowPrice", b =>
-                {
-                    b.HasOne("Infrastructure.Entities.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.SessionSeat", b =>
@@ -1051,6 +919,8 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("MovieCountries");
 
                     b.Navigation("People");
+
+                    b.Navigation("ProducedMovies");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Genre", b =>
@@ -1080,6 +950,8 @@ namespace Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Infrastructure.Entities.Person", b =>
                 {
+                    b.Navigation("DirectedMoviesMain");
+
                     b.Navigation("MovieActors");
 
                     b.Navigation("MovieDirectors");

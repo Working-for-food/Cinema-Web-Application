@@ -80,6 +80,7 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
             e.Property(x => x.BackdropPath).HasMaxLength(200);
             e.Property(x => x.Language).HasMaxLength(50);
             e.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
+            e.Property(x => x.AgeRating).HasColumnType("smallint");
         });
 
         // Genres
