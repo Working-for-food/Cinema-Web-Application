@@ -3,35 +3,48 @@
 <link rel="stylesheet" href="~/css/afisha.css" />
 
 <div class="afisha-page">
-    <h1 class="afisha-title">Афіша</h1>
+    <div class="afisha-bg" aria-hidden="true"></div>
 
-    <!-- Tabs -->
-    <div class="afisha-tabs" role="tablist" aria-label="Афіша вкладки">
-        <button type="button"
-                class="afisha-tab-btn is-active"
-                role="tab"
-                aria-selected="true"
-                aria-controls="tab-now"
-                id="tabBtnNow"
-                data-tab="now">
-            У ПРОКАТІ
-        </button>
+    <div class="afisha-header">
+        <h1 class="afisha-title">Афіша</h1>
 
-        <button type="button"
-                class="afisha-tab-btn"
-                role="tab"
-                aria-selected="false"
-                aria-controls="tab-soon"
-                id="tabBtnSoon"
-                data-tab="soon">
-            СКОРО БУДЕ
-        </button>
+        <!-- Tabs -->
+        <div class="afisha-tabs" role="tablist" aria-label="Афіша вкладки">
+            <button type="button"
+                    class="afisha-tab-btn is-active"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="tab-now"
+                    id="tabBtnNow"
+                    data-tab="now">
+                У ПРОКАТІ
+            </button>
+
+            <button type="button"
+                    class="afisha-tab-btn"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="tab-soon"
+                    id="tabBtnSoon"
+                    data-tab="soon">
+                СКОРО БУДЕ
+            </button>
+        </div>
     </div>
+    @* end .afisha-header *@
 
     <!-- Tab: Now showing -->
-    <section id="tab-now" class="afisha-tab-panel is-active" role="tabpanel" aria-labelledby="tabBtnNow">
+    <section id="tab-now"
+             class="afisha-tab-panel is-active"
+             role="tabpanel"
+             aria-labelledby="tabBtnNow">
+
         <div class="afisha-carousel" data-carousel="now">
-            <button type="button" class="afisha-car-btn prev" aria-label="Попередній слайд">‹</button>
+            <button type="button"
+                    class="afisha-car-btn prev"
+                    aria-label="Попередній слайд">
+                ‹
+            </button>
 
             <div class="afisha-car-stage">
                 <div class="afisha-car-track">
@@ -42,7 +55,8 @@
                         <a asp-route="MovieDetails"
                            asp-route-id="@m.Id"
                            class="afisha-car-item movie-card-link"
-                           data-index="@i">
+                           data-index="@i"
+                           aria-label="@m.Title">
 
                             <div class="movie-poster-wrap">
                                 @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
@@ -57,23 +71,34 @@
                                 <img class="afisha-poster"
                                      src="@m.PosterUrl"
                                      alt="@m.Title" />
-                            </div>
 
-                            <div class="movie-name">@m.Title</div>
-                            <div class="btn-details">Показати деталі</div>
+                                <div class="poster-title">@m.Title</div>
+                            </div>
                         </a>
                     }
                 </div>
             </div>
 
-            <button type="button" class="afisha-car-btn next" aria-label="Наступний слайд">›</button>
+            <button type="button"
+                    class="afisha-car-btn next"
+                    aria-label="Наступний слайд">
+                ›
+            </button>
         </div>
     </section>
 
     <!-- Tab: Coming soon -->
-    <section id="tab-soon" class="afisha-tab-panel" role="tabpanel" aria-labelledby="tabBtnSoon">
+    <section id="tab-soon"
+             class="afisha-tab-panel"
+             role="tabpanel"
+             aria-labelledby="tabBtnSoon">
+
         <div class="afisha-carousel" data-carousel="soon">
-            <button type="button" class="afisha-car-btn prev" aria-label="Попередній слайд">‹</button>
+            <button type="button"
+                    class="afisha-car-btn prev"
+                    aria-label="Попередній слайд">
+                ‹
+            </button>
 
             <div class="afisha-car-stage">
                 <div class="afisha-car-track">
@@ -84,7 +109,8 @@
                         <a asp-route="MovieDetails"
                            asp-route-id="@m.Id"
                            class="afisha-car-item movie-card-link movie-card-soon"
-                           data-index="@i">
+                           data-index="@i"
+                           aria-label="@m.Title">
 
                             <div class="movie-poster-wrap">
                                 <div class="soon-badge">СКОРО</div>
@@ -101,16 +127,19 @@
                                 <img class="afisha-poster"
                                      src="@m.PosterUrl"
                                      alt="@m.Title" />
-                            </div>
 
-                            <div class="movie-name">@m.Title</div>
-                            <div class="btn-details">Показати деталі</div>
+                                <div class="poster-title">@m.Title</div>
+                            </div>
                         </a>
                     }
                 </div>
             </div>
 
-            <button type="button" class="afisha-car-btn next" aria-label="Наступний слайд">›</button>
+            <button type="button"
+                    class="afisha-car-btn next"
+                    aria-label="Наступний слайд">
+                ›
+            </button>
         </div>
     </section>
 </div>
