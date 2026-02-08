@@ -15,10 +15,8 @@
 
     var now = DateTime.Now;
     var today = DateTime.Today;
-
     var weekStart = today.AddDays(-((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1));
     var weekEnd = weekStart.AddDays(6);
-
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 
     string PosterUrl(string? posterPath)
@@ -38,13 +36,11 @@
             ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant(),
             ["Page"] = "1"
         };
-
         if (Model.CinemaId.HasValue) dict["CinemaId"] = Model.CinemaId.Value.ToString();
         if (Model.HallId.HasValue) dict["HallId"] = Model.HallId.Value.ToString();
         if (Model.MovieId.HasValue) dict["MovieId"] = Model.MovieId.Value.ToString();
         if (!string.IsNullOrWhiteSpace(Model.MovieTitle)) dict["MovieTitle"] = Model.MovieTitle!;
         if (!string.IsNullOrWhiteSpace(Model.Sort)) dict["Sort"] = Model.Sort!;
-
         return dict;
     }
 
@@ -56,7 +52,6 @@
             ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant(),
             ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant()
         };
-
         if (Model.From.HasValue) dict["From"] = Model.From.Value.ToString("yyyy-MM-dd");
         if (Model.To.HasValue) dict["To"] = Model.To.Value.ToString("yyyy-MM-dd");
         if (Model.CinemaId.HasValue) dict["CinemaId"] = Model.CinemaId.Value.ToString();
@@ -64,172 +59,105 @@
         if (Model.MovieId.HasValue) dict["MovieId"] = Model.MovieId.Value.ToString();
         if (!string.IsNullOrWhiteSpace(Model.MovieTitle)) dict["MovieTitle"] = Model.MovieTitle!;
         if (!string.IsNullOrWhiteSpace(Model.Sort)) dict["Sort"] = Model.Sort!;
-
         return dict;
     }
 
     var isHallDisabled = !Model.CinemaId.HasValue;
-    var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Спершу оберіть кінотеатр —";
+    var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Оберіть кінотеатр —";
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container-fluid px-lg-5">
 
-        <h1 class="section-title text-center mb-5">Сеанси</h1>
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+            <h1 class="section-title mb-0">СЕАНСИ</h1>
+            <a asp-action="Create" class="btn btn-maroon px-4 shadow-sm">
+                <i class="fa-solid fa-plus me-2"></i>СТВОРЯТИ НОВИЙ
+            </a>
+        </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="alert alert-success mb-3">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4">@ok</div>
         }
         @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
         {
-            <div class="alert alert-danger mb-3">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4">@err</div>
         }
 
-        <div class="card shadow-sm col-12 mb-3">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-filter me-2"></i>
-                    Фільтри
-                </h5>
-            </div>
-
+        <div class="card shadow-sm border-0 mb-4 br-12">
             <div class="card-body p-4">
                 <form method="get" asp-action="Index" class="row g-3 align-items-end" id="filtersForm">
                     <input type="hidden" name="Page" value="1" />
 
-                    <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Кінотеатр
-                        </label>
-                        <select class="form-select" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Кінотеатр</label>
+                        <select class="form-select border-2 br-8 shadow-none" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
                             <option value="">Усі кінотеатри</option>
                         </select>
                     </div>
 
-                    <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-chair me-1"></i>
-                            Зал
-                        </label>
-                        <select class="form-select"
-                                asp-for="HallId"
-                                asp-items="Model.Halls"
-                                id="hallSelect"
-                                disabled="@isHallDisabled"
-                                aria-disabled="@isHallDisabled">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Зал</label>
+                        <select class="form-select border-2 br-8 shadow-none" asp-for="HallId" asp-items="Model.Halls" id="hallSelect" disabled="@isHallDisabled">
                             <option value="">@hallPlaceholder</option>
                         </select>
                     </div>
 
-                    <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-arrow-down-a-z me-1"></i>
-                            Сортування
-                        </label>
-                        <select class="form-select" asp-for="Sort" asp-items="Model.SortOptions"></select>
-                    </div>
-
-                    <div class="col-12 col-lg-3">
-                        <div class="d-flex gap-2 justify-content-lg-end">
-                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">ЗАСТОСУВАТИ</button>
-                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">СКИНУТИ</a>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-lg-6">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-magnifying-glass me-1"></i>
-                            Фільм
-                        </label>
-
-                        <input class="form-control"
-                               list="movieList"
-                               id="movieTitleInput"
-                               asp-for="MovieTitle"
-                               placeholder="Почніть вводити назву..." />
-
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Фільм</label>
+                        <input class="form-control border-2 br-8 shadow-none" list="movieList" id="movieTitleInput" asp-for="MovieTitle" placeholder="Пошук фільму..." />
                         <datalist id="movieList">
-                            @foreach (var m in Model.Movies)
-                            {
-                                <option value="@m.Text" data-id="@m.Value"></option>
-                            }
+                            @foreach (var m in Model.Movies) { <option value="@m.Text" data-id="@m.Value"></option> }
                         </datalist>
-
                         <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
                     </div>
 
-                    <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">З</label>
-                        <input class="form-control" type="date" asp-for="From" value="@FormatDate(Model.From)" />
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Сортування</label>
+                        <select class="form-select border-2 br-8 shadow-none" asp-for="Sort" asp-items="Model.SortOptions"></select>
                     </div>
 
-                    <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">До</label>
-                        <input class="form-control" type="date" asp-for="To" value="@FormatDate(Model.To)" />
-                    </div>
-
-                    <div class="col-12">
-                        <div class="d-flex flex-wrap gap-3 align-items-center">
-                            <div class="form-check">
-                                <input class="form-check-input" asp-for="IncludeCancelled" />
-                                <label class="form-check-label" asp-for="IncludeCancelled">Скасовані</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" asp-for="IncludeFinished" />
-                                <label class="form-check-label" asp-for="IncludeFinished">Завершені</label>
-                            </div>
-
-                            <div class="ms-auto d-flex flex-wrap gap-2">
-                                <a class="btn btn-outline-secondary"
-                                   asp-action="Index"
-                                   asp-all-route-data="RouteWithDates(today, today)">
-                                    СЬОГОДНІ
-                                </a>
-                                <a class="btn btn-outline-secondary"
-                                   asp-action="Index"
-                                   asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">
-                                    ЗАВТРА
-                                </a>
-                                <a class="btn btn-outline-secondary"
-                                   asp-action="Index"
-                                   asp-all-route-data="RouteWithDates(weekStart, weekEnd)">
-                                    ЦЕЙ ТИЖДЕНЬ
-                                </a>
-                            </div>
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Період</label>
+                        <div class="input-group">
+                            <input class="form-control border-2 br-left-8 shadow-none" type="date" asp-for="From" value="@FormatDate(Model.From)" />
+                            <span class="input-group-text bg-light border-2 border-start-0 border-end-0 text-muted small">до</span>
+                            <input class="form-control border-2 br-right-8 shadow-none" type="date" asp-for="To" value="@FormatDate(Model.To)" />
                         </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 d-flex align-items-center gap-4 py-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="IncludeCancelled">
+                            <label class="form-check-label small fw-bold text-muted text-uppercase" asp-for="IncludeCancelled">Скасовані</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="IncludeFinished">
+                            <label class="form-check-label small fw-bold text-muted text-uppercase" asp-for="IncludeFinished">Завершені</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 text-lg-end">
+                        <div class="btn-group shadow-sm br-8 overflow-hidden me-2">
+                            <a class="btn btn-light btn-sm border fw-bold text-muted px-3" asp-action="Index" asp-all-route-data="RouteWithDates(today, today)">СЬОГОДНІ</a>
+                            <a class="btn btn-light btn-sm border fw-bold text-muted px-3" asp-action="Index" asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">ЗАВТРА</a>
+                        </div>
+                        <button type="submit" class="btn btn-dark px-4 br-8">ЗАСТОСУВАТИ</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div class="col-12 mb-3">
-            <div class="d-flex justify-content-lg-end">
-                <a asp-action="Create" class="btn btn-maroon">
-                    <i class="fa-solid fa-plus me-1"></i>
-                    СТВОРИТИ НОВИЙ
-                </a>
-            </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-muted small fw-bold text-uppercase">Знайдено результатів: <span class="text-dark">@Model.TotalCount</span></div>
         </div>
-
-        @if (Model.TotalCount > 0)
-        {
-            <div class="text-muted mb-2">Знайдено: @Model.TotalCount</div>
-        }
 
         @if (Model.Sessions == null || Model.Sessions.Count == 0)
         {
-            <div class="card shadow-sm col-lg-8 mx-auto">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fa-solid fa-circle-info me-2"></i>
-                        Немає результатів
-                    </h5>
-                </div>
-                <div class="card-body p-4 text-center">
-                    <p class="mb-0">Сеансів не знайдено.</p>
-                </div>
+            <div class="text-center py-5 bg-white br-12 shadow-sm">
+                <i class="fa-solid fa-calendar-xmark fa-3x text-light mb-3"></i>
+                <p class="text-muted mb-0">На жаль, сеансів не знайдено за вказаними фільтрами.</p>
             </div>
         }
         else
@@ -241,201 +169,76 @@
                     var isFinished = !s.IsCancelled && isOver;
                     var posterUrl = PosterUrl(s.PosterPath);
 
-                    <div class="col-12 col-lg-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body p-4">
-
-                                <div class="row align-items-start g-4">
-                                    <div class="col-auto">
-                                        <div class="card overflow-hidden" style="width:150px;">
-                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
-                                                @if (!string.IsNullOrWhiteSpace(posterUrl))
-                                                {
-                                                    <img src="@posterUrl"
-                                                         alt="Постер"
-                                                         class="w-100 h-100"
-                                                         style="object-fit:cover;"
-                                                         loading="lazy" />
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">Постер</span>
-                                                }
-                                            </div>
-                                        </div>
+                    <div class="col-12 col-xl-6">
+                        <div class="card shadow-sm border-0 br-12 overflow-hidden h-100 session-card">
+                            <div class="row g-0 h-100">
+                                <div class="col-auto">
+                                    <div class="session-poster-wrap">
+                                        @if (!string.IsNullOrWhiteSpace(posterUrl))
+                                        {
+                                            <img src="@posterUrl" alt="Постер" class="h-100 w-100 object-fit-cover" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="h-100 w-100 d-flex align-items-center justify-content-center bg-light text-muted small">No poster</div>
+                                        }
                                     </div>
-
-                                    <div class="col">
-                                        <div class="mb-2">
-                                            <div class="text-muted small">
-                                                <i class="fa-solid fa-clapperboard me-1"></i>
-                                                Фільм
-                                            </div>
-                                            <div class="fw-semibold fs-4">
-                                                @(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)
-                                            </div>
+                                </div>
+                                <div class="col">
+                                    <div class="card-body p-4 d-flex flex-column h-100">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="fw-bold mb-0 text-dark">@(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)</h5>
+                                            <span class="badge @(s.IsCancelled ? "text-bg-danger" : isFinished ? "text-bg-secondary" : "badge-active") br-4 px-2 py-1">
+                                                @(s.IsCancelled ? "СКАСОВАНО" : isFinished ? "ЗАВЕРШЕНО" : "АКТИВНИЙ")
+                                            </span>
                                         </div>
 
-                                        <div class="mb-2">
-                                            <div class="text-muted small">
-                                                <i class="fa-solid fa-location-dot me-1"></i>
-                                                Кінотеатр / зал
-                                            </div>
-                                            <div class="fw-semibold">
-                                                @if (!string.IsNullOrWhiteSpace(s.CinemaName))
-                                                {
-                                                    @($"{s.CinemaName} — {s.HallName}")
-                                                }
-                                                else
-                                                {
-                                                    @(string.IsNullOrWhiteSpace(s.HallName) ? $"#{s.HallId}" : s.HallName)
-                                                }
-                                            </div>
+                                        <div class="small text-muted mb-3">
+                                            <span class="me-3"><i class="fa-solid fa-location-dot me-1 text-primary"></i>@s.CinemaName — @s.HallName</span>
+                                            <span class="badge bg-light text-dark border fw-normal">@PtLabel(s.PresentationType)</span>
                                         </div>
 
-                                        <div class="mb-3">
-                                            <div class="text-muted small">
-                                                <i class="fa-solid fa-clock me-1"></i>
-                                                Час
+                                        <div class="mt-auto pt-3 border-top">
+                                            <div class="row align-items-center">
+                                                <div class="col">
+                                                    <div class="small text-muted text-uppercase fw-bold x-small">Час проведення</div>
+                                                    <div class="fw-bold text-dark">
+                                                        <span class="text-primary">@s.StartTime.ToString("HH:mm")</span> 
+                                                        <span class="text-muted mx-1">—</span> 
+                                                        @s.EndTime.ToString("HH:mm")
+                                                        <span class="ms-2 small fw-normal text-muted">(@s.StartTime.ToString("dd.MM"))</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-auto d-flex gap-1">
+                                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn btn-icon-sm border" title="Деталі"><i class="fa-solid fa-eye"></i></a>
+                                                    
+                                                    @{ var disabledBtn = s.IsCancelled || isOver; }
+                                                    
+                                                    <a asp-action="Pricing" asp-route-id="@s.Id" class="btn btn-icon-sm border @(disabledBtn ? "disabled bg-light opacity-50" : "text-primary")" title="Ціни"><i class="fa-solid fa-tags"></i></a>
+                                                    
+                                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-icon-sm border @(disabledBtn ? "disabled bg-light opacity-50" : "")" title="Редагувати"><i class="fa-solid fa-pen-to-square"></i></a>
+
+                                                    @if (!s.IsCancelled)
+                                                    {
+                                                        <form asp-action="Cancel" asp-route-id="@s.Id" method="post" class="d-inline js-cancel-form" data-session-id="@s.Id" data-movie="@s.MovieTitle" data-start="@s.StartTime.ToString("dd.MM HH:mm")">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                            <button class="btn btn-icon-sm border text-danger @(isOver ? "disabled opacity-50" : "")" type="submit" title="Скасувати"><i class="fa-solid fa-ban"></i></button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <form asp-action="Restore" asp-route-id="@s.Id" method="post" class="d-inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                            <button class="btn btn-icon-sm border text-success @(isOver ? "disabled opacity-50" : "")" type="submit" title="Відновити"><i class="fa-solid fa-rotate-left"></i></button>
+                                                        </form>
+                                                    }
+                                                </div>
                                             </div>
-                                            <div class="fw-semibold">
-                                                @s.StartTime.ToString("dd.MM.yyyy HH:mm") — @s.EndTime.ToString("dd.MM.yyyy HH:mm")
-                                            </div>
-                                        </div>
-
-                                        <div class="d-flex flex-wrap gap-2 mb-3">
-                                            <span class="badge text-bg-secondary">@PtLabel(s.PresentationType)</span>
-
-                                            @if (s.IsCancelled)
-                                            {
-                                                <span class="badge text-bg-danger">Скасовано</span>
-                                            }
-                                            else if (isFinished)
-                                            {
-                                                <span class="badge text-bg-dark">Завершено</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge text-bg-success">Активний</span>
-                                            }
-                                        </div>
-
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <a asp-action="Details"
-                                               asp-route-id="@s.Id"
-                                               class="btn btn-maroon"
-                                               title="Деталі"
-                                               aria-label="Деталі">
-                                                <i class="fa-solid fa-circle-info"></i>
-                                            </a>
-
-                                            @if (s.IsCancelled || isOver)
-                                            {
-                                                <button class="btn btn-secondary"
-                                                        type="button"
-                                                        disabled
-                                                        title="Не можна змінювати ціни для скасованого або завершеного сеансу"
-                                                        aria-label="Ціни недоступні">
-                                                    <i class="fa-solid fa-tags"></i>
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <a asp-action="Pricing"
-                                                   asp-route-id="@s.Id"
-                                                   class="btn btn-secondary"
-                                                   title="Ціни"
-                                                   aria-label="Ціни">
-                                                    <i class="fa-solid fa-tags"></i>
-                                                </a>
-                                            }
-
-                                            @if (s.IsCancelled || isOver)
-                                            {
-                                                <button class="btn btn-secondary"
-                                                        type="button"
-                                                        disabled
-                                                        title="Не можна редагувати скасований або завершений сеанс"
-                                                        aria-label="Редагувати недоступно">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <a asp-action="Edit"
-                                                   asp-route-id="@s.Id"
-                                                   class="btn btn-secondary"
-                                                   title="Редагувати"
-                                                   aria-label="Редагувати">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
-                                                </a>
-                                            }
-
-                                            @if (!s.IsCancelled)
-                                            {
-                                                if (isOver)
-                                                {
-                                                    <button class="btn btn-maroon"
-                                                            type="button"
-                                                            disabled
-                                                            title="Не можна скасувати завершений сеанс"
-                                                            aria-label="Скасувати недоступно">
-                                                        <i class="fa-solid fa-ban"></i>
-                                                    </button>
-                                                }
-                                                else
-                                                {
-                                                    <form asp-action="Cancel"
-                                                          asp-route-id="@s.Id"
-                                                          method="post"
-                                                          class="d-inline js-cancel-form"
-                                                          data-session-id="@s.Id"
-                                                          data-movie="@(s.MovieTitle ?? "")"
-                                                          data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
-                                                        @Html.AntiForgeryToken()
-                                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                        <button class="btn btn-maroon"
-                                                                type="submit"
-                                                                title="Скасувати"
-                                                                aria-label="Скасувати">
-                                                            <i class="fa-solid fa-ban"></i>
-                                                        </button>
-                                                    </form>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (isOver)
-                                                {
-                                                    <button class="btn btn-maroon"
-                                                            type="button"
-                                                            disabled
-                                                            title="Не можна відновити завершений сеанс"
-                                                            aria-label="Відновити недоступно">
-                                                        <i class="fa-solid fa-rotate-left"></i>
-                                                    </button>
-                                                }
-                                                else
-                                                {
-                                                    <form asp-action="Restore"
-                                                          asp-route-id="@s.Id"
-                                                          method="post"
-                                                          class="d-inline">
-                                                        @Html.AntiForgeryToken()
-                                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                        <button class="btn btn-maroon"
-                                                                type="submit"
-                                                                title="Відновити"
-                                                                aria-label="Відновити">
-                                                            <i class="fa-solid fa-rotate-left"></i>
-                                                        </button>
-                                                    </form>
-                                                }
-                                            }
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -445,25 +248,64 @@
 
         @if (Model.TotalPages > 1)
         {
-            <nav aria-label="Пагінація сеансів" class="mt-3">
-                <ul class="pagination justify-content-center">
+            <nav class="mt-5">
+                <ul class="pagination pagination-sm justify-content-center border-0">
                     <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-all-route-data="RouteForPage(Model.Page - 1)">Назад</a>
+                        <a class="page-link border-0 shadow-sm mx-1 rounded-2" asp-action="Index" asp-all-route-data="RouteForPage(Model.Page - 1)">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
                     </li>
-
                     <li class="page-item disabled">
-                        <span class="page-link">Сторінка @Model.Page з @Model.TotalPages</span>
+                        <span class="page-link border-0 bg-transparent text-dark fw-bold">@Model.Page / @Model.TotalPages</span>
                     </li>
-
                     <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-all-route-data="RouteForPage(Model.Page + 1)">Вперед</a>
+                        <a class="page-link border-0 shadow-sm mx-1 rounded-2" asp-action="Index" asp-all-route-data="RouteForPage(Model.Page + 1)">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
                     </li>
                 </ul>
             </nav>
         }
-
     </div>
 </section>
+
+<style>
+    .br-12 { border-radius: 12px !important; }
+    .br-8 { border-radius: 8px !important; }
+    .br-4 { border-radius: 4px !important; }
+    .br-left-8 { border-radius: 8px 0 0 8px !important; }
+    .br-right-8 { border-radius: 0 8px 8px 0 !important; }
+    .x-small { font-size: 0.7rem; letter-spacing: 0.5px; }
+    
+    .badge-active { background-color: #EEF2FF; color: #6366F1; }
+    
+    .session-poster-wrap {
+        width: 120px;
+        height: 100%;
+        min-height: 180px;
+        background: #f8f9fa;
+    }
+    
+    .btn-icon-sm {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: white;
+        color: #64748B;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-icon-sm:hover:not(.disabled) { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
+    
+    .session-card { transition: transform 0.2s, shadow 0.2s; }
+    .session-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
+
+    .form-switch .form-check-input { width: 2.5em; height: 1.25em; cursor: pointer; }
+</style>
 
 @section Scripts {
     <script>
@@ -500,12 +342,7 @@
               const movie = (formEl.dataset.movie || '').trim();
               const start = (formEl.dataset.start || '').trim();
 
-              const msg =
-                `Скасувати сеанс №${id}` +
-                (movie ? `\nФільм: ${movie}` : '') +
-                (start ? `\nПочаток: ${start}` : '') +
-                `\n\nПідтвердити дію?`;
-
+              const msg = `Скасувати сеанс №${id}${movie ? '\nФільм: ' + movie : ''}${start ? '\nПочаток: ' + start : ''}\n\nВи впевнені?`;
               if (!confirm(msg)) e.preventDefault();
             });
           });
