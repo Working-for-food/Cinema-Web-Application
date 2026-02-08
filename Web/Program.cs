@@ -57,6 +57,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 builder.Services.AddTransient<Application.Interfaces.IEmailService, Application.Services.EmailService>();
 
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("Cloudinary"));
+
 builder.Services.AddSingleton(provider =>
 {
     var config = provider.GetRequiredService<IOptions<CloudinarySettings>>().Value;

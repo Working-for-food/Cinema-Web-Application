@@ -5,19 +5,25 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title">Створити кінотеатр</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Додати кінотеатр</h1>
+            <p class="text-muted small text-uppercase fw-semibold">Заповніть інформацію для реєстрації нового закладу</p>
+        </div>
 
-        <div class="card shadow-sm col-lg-8 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-plus me-2"></i>
-                    Реєстрація кінотеатру
-                </h5>
-            </div>
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
+        }
 
-            <div class="card-body p-4">
+        <div class="card shadow-sm border-0 col-lg-8 mx-auto br-12 overflow-hidden">
+            
+            <div class="card-body p-4 p-lg-5">
                 <form asp-area="Admin"
                       asp-controller="Cinemas"
                       asp-action="Create"
@@ -26,74 +32,68 @@
 
                     @Html.AntiForgeryToken()
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
 
                     <input asp-for="ImageUrl" type="hidden" />
 
-                    <div class="mb-3">
-                        <label asp-for="Name" class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Назва кінотеатру
+                    <div class="mb-4">
+                        <label asp-for="Name" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-film me-1"></i> Назва кінотеатру
                         </label>
-                        <input asp-for="Name" class="form-control" placeholder="Введіть назву кінотеатру" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <input asp-for="Name" class="form-control form-control-lg shadow-none border-2 br-8" placeholder="Введіть повну назву..." />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="City" class="form-label text-muted">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            Місто
-                        </label>
-                        <input asp-for="City" class="form-control" placeholder="наприклад, Київ" />
-                        <span asp-validation-for="City" class="text-danger"></span>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="City" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-location-dot me-1"></i> Місто
+                            </label>
+                            <input asp-for="City" class="form-control shadow-none border-2 br-8" placeholder="наприклад, Київ" />
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Address" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-map-location-dot me-1"></i> Адреса
+                            </label>
+                            <input asp-for="Address" class="form-control shadow-none border-2 br-8" placeholder="вул. Кінозіркова, 123" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Address" class="form-label text-muted">
-                            <i class="fa-solid fa-map-location-dot me-1"></i>
-                            Адреса
+                    <div class="mb-4">
+                        <label asp-for="Image" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-image me-1"></i> Постер або фото закладу
                         </label>
-                        <input asp-for="Address" class="form-control" placeholder="вул. Кінозіркова, 123" />
-                        <span asp-validation-for="Address" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Image" class="form-label text-muted">
-                            <i class="fa-solid fa-image me-1"></i>
-                            Постер кінотеатру
-                        </label>
-                        <input asp-for="Image" type="file" class="form-control" accept="image/*" />
-                        <span asp-validation-for="Image" class="text-danger"></span>
+                        <input asp-for="Image" type="file" class="form-control shadow-none border-2 br-8" accept="image/*" />
+                        <div class="form-text x-small text-muted mt-2">
+                             <i class="fa-solid fa-circle-info me-1"></i> Використовуйте якісні фото формату JPEG або PNG.
+                        </div>
+                        <span asp-validation-for="Image" class="text-danger small"></span>
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
                     {
-                        <div class="mb-3">
-                            <img src="@Model.ImageUrl"
-                                 class="img-fluid rounded"
-                                 style="max-height:180px;object-fit:cover;" />
+                        <div class="mb-4 p-3 bg-light br-12 border shadow-none" style="max-width: fit-content;">
+                             <div class="text-muted small fw-bold text-uppercase mb-2">Передпрогляд:</div>
+                             <img src="@Model.ImageUrl" class="br-8 shadow-sm" style="max-height:160px;object-fit:cover;" />
                         </div>
                     }
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a asp-area="Admin"
-                           asp-controller="Cinemas"
-                           asp-action="Index"
-                           class="btn btn-secondary">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            Назад
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a asp-area="Admin" asp-controller="Cinemas" asp-action="Index" 
+                           class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
+                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
                         </a>
 
-                        <button type="submit" class="btn btn-maroon">
-                            <i class="fa-solid fa-floppy-disk me-1"></i>
-                            Створити кінотеатр
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                            <i class="fa-solid fa-plus me-2"></i> СТВОРИТИ КІНОТЕАТР
                         </button>
                     </div>
 
                 </form>
             </div>
         </div>
-
     </div>
 </section>
 

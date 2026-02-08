@@ -5,111 +5,81 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">РЕДАГУВАННЯ КІНОТЕАТРУ</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагування кінотеатру</h1>
+            <p class="text-muted small text-uppercase fw-semibold">Оновіть інформацію про заклад нижче</p>
+        </div>
 
         @if (TempData["Success"] is string ok)
         {
-            <div class="alert alert-success mb-3">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err)
         {
-            <div class="alert alert-danger mb-3">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
-        <div class="card shadow-sm col-lg-8 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-pen-to-square me-2"></i>
-                    Редагування інформації про кінотеатр
-                </h5>
-            </div>
+        <div class="card shadow-sm border-0 col-lg-8 mx-auto br-12 overflow-hidden">
+            
 
-            <div class="card-body p-4">
-
-                <form asp-area="Admin"
-                      asp-controller="Cinemas"
-                      asp-action="Edit"
-                      method="post"
-                      enctype="multipart/form-data"> @* ✅ додано *@
-
+            <div class="card-body p-4 p-lg-5">
+                <form asp-area="Admin" asp-controller="Cinemas" asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
-                    <input type="hidden" asp-for="ImageUrl" /> @* ✅ додано *@
+                    <input type="hidden" asp-for="ImageUrl" />
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="Name" class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Назва кінотеатру
-                        </label>
-                        <input asp-for="Name" class="form-control" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
+                    <div class="mb-4">
+                        <label asp-for="Name" class="form-label small fw-bold text-muted text-uppercase">Назва кінотеатру</label>
+                        <input asp-for="Name" class="form-control shadow-none border-2 br-8" placeholder="Введіть назву..." />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="City" class="form-label text-muted">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            Місто
-                        </label>
-                        <input asp-for="City" class="form-control" />
-                        <span asp-validation-for="City" class="text-danger"></span>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="City" class="form-label small fw-bold text-muted text-uppercase">Місто</label>
+                            <input asp-for="City" class="form-control shadow-none border-2 br-8" placeholder="Напр. Київ" />
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Address" class="form-label small fw-bold text-muted text-uppercase">Адреса</label>
+                            <input asp-for="Address" class="form-control shadow-none border-2 br-8" placeholder="вул. Центральна, 1" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
                     </div>
 
                     <div class="mb-4">
-                        <label asp-for="Address" class="form-label text-muted">
-                            <i class="fa-solid fa-map-location-dot me-1"></i>
-                            Адреса
-                        </label>
-                        <input asp-for="Address" class="form-control" />
-                        <span asp-validation-for="Address" class="text-danger"></span>
-                    </div>
-
-                    @* ✅ додано: блок зображення *@
-                    <div class="mb-4">
-                        <label asp-for="Image" class="form-label text-muted">
-                            <i class="fa-solid fa-image me-1"></i>
-                            Постер кінотеатру
-                        </label>
-
+                        <label asp-for="Image" class="form-label small fw-bold text-muted text-uppercase">Постер / Фото закладу</label>
+                        
                         @if (!string.IsNullOrEmpty(Model.ImageUrl))
                         {
-                            <div class="mb-2">
-                                <span class="badge bg-secondary mb-1">Поточне фото:</span><br />
-                                <img src="@Model.ImageUrl"
-                                     alt="Current Poster"
-                                     style="max-height:150px;border-radius:5px;border:1px solid #ddd;" />
+                            <div class="mb-3 p-3 bg-light br-12 border">
+                                <div class="text-muted small fw-bold text-uppercase mb-2">Поточне фото:</div>
+                                <img src="@Model.ImageUrl" alt="Current Poster" class="br-8 shadow-sm" style="max-height:160px; object-fit:cover;" />
                             </div>
                         }
 
-                        <input asp-for="Image" type="file" class="form-control" accept="image/*" />
-                        <div class="form-text">Залиште порожнім, якщо не хочете змінювати фото.</div>
-                        <span asp-validation-for="Image" class="text-danger"></span>
+                        <input asp-for="Image" type="file" class="form-control shadow-none border-2 br-8" accept="image/*" />
+                        <div class="form-text x-small text-muted mt-2">
+                            <i class="fa-solid fa-circle-info me-1"></i> Залиште порожнім, якщо не хочете змінювати існуюче фото.
+                        </div>
+                        <span asp-validation-for="Image" class="text-danger small"></span>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a asp-area="Admin"
-                           asp-controller="Cinemas"
-                           asp-action="Index"
-                           class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>
-                            Назад
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a asp-area="Admin" asp-controller="Cinemas" asp-action="Index" class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
+                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
                         </a>
-
-                        <button type="submit" class="btn btn-maroon">
-                            <i class="fas fa-save me-1"></i>
-                            Зберегти зміни
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ЗМІНИ
                         </button>
                     </div>
-
                 </form>
-
             </div>
         </div>
-
     </div>
 </section>
 

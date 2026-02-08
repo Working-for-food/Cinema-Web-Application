@@ -4,225 +4,168 @@
 @{
     ViewData["Title"] = "Редагувати сеанс";
 
-    string FormatDt(DateTime? dt) => dt.HasValue
-        ? dt.Value.ToString("yyyy-MM-ddTHH:mm")
-        : "";
+    string FormatDt(DateTime? dt) => dt.HasValue ? dt.Value.ToString("yyyy-MM-ddTHH:mm") : "";
 
-    var selectedMovieText = Model.Movies
-        .FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text ?? "";
-
-    var movieTitleFromPost = Context.Request.HasFormContentType
-        ? Context.Request.Form["movieTitle"].ToString()
-        : "";
-
+    var selectedMovieText = Model.Movies.FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text ?? "";
+    var movieTitleFromPost = Context.Request.HasFormContentType ? Context.Request.Form["movieTitle"].ToString() : "";
     var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
 
     var movieTitleValue = !string.IsNullOrWhiteSpace(movieTitleFromPost)
         ? movieTitleFromPost
-        : (!string.IsNullOrWhiteSpace(movieTitleFromQuery)
-            ? movieTitleFromQuery
-            : selectedMovieText);
-
-    var lockHall = true;
+        : (!string.IsNullOrWhiteSpace(movieTitleFromQuery) ? movieTitleFromQuery : selectedMovieText);
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Редагувати сеанс</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагувати сеанс</h1>
+            <p class="text-muted small text-uppercase fw-semibold">Налаштування часу, фільму та вартості квитків</p>
+        </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="alert alert-success mb-3" role="alert">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
         {
-            <div class="alert alert-danger mb-3" role="alert">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
-        <div class="card shadow-sm rounded">
-            <div class="card-body p-4">
-
+        <div class="card shadow-sm border-0 col-lg-10 mx-auto br-12 overflow-hidden">
+            <div class="card-body p-4 p-lg-5">
+                
                 @if (!ViewData.ModelState.IsValid)
                 {
-                    <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+                    <div asp-validation-summary="All" class="alert alert-danger border-0 small br-8 mb-4 shadow-none"></div>
                 }
 
                 <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate id="editForm">
                     @Html.AntiForgeryToken()
-
                     <input type="hidden" asp-for="Id" />
                     <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-
                     <input type="hidden" asp-for="CinemaId" />
                     <input type="hidden" asp-for="HallId" />
 
-                    <div class="row g-3">
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-film me-1"></i>
-                                Кінотеатр
-                            </label>
-                            <select class="form-select"
-                                    asp-items="Model.Cinemas"
-                                    id="cinemaSelect"
-                                    disabled>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Кінотеатр</label>
+                            <select class="form-select border-2 br-8 shadow-none bg-light" asp-items="Model.Cinemas" disabled>
                                 <option value="0">— Оберіть кінотеатр —</option>
                             </select>
+                            <div class="form-text x-small text-muted"><i class="fa-solid fa-lock me-1"></i>Зміна кінотеатру для існуючого сеансу неможлива</div>
                         </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-chair me-1"></i>
-                                Зал
-                            </label>
-                            <select class="form-select"
-                                    asp-items="Model.Halls"
-                                    id="hallSelect"
-                                    disabled>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Зал</label>
+                            <select class="form-select border-2 br-8 shadow-none bg-light" asp-items="Model.Halls" disabled>
                                 <option value="0">— Оберіть зал —</option>
                             </select>
                         </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-clapperboard me-1"></i>
-                                Фільм
-                            </label>
-
-                            <div class="d-flex gap-2 align-items-start">
-                                <div class="flex-grow-1">
-                                    <input class="form-control"
-                                           list="movieList"
-                                           id="movieTitleInput"
-                                           name="movieTitle"
-                                           placeholder="Почніть вводити назву..."
-                                           autocomplete="off"
-                                           value="@movieTitleValue" />
-
-                                    <datalist id="movieList">
-                                        @foreach (var m in Model.Movies)
-                                        {
-                                            <option value="@m.Text" data-id="@m.Value"></option>
-                                        }
-                                    </datalist>
-
-                                    <div class="form-text">Пошук фільму по базі.</div>
-                                    <span class="text-danger" asp-validation-for="MovieId"></span>
-                                </div>
-
-                                <div style="width:86px;">
-                                    <img id="posterImg"
-                                         class="d-none"
-                                         src=""
-                                         alt="Постер"
-                                         style="width:86px;height:auto;border-radius:8px;object-fit:cover;"
-                                         loading="lazy" />
-                                    <div id="posterPlaceholder"
-                                         class="text-muted small border rounded d-flex align-items-center justify-content-center"
-                                         style="width:86px; height:120px;">
-                                        —
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-ticket me-1"></i>
-                                Тип показу
-                            </label>
-                            <select class="form-select" asp-for="PresentationType" asp-items="Model.PresentationTypes"></select>
-                            <span class="text-danger" asp-validation-for="PresentationType"></span>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-clock me-1"></i>
-                                Початок
-                            </label>
-                            <input class="form-control"
-                                   asp-for="StartTime"
-                                   id="StartTime"
-                                   type="datetime-local"
-                                   step="60"
-                                   value="@FormatDt(Model.StartTime)" />
-                            <span class="text-danger" asp-validation-for="StartTime"></span>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-hourglass-end me-1"></i>
-                                Кінець
-                            </label>
-                            <input class="form-control"
-                                   asp-for="EndTime"
-                                   id="EndTime"
-                                   type="datetime-local"
-                                   step="60"
-                                   value="@FormatDt(Model.EndTime)" />
-
-                            <div class="form-text" id="movieDurationText">Тривалість: —</div>
-                            <div class="alert alert-warning mt-2 py-2 d-none" id="shortDurationWarn" role="alert"></div>
-
-                            <span class="text-danger" asp-validation-for="EndTime"></span>
-                        </div>
-
                     </div>
 
-                    <hr class="my-4" />
-
-                    <div class="card border-0 bg-light mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">Ціноутворення</h5>
-                                <span class="text-muted small">Формула: ціна ряду × множник категорії</span>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Вибір фільму</label>
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-2 border-end-0 br-left-8 text-muted">
+                                        <i class="fa-solid fa-clapperboard"></i>
+                                    </span>
+                                    <input class="form-control border-2 border-start-0 br-right-8 shadow-none" 
+                                           list="movieList" id="movieTitleInput" name="movieTitle" 
+                                           placeholder="Почніть вводити назву фільму..." value="@movieTitleValue" />
+                                </div>
+                                <datalist id="movieList">
+                                    @foreach (var m in Model.Movies) { <option value="@m.Text" data-id="@m.Value"></option> }
+                                </datalist>
+                                <span class="text-danger small" asp-validation-for="MovieId"></span>
                             </div>
 
-                            <div class="row g-3">
-                                <div class="col-12 col-lg-6">
-                                    <label class="form-label fw-semibold">Базові ціни по рядах (грн)</label>
-                                    <div id="rowPricesWrap" class="border rounded p-2 bg-white">
-                                        <div class="text-center py-3">
-                                            <div class="spinner-border text-primary spinner-border-sm" role="status"></div> Завантаження...
-                                        </div>
-                                    </div>
-                                    <span class="text-danger" asp-validation-for="RowPrices"></span>
-                                </div>
-
-                                <div class="col-12 col-lg-6">
-                                    <label class="form-label fw-semibold">Множники категорій</label>
-                                    <div id="catMultipliersWrap" class="border rounded p-2 bg-white">
-                                        <div class="text-center py-3">
-                                            <div class="spinner-border text-primary spinner-border-sm" role="status"></div> Завантаження...
-                                        </div>
-                                    </div>
-                                    <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
+                            <div class="shadow-sm border br-8 overflow-hidden bg-white" style="width:90px; height:130px;">
+                                <img id="posterImg" class="d-none w-100 h-100 object-fit-cover" src="" alt="Постер" />
+                                <div id="posterPlaceholder" class="h-100 w-100 d-flex align-items-center justify-content-center text-muted opacity-50 small">
+                                    <i class="fa-solid fa-image fa-2x"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
+                    <hr class="my-5 opacity-10">
 
-                        <a class="btn btn-secondary"
-                           asp-action="Index">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            НАЗАД
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Тип показу</label>
+                            <select class="form-select border-2 br-8 shadow-none" asp-for="PresentationType" asp-items="Model.PresentationTypes"></select>
+                            <span class="text-danger small" asp-validation-for="PresentationType"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Початок сеансу</label>
+                            <input class="form-control border-2 br-8 shadow-none" asp-for="StartTime" id="StartTime" 
+                                   type="datetime-local" step="60" value="@FormatDt(Model.StartTime)" />
+                            <span class="text-danger small" asp-validation-for="StartTime"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Кінець сеансу</label>
+                            <input class="form-control border-2 br-8 shadow-none" asp-for="EndTime" id="EndTime" 
+                                   type="datetime-local" step="60" value="@FormatDt(Model.EndTime)" />
+                            <div class="form-text x-small fw-bold text-primary mt-1" id="movieDurationText">ТРИВАЛІСТЬ: —</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning border-0 shadow-sm br-8 d-none" id="shortDurationWarn"></div>
+
+                    <hr class="my-5 opacity-10">
+
+                    <div class="panel p-4 bg-light-soft border">
+                        <div class="panel-head mb-4">
+                            <div>
+                                <h5 class="panel-title mb-1 text-uppercase fs-6">Ціноутворення</h5>
+                                <p class="panel-hint mb-0">Базова вартість розраховується за формулою: <strong>ціна ряду × множник категорії</strong></p>
+                            </div>
+                            <div class="icon-badge bg-white shadow-sm text-primary">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-3">Базові ціни по рядах (грн)</label>
+                                <div id="rowPricesWrap" class="p-3 bg-white border br-12 shadow-none min-vh-10">
+                                    <div class="text-center py-4 text-muted">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2"></div> Завантаження конфігурації залу...
+                                    </div>
+                                </div>
+                                <span class="text-danger small" asp-validation-for="RowPrices"></span>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-3">Множники категорій (VIP / ACC)</label>
+                                <div id="catMultipliersWrap" class="p-3 bg-white border br-12 shadow-none min-vh-10">
+                                    <div class="text-center py-4 text-muted">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2"></div> Аналіз категорій місць...
+                                    </div>
+                                </div>
+                                <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a class="btn btn-link text-muted text-decoration-none fw-bold small p-0" asp-action="Index">
+                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
                         </a>
 
-                        <button class="btn btn-maroon" type="submit">
-                            <i class="fa-solid fa-check me-1"></i>
-                            ЗБЕРЕГТИ
+                        <button class="btn btn-maroon px-5 py-2 fw-bold shadow-sm" type="submit">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ЗМІНИ
                         </button>
-
                     </div>
 
                 </form>
             </div>
         </div>
-
     </div>
 </section>
 

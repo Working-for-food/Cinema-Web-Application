@@ -8,66 +8,71 @@
     <div class="container">
 
         <div class="text-center mb-5">
-            <h1 class="section-title h2 fw-bold text-dark">Додати новий фільм</h1>
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Додати новий фільм</h1>
             <p class="text-muted small text-uppercase fw-semibold">Заповніть інформацію для створення картки фільму</p>
         </div>
 
         @if (TempData["Success"] is string ok)
         {
-            <div class="alert alert-success border-0 shadow-sm mb-4 br-8">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err)
         {
-            <div class="alert alert-danger border-0 shadow-sm mb-4 br-8">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
         <div class="card shadow-sm border-0 col-lg-9 mx-auto br-12 overflow-hidden">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="mb-0 fs-6 fw-bold text-dark text-uppercase">
-                    <i class="fa-solid fa-plus me-2 text-primary"></i>
-                    Новий фільм
-                </h5>
-            </div>
-
             <div class="card-body p-4 p-lg-5">
                 <form asp-area="Admin" asp-controller="Movies" asp-action="Create" method="post" asp-antiforgery="true">
                     
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
 
                     <div class="mb-4">
-                        <label asp-for="Title" class="form-label small fw-bold text-muted text-uppercase">Назва фільму</label>
-                        <input asp-for="Title" class="form-control form-control-lg border-2 br-8 shadow-none" placeholder="Введіть назву..." />
+                        <label asp-for="Title" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-clapperboard me-1"></i> Назва фільму
+                        </label>
+                        <input asp-for="Title" class="form-control form-control-lg shadow-none border-2 br-8" placeholder="Введіть назву..." />
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-4">
-                        <label asp-for="Description" class="form-label small fw-bold text-muted text-uppercase">Опис / Сюжет</label>
-                        <textarea asp-for="Description" class="form-control border-2 br-8 shadow-none" rows="4" placeholder="Короткий опис фільму..."></textarea>
+                        <label asp-for="Description" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-align-left me-1"></i> Опис / Сюжет
+                        </label>
+                        <textarea asp-for="Description" class="form-control shadow-none border-2 br-8" rows="4" placeholder="Короткий опис фільму..."></textarea>
                         <span asp-validation-for="Description" class="text-danger small"></span>
                     </div>
 
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="ReleaseDate" class="form-label small fw-bold text-muted text-uppercase">Дата релізу</label>
-                            <input asp-for="ReleaseDate" type="date" class="form-control border-2 br-8 shadow-none" />
+                            <label asp-for="ReleaseDate" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-calendar-days me-1"></i> Дата релізу
+                            </label>
+                            <input asp-for="ReleaseDate" type="date" class="form-control shadow-none border-2 br-8" />
                             <span asp-validation-for="ReleaseDate" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Duration" class="form-label small fw-bold text-muted text-uppercase">Тривалість (хв)</label>
-                            <input asp-for="Duration" type="number" class="form-control border-2 br-8 shadow-none" placeholder="Напр. 120" />
+                            <label asp-for="Duration" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-clock me-1"></i> Тривалість (хв)
+                            </label>
+                            <input asp-for="Duration" type="number" class="form-control shadow-none border-2 br-8" placeholder="Напр. 120" />
                             <span asp-validation-for="Duration" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row g-4 mb-4">
                         <div class="col-md-8">
-                            <label asp-for="OriginalName" class="form-label small fw-bold text-muted text-uppercase">Оригінальна назва</label>
-                            <input asp-for="OriginalName" class="form-control border-2 br-8 shadow-none" />
+                            <label asp-for="OriginalName" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-pen-nib me-1"></i> Оригінальна назва
+                            </label>
+                            <input asp-for="OriginalName" class="form-control shadow-none border-2 br-8" />
                             <span asp-validation-for="OriginalName" class="text-danger small"></span>
                         </div>
                         <div class="col-md-4">
-                            <label asp-for="Language" class="form-label small fw-bold text-muted text-uppercase">Мова (ISO)</label>
-                            <input asp-for="Language" class="form-control border-2 br-8 shadow-none" placeholder="en" />
+                            <label asp-for="Language" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-language me-1"></i> Мова (ISO)
+                            </label>
+                            <input asp-for="Language" class="form-control shadow-none border-2 br-8" placeholder="en" />
                             <span asp-validation-for="Language" class="text-danger small"></span>
                         </div>
                     </div>
@@ -75,56 +80,70 @@
                     <hr class="my-5 opacity-10">
 
                     <div class="mb-4">
-                        <label asp-for="TrailerUrl" class="form-label small fw-bold text-muted text-uppercase">Трейлер (YouTube URL)</label>
+                        <label asp-for="TrailerUrl" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-link me-1"></i> Трейлер (YouTube URL)
+                        </label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-2 border-end-0 br-left-8 text-muted"><i class="fa-solid fa-link"></i></span>
-                            <input asp-for="TrailerUrl" type="url" class="form-control border-2 br-right-8 shadow-none" placeholder="https://..." />
+                            <span class="input-group-text bg-light border-2 border-end-0 br-left-8 text-muted"><i class="fa-solid fa-play"></i></span>
+                            <input asp-for="TrailerUrl" type="url" class="form-control shadow-none border-2 br-right-8" placeholder="https://youtube.com/..." />
                         </div>
                         <span asp-validation-for="TrailerUrl" class="text-danger small"></span>
                     </div>
 
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="PosterPath" class="form-label small fw-bold text-muted text-uppercase">Шлях до постера</label>
-                            <input asp-for="PosterPath" class="form-control border-2 br-8 shadow-none" />
-                            <div class="form-text x-small">TMDB шлях або повний URL</div>
+                            <label asp-for="PosterPath" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-image me-1"></i> Шлях до постера
+                            </label>
+                            <input asp-for="PosterPath" class="form-control shadow-none border-2 br-8" />
+                            <div class="form-text x-small text-muted">TMDB шлях (напр. /abc.jpg) або повний URL</div>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="BackdropPath" class="form-label small fw-bold text-muted text-uppercase">Шлях до фону</label>
-                            <input asp-for="BackdropPath" class="form-control border-2 br-8 shadow-none" />
+                            <label asp-for="BackdropPath" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-panorama me-1"></i> Шлях до фону (Backdrop)
+                            </label>
+                            <input asp-for="BackdropPath" class="form-control shadow-none border-2 br-8" />
                         </div>
                     </div>
 
                     <hr class="my-5 opacity-10">
 
                     <div class="mb-4">
-                        <label asp-for="SelectedDirectorIds" class="form-label small fw-bold text-muted text-uppercase">Режисери</label>
-                        <select asp-for="SelectedDirectorIds" asp-items="Model.DirectorMultiList" class="form-select js-people-select" multiple></select>
-                        <div class="form-text x-small">Пошук від 3-х літер</div>
+                        <label asp-for="SelectedDirectorIds" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-video me-1"></i> Режисери
+                        </label>
+                        <select asp-for="SelectedDirectorIds" asp-items="Model.DirectorMultiList" class="form-select js-people-select shadow-none" multiple></select>
+                        <div class="form-text x-small text-muted">Почніть вводити ім'я (мінімум 3 літери)</div>
                     </div>
 
                     <div class="mb-4">
-                        <label asp-for="SelectedActorIds" class="form-label small fw-bold text-muted text-uppercase">Актори</label>
-                        <select asp-for="SelectedActorIds" asp-items="Model.ActorList" class="form-select js-people-select" multiple></select>
+                        <label asp-for="SelectedActorIds" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-user-group me-1"></i> Актори
+                        </label>
+                        <select asp-for="SelectedActorIds" asp-items="Model.ActorList" class="form-select js-people-select shadow-none" multiple></select>
                     </div>
 
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="SelectedGenreIds" class="form-label small fw-bold text-muted text-uppercase">Жанри</label>
-                            <select asp-for="SelectedGenreIds" asp-items="Model.GenreList" class="form-select select-modern shadow-none" multiple size="6"></select>
-                            <div class="form-text x-small text-primary">Ctrl + клік для вибору</div>
+                            <label asp-for="SelectedGenreIds" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-tags me-1"></i> Жанри
+                            </label>
+                            <select asp-for="SelectedGenreIds" asp-items="Model.GenreList" class="form-select select-modern shadow-none border-2 br-8" multiple size="6"></select>
+                            <div class="form-text x-small text-primary">Утримуйте Ctrl / Command для вибору</div>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="SelectedCountryCodes" class="form-label small fw-bold text-muted text-uppercase">Країни виробництва</label>
-                            <select asp-for="SelectedCountryCodes" asp-items="Model.CountryMultiList" class="form-select select-modern shadow-none" multiple size="6"></select>
+                            <label asp-for="SelectedCountryCodes" class="form-label small fw-bold text-muted text-uppercase">
+                                <i class="fa-solid fa-globe me-1"></i> Країни виробництва
+                            </label>
+                            <select asp-for="SelectedCountryCodes" asp-items="Model.CountryMultiList" class="form-select select-modern shadow-none border-2 br-8" multiple size="6"></select>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
-                        <a asp-area="Admin" asp-controller="Movies" asp-action="Index" class="btn btn-link text-muted text-decoration-none fw-bold small">
+                        <a asp-area="Admin" asp-controller="Movies" asp-action="Index" class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
                             <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
                         </a>
-                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold br-8 shadow-sm">
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
                             <i class="fa-solid fa-plus me-2"></i> СТВОРИТИ ФІЛЬМ
                         </button>
                     </div>

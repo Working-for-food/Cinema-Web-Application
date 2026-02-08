@@ -5,78 +5,74 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Деталі кінотеатру</h1>
-
-        <div class="card shadow-sm col-lg-8 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-circle-info me-2"></i>
-                    Інформація про кінотеатр
-                </h5>
+        <div class="card shadow-sm border-0 br-12 overflow-hidden">
+            
+            <div class="backdrop-container" style="height: 300px;">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="@Model.Name" class="backdrop-img" />
+                }
+                else
+                {
+                    <div class="h-100 w-100 bg-dark d-flex align-items-center justify-content-center">
+                        <i class="fa-solid fa-film fa-4x text-white opacity-25"></i>
+                    </div>
+                }
+                <div class="backdrop-overlay"></div>
+                <div class="position-absolute bottom-0 start-0 p-4 p-lg-5 w-100">
+                    <div class="info-label mb-1">Кінотеатр</div>
+                    <h2 class="display-5 fw-bold text-white mb-0">@Model.Name</h2>
+                </div>
             </div>
 
-            <div class="card-body p-4">
+            <div class="card-body p-4 p-lg-5">
+                <div class="row g-5">
+                    
+                    <div class="col-12 col-lg-7">
+                        <h5 class="panel-title mb-4 text-uppercase fs-6">Локація та контакти</h5>
+                        
+                        <div class="info-item">
+                            <span class="info-item-label"><i class="fa-solid fa-location-dot me-2"></i>Місто</span>
+                            <span class="info-item-value">@Model.City</span>
+                        </div>
 
-                <div class="mb-4">
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Назва кінотеатру
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Name</div>
+                        <div class="info-item">
+                            <span class="info-item-label"><i class="fa-solid fa-map-location-dot me-2"></i>Адреса</span>
+                            <span class="info-item-value">@Model.Address</span>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            Місто
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.City</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-map-location-dot me-1"></i>
-                            Адреса
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Address</div>
+                    <div class="col-12 col-lg-5">
+                        <div class="panel p-4 bg-light-soft border-0 shadow-none" style="background: var(--surface-2);">
+                            <div class="text-center py-2">
+                                <div class="icon-badge bg-white shadow-sm text-primary mb-3">
+                                    <i class="fa-solid fa-door-open fa-lg"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark">Керування залами</h5>
+                                <p class="text-muted small mb-4">Перегляд, створення та налаштування місць у залах цього кінотеатру</p>
+                                
+                                <a asp-area="Admin" asp-controller="Halls" asp-action="Index" asp-route-cinemaId="@Model.Id" 
+                                   class="btn btn-danger-second w-100 py-2 fw-bold br-10">
+                                     ПЕРЕЙТИ ДО ЗАЛІВ
+                                </a>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a asp-area="Admin"
-                       asp-controller="Cinemas"
-                       asp-action="Index"
-                       class="btn btn-secondary">
-                        <i class="fa-solid fa-arrow-left me-1"></i>
-                        Назад
+                <div class="d-flex justify-content-center gap-3 mt-5 pt-4 border-top">
+                    <a asp-area="Admin" asp-controller="Cinemas" asp-action="Index" class="btn btn-secondary px-5 py-2 fw-bold">
+                        <i class="fa-solid fa-arrow-left me-2"></i> НАЗАД
                     </a>
-
-                    <a asp-area="Admin"
-                       asp-controller="Halls"
-                       asp-action="Index"
-                       asp-route-cinemaId="@Model.Id"
-                       class="btn btn-danger-second">
-                        <i class="fa-solid fa-door-open me-1"></i>
-                        Зали
-                    </a>
-
-                    <a asp-area="Admin"
-                       asp-controller="Cinemas"
-                       asp-action="Edit"
-                       asp-route-id="@Model.Id"
-                       class="btn btn-maroon">
-                        <i class="fa-solid fa-pen-to-square me-1"></i>
-                        Редагувати
+                    
+                    <a asp-area="Admin" asp-controller="Cinemas" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                        <i class="fa-solid fa-pen-to-square me-2"></i> РЕДАГУВАТИ
                     </a>
                 </div>
-
             </div>
         </div>
-
     </div>
 </section>

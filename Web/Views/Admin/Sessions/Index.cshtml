@@ -63,26 +63,26 @@
     }
 
     var isHallDisabled = !Model.CinemaId.HasValue;
-    var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Оберіть кінотеатр —";
+    var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Спершу оберіть кінотеатр —";
 }
 
 <section class="py-5 gray-bg">
     <div class="container-fluid px-lg-5">
 
         <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
-            <h1 class="section-title mb-0">СЕАНСИ</h1>
+            <h1 class="section-title mb-0">Сеанси</h1>
             <a asp-action="Create" class="btn btn-maroon px-4 shadow-sm">
-                <i class="fa-solid fa-plus me-2"></i>СТВОРЯТИ НОВИЙ
+                <i class="fa-solid fa-plus me-2"></i>СТВОРИТИ НОВИЙ
             </a>
         </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="alert alert-success border-0 shadow-sm mb-4">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
         {
-            <div class="alert alert-danger border-0 shadow-sm mb-4">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
         <div class="card shadow-sm border-0 mb-4 br-12">
@@ -149,15 +149,16 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="text-muted small fw-bold text-uppercase">Знайдено результатів: <span class="text-dark">@Model.TotalCount</span></div>
+        <div class="mb-3">
+            <div class="text-muted small fw-bold text-uppercase">Знайдено: <span class="text-dark">@Model.TotalCount</span></div>
         </div>
 
         @if (Model.Sessions == null || Model.Sessions.Count == 0)
         {
-            <div class="text-center py-5 bg-white br-12 shadow-sm">
-                <i class="fa-solid fa-calendar-xmark fa-3x text-light mb-3"></i>
-                <p class="text-muted mb-0">На жаль, сеансів не знайдено за вказаними фільтрами.</p>
+            <div class="empty-state mx-auto" style="max-width: 600px;">
+                <div class="empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+                <h5 class="empty-title">Сеансів не знайдено</h5>
+                <p class="empty-sub">Спробуйте змінити фільтри або створіть новий сеанс.</p>
             </div>
         }
         else
@@ -180,7 +181,7 @@
                                         }
                                         else
                                         {
-                                            <div class="h-100 w-100 d-flex align-items-center justify-content-center bg-light text-muted small">No poster</div>
+                                            <div class="h-100 w-100 d-flex align-items-center justify-content-center text-muted small">No poster</div>
                                         }
                                     </div>
                                 </div>
@@ -201,7 +202,7 @@
                                         <div class="mt-auto pt-3 border-top">
                                             <div class="row align-items-center">
                                                 <div class="col">
-                                                    <div class="small text-muted text-uppercase fw-bold x-small">Час проведення</div>
+                                                    <div class="small text-muted text-uppercase fw-bold x-small">Час</div>
                                                     <div class="fw-bold text-dark">
                                                         <span class="text-primary">@s.StartTime.ToString("HH:mm")</span> 
                                                         <span class="text-muted mx-1">—</span> 
@@ -210,20 +211,20 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-auto d-flex gap-1">
-                                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn btn-icon-sm border" title="Деталі"><i class="fa-solid fa-eye"></i></a>
+                                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn-icon-sm" title="Деталі"><i class="fa-solid fa-eye"></i></a>
                                                     
                                                     @{ var disabledBtn = s.IsCancelled || isOver; }
                                                     
-                                                    <a asp-action="Pricing" asp-route-id="@s.Id" class="btn btn-icon-sm border @(disabledBtn ? "disabled bg-light opacity-50" : "text-primary")" title="Ціни"><i class="fa-solid fa-tags"></i></a>
+                                                    <a asp-action="Pricing" asp-route-id="@s.Id" class="btn-icon-sm @(disabledBtn ? "disabled bg-light opacity-50" : "text-primary")" title="Ціни"><i class="fa-solid fa-tags"></i></a>
                                                     
-                                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-icon-sm border @(disabledBtn ? "disabled bg-light opacity-50" : "")" title="Редагувати"><i class="fa-solid fa-pen-to-square"></i></a>
+                                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn-icon-sm @(disabledBtn ? "disabled bg-light opacity-50" : "")" title="Редагувати"><i class="fa-solid fa-pen-to-square"></i></a>
 
                                                     @if (!s.IsCancelled)
                                                     {
                                                         <form asp-action="Cancel" asp-route-id="@s.Id" method="post" class="d-inline js-cancel-form" data-session-id="@s.Id" data-movie="@s.MovieTitle" data-start="@s.StartTime.ToString("dd.MM HH:mm")">
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                            <button class="btn btn-icon-sm border text-danger @(isOver ? "disabled opacity-50" : "")" type="submit" title="Скасувати"><i class="fa-solid fa-ban"></i></button>
+                                                            <button class="btn-icon-sm text-danger border @(isOver ? "disabled opacity-50" : "")" type="submit" title="Скасувати"><i class="fa-solid fa-ban"></i></button>
                                                         </form>
                                                     }
                                                     else
@@ -231,7 +232,7 @@
                                                         <form asp-action="Restore" asp-route-id="@s.Id" method="post" class="d-inline">
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                            <button class="btn btn-icon-sm border text-success @(isOver ? "disabled opacity-50" : "")" type="submit" title="Відновити"><i class="fa-solid fa-rotate-left"></i></button>
+                                                            <button class="btn-icon-sm text-success border @(isOver ? "disabled opacity-50" : "")" type="submit" title="Відновити"><i class="fa-solid fa-rotate-left"></i></button>
                                                         </form>
                                                     }
                                                 </div>
@@ -268,44 +269,6 @@
         }
     </div>
 </section>
-
-<style>
-    .br-12 { border-radius: 12px !important; }
-    .br-8 { border-radius: 8px !important; }
-    .br-4 { border-radius: 4px !important; }
-    .br-left-8 { border-radius: 8px 0 0 8px !important; }
-    .br-right-8 { border-radius: 0 8px 8px 0 !important; }
-    .x-small { font-size: 0.7rem; letter-spacing: 0.5px; }
-    
-    .badge-active { background-color: #EEF2FF; color: #6366F1; }
-    
-    .session-poster-wrap {
-        width: 120px;
-        height: 100%;
-        min-height: 180px;
-        background: #f8f9fa;
-    }
-    
-    .btn-icon-sm {
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        background: white;
-        color: #64748B;
-        transition: all 0.2s;
-        text-decoration: none;
-    }
-    .btn-icon-sm:hover:not(.disabled) { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
-    
-    .session-card { transition: transform 0.2s, shadow 0.2s; }
-    .session-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
-
-    .form-switch .form-check-input { width: 2.5em; height: 1.25em; cursor: pointer; }
-</style>
 
 @section Scripts {
     <script>
