@@ -1,0 +1,167 @@
+﻿@model Web.ViewModels.Movies.Details.MovieDetailsVm
+@using Web.ViewModels.Movies.Details
+
+<link rel="stylesheet" href="~/css/movie-details.css" />
+
+@{
+    var hasSchedule = Model.Schedule is not null && Model.Schedule.Count > 0;
+
+    var allDays = hasSchedule
+        ? Model.Schedule
+            .SelectMany(c => c.Days ?? Array.Empty<MovieScheduleDayVm>())
+            .Select(d => d.Date)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList()
+        : new List<DateOnly>();
+
+    DateOnly? activeDate = Model.SelectedDate ?? allDays.FirstOrDefault();
+
+    var chips = new List<string>();
+    if (Model.ReleaseDate is not null) chips.Add(Model.ReleaseDate.ToString()!);
+    if (Model.Duration is not null) chips.Add($"{Model.Duration} хв");
+    if (!string.IsNullOrWhiteSpace(Model.Language)) chips.Add(Model.Language!);
+    if (Model.Rating is not null) chips.Add($"★ {Model.Rating}");
+    if (Model.AgeRating is not null) chips.Add($"{Model.AgeRating}+");
+}
+
+<div class="movie-details-layout">
+    <div class="movie-details-left">
+        <div class="movie-details-card">
+            <div class="movie-details-poster">
+                <img src="@Model.PosterUrl"
+                     alt="@Model.Title"
+                     loading="lazy"
+                     onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+            </div>
+
+            <div class="movie-details-info">
+                <div class="movie-details-title">@Model.Title</div>
+
+                <div class="movie-details-meta">
+                    @if (chips.Count > 0)
+                    {
+                        <div>@string.Join(" • ", chips)</div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.OriginalName))
+                    {
+                        <div><span class="meta-label">Оригінальна назва:</span> @Model.OriginalName</div>
+                    }
+
+                    @if (Model.Genres is not null && Model.Genres.Count > 0)
+                    {
+                        <div><span class="meta-label">Жанр:</span> @string.Join(", ", Model.Genres)</div>
+                    }
+
+                    @if (Model.Directors is not null && Model.Directors.Count > 0)
+                    {
+                        <div><span class="meta-label">Режисер:</span> @string.Join(", ", Model.Directors)</div>
+                    }
+
+                    @if (Model.Countries is not null && Model.Countries.Count > 0)
+                    {
+                        <div><span class="meta-label">Країна:</span> @string.Join(", ", Model.Countries)</div>
+                    }
+
+                    @if (Model.Actors is not null && Model.Actors.Count > 0)
+                    {
+                        <div><span class="meta-label">У головних ролях:</span> @string.Join(", ", Model.Actors.Take(6))</div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <div class="movie-details-desc">@Model.Description</div>
+                }
+
+                <div class="movie-details-actions">
+                    @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                    {
+                        <a class="btn-secondary"
+                           href="@Model.TrailerUrl"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            Дивитися трейлер
+                        </a>
+                    }
+
+                    <a class="btn-details"
+                       asp-controller="Afisha"
+                       asp-action="Index">
+                        Назад до афіші
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="movie-details-right">
+        <div class="schedule-card">
+            <div class="schedule-title">Сеанси</div>
+
+            @if (!hasSchedule || allDays.Count == 0 || activeDate is null)
+            {
+                <div class="schedule-empty">Сеансів поки немає</div>
+            }
+            else
+            {
+                <div class="schedule-days" id="scheduleDays">
+                    @foreach (var day in allDays)
+                    {
+                        var iso = day.ToString("yyyy-MM-dd");
+                        <button type="button"
+                                class="schedule-day"
+                                data-day="@iso">
+                            @day.ToString("dd.MM")
+                        </button>
+                    }
+                </div>
+                <div class="schedule-scroll">
+                @foreach (var cinema in Model.Schedule)
+                {
+                    <div class="schedule-cinema">
+                        <div class="schedule-cinema-title">@cinema.CinemaName</div>
+
+                        @foreach (var dayVm in (cinema.Days ?? Array.Empty<MovieScheduleDayVm>()))
+                        {
+                            <div class="schedule-day-panel" data-day="@dayVm.Date.ToString("yyyy-MM-dd")">
+                                @if (dayVm.Sessions is null || dayVm.Sessions.Count == 0)
+                                {
+                                    <div class="schedule-empty">Немає сеансів</div>
+                                }
+                                else
+                                {
+                                    <div class="schedule-list">
+                                        @foreach (var s in dayVm.Sessions.OrderBy(x => x.StartTime))
+                                        {
+                                            <div class="schedule-item">
+                                                <div class="schedule-time">@s.StartTime.ToString("HH:mm")</div>
+
+                                                <div class="schedule-meta">
+                                                    <div class="schedule-hall">@s.HallName</div>
+                                                    @if (!string.IsNullOrWhiteSpace(s.Presentation))
+                                                    {
+                                                        <div class="schedule-format">@s.Presentation</div>
+                                                    }
+                                                </div>
+                                                    <a class="btn-details schedule-cta"
+                                                       asp-controller="Booking"
+                                                       asp-action="Create"
+                                                       asp-route-sessionId="@s.Id">
+                                                        Обрати
+                                                    </a>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                </div>
+            }
+        </div>
+    </aside>
+</div>
+<script src="~/js/movie-details-schedule.js"></script>
