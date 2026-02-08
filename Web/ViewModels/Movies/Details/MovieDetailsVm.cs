@@ -15,6 +15,8 @@ public sealed class MovieDetailsVm
     public string? Metacritic { get; set; }
     public string? RottenTomatoes { get; set; }
     public string? Imdb { get; set; }
+    public int? TmdbId { get; set; }
+
     public IReadOnlyList<string> Directors { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> Countries { get; set; } = Array.Empty<string>();
     public DateOnly? SelectedDate { get; set; }

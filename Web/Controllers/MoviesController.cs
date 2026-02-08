@@ -9,11 +9,16 @@ public class MoviesController : Controller
 {
     private readonly IMoviePublicService _moviePublicService;
     private readonly IExternalRatingsService _externalRatingsService;
+    private readonly ITmdbClient _tmdb;
 
-    public MoviesController(IMoviePublicService moviePublicService, IExternalRatingsService externalRatingsService)
+    public MoviesController(
+        IMoviePublicService moviePublicService,
+        IExternalRatingsService externalRatingsService,
+        ITmdbClient tmdb)
     {
         _moviePublicService = moviePublicService;
         _externalRatingsService = externalRatingsService;
+        _tmdb = tmdb;
     }
 
     [HttpGet("{id:int}", Name = "MovieDetails")]
@@ -42,12 +47,14 @@ public class MoviesController : Controller
             Rating = dto.Rating,
             PosterUrl = NormalizePosterUrl(dto.PosterPath),
 
+            TmdbId = dto.TmdbId,
+            AgeRating = dto.AgeRating,
+
             Directors = dto.Directors.Select(d => d.Name).ToList(),
             Countries = dto.Countries.ToList(),
             Genres = dto.Genres.ToList(),
             Actors = dto.Actors.Select(a => a.Name).ToList(),
 
-            AgeRating = dto.AgeRating,
             SelectedDate = selected,
             Schedule = dto.Schedule.Select(c => new MovieCinemaScheduleVm
             {
@@ -68,10 +75,16 @@ public class MoviesController : Controller
             }).ToList()
         };
 
-        var ratings = await _externalRatingsService.GetRatingsByTitleAsync(
-            vm.OriginalName ?? vm.Title,
-            vm.ReleaseDate?.Year,
-            ct);
+        string? imdbId = null;
+        if (vm.TmdbId.HasValue)
+        {
+            var ext = await _tmdb.GetExternalIdsAsync(vm.TmdbId.Value, ct);
+            imdbId = ext.ImdbId;
+        }
+
+        var ratings = !string.IsNullOrWhiteSpace(imdbId)
+            ? await _externalRatingsService.GetRatingsAsync(imdbId!, ct)
+            : await _externalRatingsService.GetRatingsByTitleAsync(vm.OriginalName ?? vm.Title, vm.ReleaseDate?.Year, ct);
 
         vm.Imdb = ratings.Imdb;
         vm.RottenTomatoes = ratings.RottenTomatoes;

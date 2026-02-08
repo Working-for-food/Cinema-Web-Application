@@ -79,6 +79,7 @@ public class MoviePublicService : IMoviePublicService
             Language = movie.Language,
             Rating = movie.Rating,
             AgeRating = movie.AgeRating,
+            TmdbId = movie.TmdbId,
 
             Genres = movie.MovieGenres.Select(g => g.Genre.Name).ToList(),
             Countries = movie.MovieCountries.Select(c => c.Country.Name).ToList(),
