@@ -3,6 +3,14 @@
 
 @{
     ViewData["Title"] = "Сеанси";
+
+    string PtLabel(PresentationType pt) => pt switch
+    {
+        PresentationType.TwoD => "2D",
+        PresentationType.ThreeD => "3D",
+        _ => pt.ToString()
+    };
+
     string FormatDate(DateTime? dt) => dt?.ToString("yyyy-MM-dd") ?? "";
 
     var now = DateTime.Now;
@@ -17,7 +25,7 @@
     {
         if (string.IsNullOrWhiteSpace(posterPath)) return "";
         if (posterPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return posterPath;
-        return $"https://image.tmdb.org/t/p/w92{posterPath}";
+        return $"https://image.tmdb.org/t/p/w154{(posterPath.StartsWith("/") ? posterPath : "/" + posterPath)}";
     }
 
     IDictionary<string, string> RouteWithDates(DateTime from, DateTime to)
@@ -31,20 +39,11 @@
             ["Page"] = "1"
         };
 
-        if (Model.CinemaId.HasValue)
-            dict["CinemaId"] = Model.CinemaId.Value.ToString();
-
-        if (Model.HallId.HasValue)
-            dict["HallId"] = Model.HallId.Value.ToString();
-
-        if (Model.MovieId.HasValue)
-            dict["MovieId"] = Model.MovieId.Value.ToString();
-
-        if (!string.IsNullOrWhiteSpace(Model.MovieTitle))
-            dict["MovieTitle"] = Model.MovieTitle!;
-
-        if (!string.IsNullOrWhiteSpace(Model.Sort))
-            dict["Sort"] = Model.Sort!;
+        if (Model.CinemaId.HasValue) dict["CinemaId"] = Model.CinemaId.Value.ToString();
+        if (Model.HallId.HasValue) dict["HallId"] = Model.HallId.Value.ToString();
+        if (Model.MovieId.HasValue) dict["MovieId"] = Model.MovieId.Value.ToString();
+        if (!string.IsNullOrWhiteSpace(Model.MovieTitle)) dict["MovieTitle"] = Model.MovieTitle!;
+        if (!string.IsNullOrWhiteSpace(Model.Sort)) dict["Sort"] = Model.Sort!;
 
         return dict;
     }
@@ -58,400 +57,420 @@
             ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant()
         };
 
-        if (Model.From.HasValue)
-            dict["From"] = Model.From.Value.ToString("yyyy-MM-dd");
-
-        if (Model.To.HasValue)
-            dict["To"] = Model.To.Value.ToString("yyyy-MM-dd");
-
-        if (Model.CinemaId.HasValue)
-            dict["CinemaId"] = Model.CinemaId.Value.ToString();
-
-        if (Model.HallId.HasValue)
-            dict["HallId"] = Model.HallId.Value.ToString();
-
-        if (Model.MovieId.HasValue)
-            dict["MovieId"] = Model.MovieId.Value.ToString();
-
-        if (!string.IsNullOrWhiteSpace(Model.MovieTitle))
-            dict["MovieTitle"] = Model.MovieTitle!;
-
-        if (!string.IsNullOrWhiteSpace(Model.Sort))
-            dict["Sort"] = Model.Sort!;
+        if (Model.From.HasValue) dict["From"] = Model.From.Value.ToString("yyyy-MM-dd");
+        if (Model.To.HasValue) dict["To"] = Model.To.Value.ToString("yyyy-MM-dd");
+        if (Model.CinemaId.HasValue) dict["CinemaId"] = Model.CinemaId.Value.ToString();
+        if (Model.HallId.HasValue) dict["HallId"] = Model.HallId.Value.ToString();
+        if (Model.MovieId.HasValue) dict["MovieId"] = Model.MovieId.Value.ToString();
+        if (!string.IsNullOrWhiteSpace(Model.MovieTitle)) dict["MovieTitle"] = Model.MovieTitle!;
+        if (!string.IsNullOrWhiteSpace(Model.Sort)) dict["Sort"] = Model.Sort!;
 
         return dict;
     }
+
+    var isHallDisabled = !Model.CinemaId.HasValue;
+    var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Спершу оберіть кінотеатр —";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Сеанси</h1>
-    <div class="btn-group">
-        <a asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="bi bi-gear"></i> Шаблони цін
-        </a>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Створити сеанс
-        </a>
-    </div>
-</div>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
-{
-    <div class="alert alert-success">@ok</div>
-}
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger">@err</div>
-}
+        <h1 class="section-title text-center mb-5">Сеанси</h1>
 
-<form method="get" class="mb-3" id="filtersForm">
-    <input type="hidden" name="Page" value="1" />
+        @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+        {
+            <div class="alert alert-success mb-3">@ok</div>
+        }
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div class="alert alert-danger mb-3">@err</div>
+        }
 
-    @{
-        var isHallDisabled = !Model.CinemaId.HasValue;
-        var hallPlaceholder = Model.CinemaId.HasValue ? "— Усі —" : "— Спершу оберіть кінотеатр —";
-    }
-
-    <div class="card shadow-sm">
-        <div class="card-body py-2">
-
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <div class="fw-semibold">Фільтри</div>
-                <div class="text-muted small">Кінотеатр → оновлює зали</div>
+        <div class="card shadow-sm col-12 mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-filter me-2"></i>
+                    Фільтри
+                </h5>
             </div>
 
-            <div class="row g-2">
+            <div class="card-body p-4">
+                <form method="get" asp-action="Index" class="row g-3 align-items-end" id="filtersForm">
+                    <input type="hidden" name="Page" value="1" />
 
-                <div class="col-lg-6">
-                    <label class="form-label fw-semibold text-uppercase small mb-1">Кінотеатр</label>
-                    <select class="form-select form-select-sm" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
-                        <option value="">— Усі —</option>
-                    </select>
-                </div>
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-film me-1"></i>
+                            Кінотеатр
+                        </label>
+                        <select class="form-select" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
+                            <option value="">Усі кінотеатри</option>
+                        </select>
+                        <div class="form-text">Після вибору кінотеатру список залів оновиться.</div>
+                    </div>
 
-                <div class="col-lg-6">
-                    <label class="form-label fw-semibold text-uppercase small mb-1">Зал</label>
-                    <select class="form-select form-select-sm"
-                            asp-for="HallId"
-                            asp-items="Model.Halls"
-                            id="hallSelect"
-                            disabled="@isHallDisabled"
-                            aria-disabled="@isHallDisabled">
-                        <option value="">@hallPlaceholder</option>
-                    </select>
-                </div>
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-chair me-1"></i>
+                            Зал
+                        </label>
+                        <select class="form-select"
+                                asp-for="HallId"
+                                asp-items="Model.Halls"
+                                id="hallSelect"
+                                disabled="@isHallDisabled"
+                                aria-disabled="@isHallDisabled">
+                            <option value="">@hallPlaceholder</option>
+                        </select>
+                    </div>
 
-                <div class="col-lg-8">
-                    <label class="form-label fw-semibold text-uppercase small mb-1">Фільм</label>
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-arrow-down-a-z me-1"></i>
+                            Сортування
+                        </label>
+                        <select class="form-select" asp-for="Sort" asp-items="Model.SortOptions"></select>
+                    </div>
 
-                    <input class="form-control form-control-sm"
-                           list="movieList"
-                           id="movieTitleInput"
-                           asp-for="MovieTitle"
-                           placeholder="Почніть вводити назву..." />
-
-                    <datalist id="movieList">
-                        @foreach (var m in Model.Movies)
-                        {
-                            <option value="@m.Text" data-id="@m.Value"></option>
-                        }
-                    </datalist>
-
-                    <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-                </div>
-
-                <div class="col-lg-4">
-                    <label class="form-label fw-semibold text-uppercase small mb-1">Сортування</label>
-                    <select class="form-select form-select-sm" asp-for="Sort" asp-items="Model.SortOptions"></select>
-                </div>
-
-                <div class="col-12">
-                    <div class="p-2 rounded border bg-light">
-                        <div class="row g-2 align-items-end">
-
-                            <div class="col-lg-3">
-                                <label class="form-label fw-semibold text-uppercase small mb-1">З</label>
-                                <input class="form-control form-control-sm" type="date" asp-for="From" value="@FormatDate(Model.From)" />
-                            </div>
-
-                            <div class="col-lg-3">
-                                <label class="form-label fw-semibold text-uppercase small mb-1">До</label>
-                                <input class="form-control form-control-sm" type="date" asp-for="To" value="@FormatDate(Model.To)" />
-                            </div>
-
-                            <div class="col-lg-6">
-                                <div class="fw-semibold text-uppercase small mb-1">Швидко</div>
-                                <div class="btn-group w-100" role="group" aria-label="Швидкі фільтри за датою">
-                                    <a class="btn btn-outline-secondary btn-sm"
-                                       asp-action="Index"
-                                       asp-all-route-data="RouteWithDates(today, today)">
-                                        Сьогодні
-                                    </a>
-
-                                    <a class="btn btn-outline-secondary btn-sm"
-                                       asp-action="Index"
-                                       asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">
-                                        Завтра
-                                    </a>
-
-                                    <a class="btn btn-outline-secondary btn-sm"
-                                       asp-action="Index"
-                                       asp-all-route-data="RouteWithDates(weekStart, weekEnd)">
-                                        Цей тиждень
-                                    </a>
-                                </div>
-                            </div>
-
+                    <div class="col-12 col-lg-3">
+                        <div class="d-flex gap-2 justify-content-lg-end">
+                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">ЗАСТОСУВАТИ</button>
+                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">СКИНУТИ</a>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-12">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>
+                            Фільм
+                        </label>
 
-                        <div class="d-flex flex-wrap gap-3">
+                        <input class="form-control"
+                               list="movieList"
+                               id="movieTitleInput"
+                               asp-for="MovieTitle"
+                               placeholder="Почніть вводити назву..." />
+
+                        <datalist id="movieList">
+                            @foreach (var m in Model.Movies)
+                            {
+                                <option value="@m.Text" data-id="@m.Value"></option>
+                            }
+                        </datalist>
+
+                        <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">З</label>
+                        <input class="form-control" type="date" asp-for="From" value="@FormatDate(Model.From)" />
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label text-muted">До</label>
+                        <input class="form-control" type="date" asp-for="To" value="@FormatDate(Model.To)" />
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-3 align-items-center">
                             <div class="form-check">
                                 <input class="form-check-input" asp-for="IncludeCancelled" />
                                 <label class="form-check-label" asp-for="IncludeCancelled">Скасовані</label>
                             </div>
-
                             <div class="form-check">
                                 <input class="form-check-input" asp-for="IncludeFinished" />
                                 <label class="form-check-label" asp-for="IncludeFinished">Завершені</label>
                             </div>
-                        </div>
 
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary btn-sm" type="submit">Застосувати</button>
-                            <a class="btn btn-outline-secondary btn-sm" asp-action="Index">Очистити</a>
+                            <div class="ms-auto d-flex flex-wrap gap-2">
+                                <a class="btn btn-outline-secondary"
+                                   asp-action="Index"
+                                   asp-all-route-data="RouteWithDates(today, today)">
+                                    СЬОГОДНІ
+                                </a>
+                                <a class="btn btn-outline-secondary"
+                                   asp-action="Index"
+                                   asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">
+                                    ЗАВТРА
+                                </a>
+                                <a class="btn btn-outline-secondary"
+                                   asp-action="Index"
+                                   asp-all-route-data="RouteWithDates(weekStart, weekEnd)">
+                                    ЦЕЙ ТИЖДЕНЬ
+                                </a>
+                            </div>
                         </div>
-
                     </div>
-                </div>
 
+                </form>
             </div>
         </div>
-    </div>
-</form>
 
-@if (Model.TotalCount > 0)
-{
-    <div class="text-muted mb-2">
-        Знайдено: @Model.TotalCount
-    </div>
-}
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-lg-end gap-2">
+                <a asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-gear me-1"></i>
+                    ШАБЛОНИ ЦІН
+                </a>
 
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th style="width:72px;">Постер</th>
-            <th>Фільм</th>
-            <th>Зал</th>
-            <th>Початок</th>
-            <th>Кінець</th>
-            <th>Тип</th>
-            <th>Статус</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+                <a asp-action="Create" class="btn btn-maroon">
+                    <i class="fa-solid fa-plus me-1"></i>
+                    СТВОРИТИ НОВИЙ
+                </a>
+            </div>
+        </div>
+
+        @if (Model.TotalCount > 0)
+        {
+            <div class="text-muted mb-2">Знайдено: @Model.TotalCount</div>
+        }
+
         @if (Model.Sessions == null || Model.Sessions.Count == 0)
         {
-            <tr>
-                <td colspan="8">Сеансів не знайдено.</td>
-            </tr>
+            <div class="card shadow-sm col-lg-8 mx-auto">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        Немає результатів
+                    </h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="mb-0">Сеансів не знайдено.</p>
+                </div>
+            </div>
         }
         else
         {
-            @foreach (var s in Model.Sessions)
-            {
-                var isOver = s.EndTime <= now;
-                var isFinished = !s.IsCancelled && isOver;
+            <div class="row g-3">
+                @foreach (var s in Model.Sessions)
+                {
+                    var isOver = s.EndTime <= now;
+                    var isFinished = !s.IsCancelled && isOver;
+                    var posterUrl = PosterUrl(s.PosterPath);
 
-                var posterUrl = PosterUrl(s.PosterPath);
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body p-4">
 
-                <tr>
-                    <td>
-                        @if (!string.IsNullOrWhiteSpace(posterUrl))
-                        {
-                            <img src="@posterUrl"
-                                 alt="Poster"
-                                 style="width:56px;height:auto;border-radius:6px;object-fit:cover;"
-                                 loading="lazy" />
-                        }
-                        else
-                        {
-                            <div class="text-muted small">—</div>
-                        }
-                    </td>
+                                <div class="row align-items-start g-4">
+                                    <div class="col-auto">
+                                        <div class="card overflow-hidden" style="width:150px;">
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
+                                                @if (!string.IsNullOrWhiteSpace(posterUrl))
+                                                {
+                                                    <img src="@posterUrl"
+                                                         alt="Постер"
+                                                         class="w-100 h-100"
+                                                         style="object-fit:cover;"
+                                                         loading="lazy" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Постер</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    <td>@(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)</td>
+                                    <div class="col">
+                                        <div class="mb-2">
+                                            <div class="text-muted small">
+                                                <i class="fa-solid fa-clapperboard me-1"></i>
+                                                Фільм
+                                            </div>
+                                            <div class="fw-semibold fs-4">
+                                                @(string.IsNullOrWhiteSpace(s.MovieTitle) ? $"#{s.MovieId}" : s.MovieTitle)
+                                            </div>
+                                        </div>
 
-                    <td>
-                        @if (!string.IsNullOrWhiteSpace(s.CinemaName))
-                        {
-                            @($"{s.CinemaName} — {s.HallName}")
-                        }
-                        else
-                        {
-                            @(string.IsNullOrWhiteSpace(s.HallName) ? $"#{s.HallId}" : s.HallName)
-                        }
-                    </td>
+                                        <div class="mb-2">
+                                            <div class="text-muted small">
+                                                <i class="fa-solid fa-location-dot me-1"></i>
+                                                Кінотеатр / зал
+                                            </div>
+                                            <div class="fw-semibold">
+                                                @if (!string.IsNullOrWhiteSpace(s.CinemaName))
+                                                {
+                                                    @($"{s.CinemaName} — {s.HallName}")
+                                                }
+                                                else
+                                                {
+                                                    @(string.IsNullOrWhiteSpace(s.HallName) ? $"#{s.HallId}" : s.HallName)
+                                                }
+                                            </div>
+                                        </div>
 
-                    <td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>@s.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <div class="mb-3">
+                                            <div class="text-muted small">
+                                                <i class="fa-solid fa-clock me-1"></i>
+                                                Час
+                                            </div>
+                                            <div class="fw-semibold">
+                                                @s.StartTime.ToString("dd.MM.yyyy HH:mm") — @s.EndTime.ToString("dd.MM.yyyy HH:mm")
+                                            </div>
+                                        </div>
 
-                    <td>
-                        <span class="badge text-bg-secondary">@s.PresentationType</span>
-                    </td>
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <span class="badge text-bg-secondary">@PtLabel(s.PresentationType)</span>
 
-                    <td>
-                        @if (s.IsCancelled)
-                        {
-                            <span class="badge text-bg-danger">Скасовано</span>
-                        }
-                        else if (isFinished)
-                        {
-                            <span class="badge text-bg-dark">Завершено</span>
-                        }
-                        else
-                        {
-                            <span class="badge text-bg-success">Активний</span>
-                        }
-                    </td>
+                                            @if (s.IsCancelled)
+                                            {
+                                                <span class="badge text-bg-danger">Скасовано</span>
+                                            }
+                                            else if (isFinished)
+                                            {
+                                                <span class="badge text-bg-dark">Завершено</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-success">Активний</span>
+                                            }
+                                        </div>
 
-                    <td class="text-end">
-                        <a class="btn btn-sm btn-outline-primary"
-                           asp-action="Details"
-                           asp-route-id="@s.Id">
-                            Деталі
-                        </a>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-action="Details"
+                                               asp-route-id="@s.Id"
+                                               class="btn btn-maroon"
+                                               title="Деталі"
+                                               aria-label="Деталі">
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            </a>
 
-                        @if (s.IsCancelled || isOver)
-                        {
-                            <span title="Не можна змінювати ціни для скасованого або завершеного сеансу">
-                                <button class="btn btn-sm btn-outline-primary" type="button" disabled>
-                                    Ціни
-                                </button>
-                            </span>
-                        }
-                        else
-                        {
-                            <a class="btn btn-sm btn-outline-primary"
-                               asp-action="Pricing"
-                               asp-route-id="@s.Id">
-                                Ціни
-                            </a>
-                        }
+                                            @if (s.IsCancelled || isOver)
+                                            {
+                                                <button class="btn btn-secondary"
+                                                        type="button"
+                                                        disabled
+                                                        title="Не можна змінювати ціни для скасованого або завершеного сеансу"
+                                                        aria-label="Ціни недоступні">
+                                                    <i class="fa-solid fa-tags"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="Pricing"
+                                                   asp-route-id="@s.Id"
+                                                   class="btn btn-secondary"
+                                                   title="Ціни"
+                                                   aria-label="Ціни">
+                                                    <i class="fa-solid fa-tags"></i>
+                                                </a>
+                                            }
 
-                        @if (s.IsCancelled || isOver)
-                        {
-                            <span title="Не можна редагувати скасований або завершений сеанс">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" disabled>
-                                    Редагувати
-                                </button>
-                            </span>
-                        }
-                        else
-                        {
-                            <a class="btn btn-sm btn-outline-secondary"
-                               asp-action="Edit"
-                               asp-route-id="@s.Id">
-                                Редагувати
-                            </a>
-                        }
+                                            @if (s.IsCancelled || isOver)
+                                            {
+                                                <button class="btn btn-secondary"
+                                                        type="button"
+                                                        disabled
+                                                        title="Не можна редагувати скасований або завершений сеанс"
+                                                        aria-label="Редагувати недоступно">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="Edit"
+                                                   asp-route-id="@s.Id"
+                                                   class="btn btn-secondary"
+                                                   title="Редагувати"
+                                                   aria-label="Редагувати">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </a>
+                                            }
 
-                        @if (!s.IsCancelled)
-                        {
-                            if (isOver)
-                            {
-                                <span title="Не можна скасувати завершений сеанс">
-                                    <button class="btn btn-sm btn-outline-danger" type="button" disabled>
-                                        Скасувати
-                                    </button>
-                                </span>
-                            }
-                            else
-                            {
-                                <form asp-action="Cancel"
-                                      asp-route-id="@s.Id"
-                                      method="post"
-                                      class="d-inline js-cancel-form"
-                                      data-session-id="@s.Id"
-                                      data-movie="@(s.MovieTitle ?? "")"
-                                      data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                            @if (!s.IsCancelled)
+                                            {
+                                                if (isOver)
+                                                {
+                                                    <button class="btn btn-maroon"
+                                                            type="button"
+                                                            disabled
+                                                            title="Не можна скасувати завершений сеанс"
+                                                            aria-label="Скасувати недоступно">
+                                                        <i class="fa-solid fa-ban"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-action="Cancel"
+                                                          asp-route-id="@s.Id"
+                                                          method="post"
+                                                          class="d-inline js-cancel-form"
+                                                          data-session-id="@s.Id"
+                                                          data-movie="@(s.MovieTitle ?? "")"
+                                                          data-start="@s.StartTime.ToString("dd.MM.yyyy HH:mm")">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                        <button class="btn btn-maroon"
+                                                                type="submit"
+                                                                title="Скасувати"
+                                                                aria-label="Скасувати">
+                                                            <i class="fa-solid fa-ban"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (isOver)
+                                                {
+                                                    <button class="btn btn-maroon"
+                                                            type="button"
+                                                            disabled
+                                                            title="Не можна відновити завершений сеанс"
+                                                            aria-label="Відновити недоступно">
+                                                        <i class="fa-solid fa-rotate-left"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-action="Restore"
+                                                          asp-route-id="@s.Id"
+                                                          method="post"
+                                                          class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                        <button class="btn btn-maroon"
+                                                                type="submit"
+                                                                title="Відновити"
+                                                                aria-label="Відновити">
+                                                            <i class="fa-solid fa-rotate-left"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
 
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">
-                                        Скасувати
-                                    </button>
-                                </form>
-                            }
-                        }
-                        else
-                        {
-                            if (isOver)
-                            {
-                                <span title="Не можна відновити завершений сеанс">
-                                    <button class="btn btn-sm btn-outline-success" type="button" disabled>
-                                        Відновити
-                                    </button>
-                                </span>
-                            }
-                            else
-                            {
-                                <form asp-action="Restore"
-                                      asp-route-id="@s.Id"
-                                      method="post"
-                                      class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
-
-                                    <button class="btn btn-sm btn-outline-success" type="submit">
-                                        Відновити
-                                    </button>
-                                </form>
-                            }
-                        }
-                    </td>
-                </tr>
-            }
-
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         }
-    </tbody>
-</table>
 
-@if (Model.TotalPages > 1)
-{
-    <nav aria-label="Пагінація сеансів" class="mt-3">
-        <ul class="pagination justify-content-center">
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Пагінація сеансів" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-all-route-data="RouteForPage(Model.Page - 1)">Назад</a>
+                    </li>
 
-            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="Index"
-                   asp-all-route-data="RouteForPage(Model.Page - 1)">
-                    Назад
-                </a>
-            </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Сторінка @Model.Page з @Model.TotalPages</span>
+                    </li>
 
-            <li class="page-item disabled">
-                <span class="page-link">
-                    Сторінка @Model.Page з @Model.TotalPages
-                </span>
-            </li>
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-all-route-data="RouteForPage(Model.Page + 1)">Вперед</a>
+                    </li>
+                </ul>
+            </nav>
+        }
 
-            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="Index"
-                   asp-all-route-data="RouteForPage(Model.Page + 1)">
-                    Вперед
-                </a>
-            </li>
-
-        </ul>
-    </nav>
-}
+    </div>
+</section>
 
 @section Scripts {
     <script>
@@ -467,6 +486,10 @@
             });
           }
 
+          if (hall && form) {
+            hall.addEventListener('change', () => form.submit());
+          }
+
           const input = document.getElementById('movieTitleInput');
           const hidden = document.getElementById('movieIdHidden');
           const list = document.getElementById('movieList');
@@ -474,7 +497,7 @@
           function syncHidden() {
             const value = (input.value || "").trim();
             const option = Array.from(list.options).find(o => o.value === value);
-            hidden.value = option ? option.dataset.id : '';
+            hidden.value = option ? (option.dataset.id || '') : '';
           }
 
           if (input && hidden && list) {
@@ -484,8 +507,6 @@
 
           document.querySelectorAll('form.js-cancel-form').forEach(formEl => {
             formEl.addEventListener('submit', (e) => {
-              if (formEl.querySelector('button[disabled]')) return;
-
               const id = formEl.dataset.sessionId || '';
               const movie = (formEl.dataset.movie || '').trim();
               const start = (formEl.dataset.start || '').trim();

@@ -1,0 +1,92 @@
+﻿@model Web.ViewModels.Account.ProfileVm
+@{
+    ViewData["Title"] = "Мій Профіль";
+}
+
+<div class="auth-container d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="auth-card p-5 shadow-lg rounded">
+
+            <div class="text-center mb-4">
+                <h1 class="section-title"><i class="fas fa-id-card"></i> Мій Профіль</h1>
+                <p class="text-muted">Персональні дані та налаштування</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.StatusMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @Model.StatusMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="UpdateProfile" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Логін</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
+                        <input class="form-control" value="@Model.Username" disabled readonly />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Електронна пошта</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+                        <input asp-for="Email" class="form-control auth-input" disabled />
+                        @if (Model.IsEmailConfirmed)
+                        {
+                            <span class="input-group-text text-success" title="Пошту підтверджено">
+                                <i class="fas fa-check-circle"></i>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="input-group-text text-warning" title="Пошту не підтверджено">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label class="form-label text-muted">Номер телефону</label>
+                        <input asp-for="PhoneNumber" class="form-control auth-input" placeholder="+380..." />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Дата народження</label>
+                        <input type="date" class="form-control auth-input" asp-for="DateOfBirth"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mb-4">
+                    <button type="submit" class="btn btn-maroon btn-lg" style="background-color: #800000; color: white;">
+                        <i class="fas fa-save"></i> Зберегти зміни
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-4" />
+
+            <h5 class="text-muted mb-3"><i class="fas fa-shield-alt"></i> Безпека та вхід</h5>
+
+            <div class="d-grid gap-2">
+                <a asp-action="ChangePassword" class="btn btn-outline-dark btn-lg">
+                    <i class="fas fa-key text-warning me-2"></i> Змінити пароль
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

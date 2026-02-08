@@ -1,0 +1,20 @@
+﻿@{
+    ViewData["Title"] = "Перевірте пошту";
+}
+
+<div class="container mt-5 text-center">
+    <div class="card p-5 shadow-sm">
+        <div class="mb-4">
+            <i class="fas fa-envelope-open-text fa-4x text-primary"></i>
+        </div>
+        <h2>Потрібне підтвердження</h2>
+        <p class="lead">
+            Ми надіслали лист із посиланням для підтвердження на вашу електронну пошту. <br />
+            Будь ласка, натисніть на посилання в листі, щоб активувати акаунт.
+        </p>
+        <p class="text-muted small">
+            Якщо ви не бачите листа протягом кількох хвилин, перевірте папку "Спам".
+        </p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">На головну</a>
+    </div>
+</div>

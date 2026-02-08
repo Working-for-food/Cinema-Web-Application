@@ -1,0 +1,48 @@
+﻿html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+html, body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background-color: #fefefe;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+    min-height: 0;
+}
+
+.container {
+    max-width: 1400px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+
+.container-fluid {
+    max-width: 1280px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+
+.seats-page {
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(128,0,0,.08), transparent 60%), radial-gradient(900px 500px at 90% 0%, rgba(0,0,0,.06), transparent 55%), #f6f7fb;
+    min-height: 100%;
+}
+
+.text-maroon {
+    color: #800020;
+}
+

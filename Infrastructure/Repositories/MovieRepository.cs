@@ -58,17 +58,17 @@ public class MovieRepository : IMovieRepository
         .Include(m => m.MovieGenres)
         .Include(m => m.MovieActors)
         .Include(m => m.MovieCountries)
+        .Include(m => m.MovieDirectors)
         .FirstOrDefaultAsync(m => m.Id == id, ct);
 
 
     public Task<Movie?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default) =>
     _db.Movies
         .AsNoTracking()
-        .Include(m => m.Director)
-        .Include(m => m.ProductionCountry)
         .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
         .Include(m => m.MovieActors).ThenInclude(ma => ma.Actor)
         .Include(m => m.MovieCountries).ThenInclude(mc => mc.Country)
+        .Include(m => m.MovieDirectors).ThenInclude(md => md.Director)
         .Include(m => m.Sessions)
         .FirstOrDefaultAsync(m => m.Id == id, ct);
 
@@ -85,6 +85,7 @@ public class MovieRepository : IMovieRepository
     IEnumerable<int> genreIds,
     IEnumerable<int> actorIds,
     IEnumerable<string> countryCodes,
+    IEnumerable<int> directorIds,
     CancellationToken ct = default)
     {
         var gIds = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
@@ -92,9 +93,9 @@ public class MovieRepository : IMovieRepository
             movie.MovieGenres.Add(new MovieGenre { GenreId = gId });
 
         var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-        short order = 1;
+        short actorOrder = 1;
         foreach (var aId in aIds)
-            movie.MovieActors.Add(new MovieActor { ActorId = aId, CustOrder = order++ });
+            movie.MovieActors.Add(new MovieActor { ActorId = aId, CustOrder = actorOrder++ });
 
         var codes = (countryCodes ?? Array.Empty<string>())
             .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -102,25 +103,32 @@ public class MovieRepository : IMovieRepository
             .Where(x => x.Length == 2)
             .Distinct()
             .ToList();
-
         foreach (var code in codes)
             movie.MovieCountries.Add(new MovieCountry { CountryCode = code });
+
+        var dIds = (directorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
+        short billing = 1;
+        foreach (var dId in dIds)
+            movie.MovieDirectors.Add(new MovieDirector { DirectorId = dId, BillingOrder = billing++ });
 
         await _db.Movies.AddAsync(movie, ct);
         await _db.SaveChangesAsync(ct);
     }
+
 
     public async Task UpdateAsync(
     Movie movie,
     IEnumerable<int> genreIds,
     IEnumerable<int> actorIds,
     IEnumerable<string> countryCodes,
+    IEnumerable<int> directorIds,
     CancellationToken ct = default)
     {
         var existing = await _db.Movies
             .Include(m => m.MovieGenres)
             .Include(m => m.MovieActors)
             .Include(m => m.MovieCountries)
+            .Include(m => m.MovieDirectors)
             .FirstOrDefaultAsync(m => m.Id == movie.Id, ct);
 
         if (existing == null)
@@ -130,8 +138,11 @@ public class MovieRepository : IMovieRepository
         existing.Description = movie.Description;
         existing.ReleaseDate = movie.ReleaseDate;
         existing.Duration = movie.Duration;
-        existing.ProductionCountryCode = movie.ProductionCountryCode;
-        existing.DirectorId = movie.DirectorId;
+        existing.PosterPath = movie.PosterPath;
+        existing.BackdropPath = movie.BackdropPath;
+        existing.OriginalName = movie.OriginalName;
+        existing.Language = movie.Language;
+        existing.TrailerUrl = movie.TrailerUrl;
 
         // genres
         existing.MovieGenres.Clear();
@@ -139,22 +150,33 @@ public class MovieRepository : IMovieRepository
         foreach (var gId in gIds)
             existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
 
-
         // actors
-        var incomingSet = new HashSet<int>((actorIds ?? Array.Empty<int>()).Where(x => x > 0));
+        var actorIdsNew = (actorIds ?? Array.Empty<int>())
+            .Where(x => x > 0)
+            .Distinct()
+            .ToList();
 
-        var existingActorIds = existing.MovieActors
-            .Select(ma => ma.ActorId)
-            .ToHashSet();
+        var actorSet = actorIdsNew.ToHashSet();
 
-        if (!incomingSet.SetEquals(existingActorIds))
+        var existingActors = existing.MovieActors.ToList();
+        var actorsToRemove = existingActors.Where(x => !actorSet.Contains(x.ActorId)).ToList();
+        _db.MovieActors.RemoveRange(actorsToRemove);
+
+        var remainingActors = existingActors.Where(x => actorSet.Contains(x.ActorId)).ToList();
+        short nextActorOrder = (short)(remainingActors.Count == 0 ? 1 : remainingActors.Max(x => x.CustOrder) + 1);
+
+        var remainingActorSet = remainingActors.Select(x => x.ActorId).ToHashSet();
+        foreach (var idToAdd in actorIdsNew)
         {
-            existing.MovieActors.Clear();
-            var aIds = (actorIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
-            short order = 1;
-            foreach (var aId in aIds)
-                existing.MovieActors.Add(new MovieActor { MovieId = existing.Id, ActorId = aId, CustOrder = order++ });
+            if (remainingActorSet.Contains(idToAdd)) continue;
+            existing.MovieActors.Add(new MovieActor
+            {
+                MovieId = existing.Id,
+                ActorId = idToAdd,
+                CustOrder = nextActorOrder++
+            });
         }
+
         // countries
         existing.MovieCountries.Clear();
         var codes = (countryCodes ?? Array.Empty<string>())
@@ -163,12 +185,39 @@ public class MovieRepository : IMovieRepository
             .Where(x => x.Length == 2)
             .Distinct()
             .ToList();
-
         foreach (var code in codes)
             existing.MovieCountries.Add(new MovieCountry { MovieId = existing.Id, CountryCode = code });
 
+        // directors
+        var directorIdsNew = (directorIds ?? Array.Empty<int>())
+            .Where(x => x > 0)
+            .Distinct()
+            .ToList();
+
+        var directorSet = directorIdsNew.ToHashSet();
+
+        var existingDirs = existing.MovieDirectors.ToList();
+        var dirsToRemove = existingDirs.Where(x => !directorSet.Contains(x.DirectorId)).ToList();
+        _db.MovieDirectors.RemoveRange(dirsToRemove);
+
+        var remainingDirs = existingDirs.Where(x => directorSet.Contains(x.DirectorId)).ToList();
+        short nextBilling = (short)(remainingDirs.Count == 0 ? 1 : remainingDirs.Max(x => x.BillingOrder) + 1);
+
+        var remainingDirectorSet = remainingDirs.Select(x => x.DirectorId).ToHashSet();
+        foreach (var idToAdd in directorIdsNew)
+        {
+            if (remainingDirectorSet.Contains(idToAdd)) continue;
+            existing.MovieDirectors.Add(new MovieDirector
+            {
+                MovieId = existing.Id,
+                DirectorId = idToAdd,
+                BillingOrder = nextBilling++
+            });
+        }
+
         await _db.SaveChangesAsync(ct);
     }
+
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {

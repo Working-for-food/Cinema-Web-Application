@@ -1,31 +1,58 @@
 ﻿@model Infrastructure.Entities.Genre
 
-<style>
-    .container { max-width: 720px; margin: 30px auto; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
-    .row { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; }
-    .label { font-weight: 700; }
-    .actions { margin-top: 14px; display: flex; gap: 10px; }
-    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; }
-    .btn-primary { background: #4f46e5; color: #fff; }
-    .btn-secondary { background: #e5e7eb; color: #111; }
-</style>
+@{
+    ViewData["Title"] = "Деталі жанру";
+}
 
-<div class="container">
-    <h2>Деталі жанру</h2>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-    <div class="card">
-        <div class="row">
-            <div class="label">ID</div>
-            <div>@Model.Id</div>
+        <h1 class="section-title text-center mb-5">Деталі жанру</h1>
 
-            <div class="label">Назва</div>
-            <div>@Model.Name</div>
+        <div class="card shadow-sm col-lg-6 mx-auto">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Інформація про жанр
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+
+                <div class="mb-4">
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">
+                            <i class="fa-solid fa-tags me-1"></i>
+                            Назва жанру
+                        </label>
+                        <div class="fw-semibold fs-5">@Model.Name</div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a asp-area="Admin"
+                       asp-controller="Genres"
+                       asp-action="Index"
+                       class="btn btn-secondary">
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Назад
+                    </a>
+
+                    <a asp-area="Admin"
+                       asp-controller="Genres"
+                       asp-action="Edit"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-maroon">
+                        <i class="fa-solid fa-pen-to-square me-1"></i>
+                        Редагувати жанр
+                    </a>
+                </div>
+
+            </div>
         </div>
-    </div>
 
-    <div class="actions">
-        <a class="btn btn-primary" asp-controller="Genres" asp-action="Edit" asp-route-id="@Model.Id">Редагувати</a>
-        <a class="btn btn-secondary" asp-controller="Genres" asp-action="Index">Назад</a>
     </div>
-</div>
+</section>
+

@@ -1,0 +1,14 @@
+﻿/* Variables & Reset: Define colors and fonts first */
+@import url('_base.css');
+
+/* Global Typography: Headers, text, and decorative lines */
+@import url('_typography.css');
+
+/* Components: Cards, Buttons, and UI elements */
+@import url('_components.css');
+
+/* Forms: Form controls and validation messages */
+@import url('_forms.css');
+
+/* Footer: Form footer */
+@import url('_footer.css');

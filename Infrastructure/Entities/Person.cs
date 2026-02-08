@@ -22,6 +22,4 @@ public class Person
 
     public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     public ICollection<MovieDirector> MovieDirectors { get; set; } = new List<MovieDirector>();
-
-    public ICollection<Movie> DirectedMoviesMain { get; set; } = new List<Movie>();
 }

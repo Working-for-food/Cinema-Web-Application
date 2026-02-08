@@ -16,196 +16,298 @@
         : movieTitleFromQuery;
 
     var isHallDisabled = Model.CinemaId <= 0;
-    var hallPlaceholder = Model.CinemaId > 0 ? "Оберіть зал" : "Спершу оберіть кінотеатр";
+    var hallPlaceholder = Model.CinemaId > 0 ? "— Оберіть зал —" : "— Спершу оберіть кінотеатр —";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-0">Новий сеанс</h1>
-        <div class="text-muted small">Заповніть дані для розкладу</div>
-    </div>
-    <a class="btn btn-outline-secondary btn-sm" asp-action="Index">
-        <i class="bi bi-arrow-left"></i> Назад до списку
-    </a>
-</div>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
-{
-    <div class="alert alert-success mb-3" role="alert">@ok</div>
-}
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger mb-3" role="alert">@err</div>
-}
+        <h1 class="section-title text-center mb-5">Новий сеанс</h1>
 
-<form asp-action="Create" method="post" novalidate id="createForm">
-    @Html.AntiForgeryToken()
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div></div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 text-primary"><i class="bi bi-geo-alt me-2"></i>Локація та Час</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Кінотеатр</label>
-                            <select class="form-select" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
-                                <option value="0">— Оберіть кінотеатр —</option>
-                            </select>
-                            <span class="text-danger small" asp-validation-for="CinemaId"></span>
+            <a class="btn btn-secondary" asp-action="Index">
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                НАЗАД
+            </a>
+        </div>
+
+        @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+        {
+            <div class="alert alert-success mb-3" role="alert">@ok</div>
+        }
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div class="alert alert-danger mb-3" role="alert">@err</div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+        }
+
+        <form asp-action="Create" method="post" novalidate id="createForm" asp-antiforgery="true">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3 align-items-stretch">
+
+                <div class="col-12 col-lg-8 d-flex flex-column">
+
+                    <div class="card shadow-sm rounded-4 modern-card mb-3">
+                        <div class="card-header bg-maroon text-white rounded-top-4">
+                            <h5 class="mb-0">
+                                <i class="fa-solid fa-location-dot me-2"></i>Локація та час
+                            </h5>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Зал</label>
-                            <select class="form-select" asp-for="HallId" asp-items="Model.Halls" id="hallSelect" disabled="@isHallDisabled">
-                                <option value="0">@hallPlaceholder</option>
-                            </select>
-                            <span class="text-danger small" asp-validation-for="HallId"></span>
-                        </div>
-                    </div>
+                        <div class="card-body p-4 p-md-5">
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Початок сеансу</label>
-                            <input class="form-control" asp-for="StartTime" id="StartTime" type="datetime-local" step="60" />
-                            <span class="text-danger small" asp-validation-for="StartTime"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Завершення</label>
-                            <input class="form-control" asp-for="EndTime" id="EndTime" type="datetime-local" step="60" />
-                            <div class="d-flex justify-content-between mt-1">
-                                <span class="form-text small" id="movieDurationText">Тривалість: —</span>
-                                <span class="text-danger small d-none fw-bold" id="shortDurationWarn"></span>
-                            </div>
-                            <span class="text-danger small" asp-validation-for="EndTime"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                            <div class="row g-3 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">
+                                        <i class="fa-solid fa-film me-1"></i>Кінотеатр
+                                    </label>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 text-primary"><i class="bi bi-film me-2"></i>Фільм</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex gap-4">
-                        <div class="flex-shrink-0">
-                            <div style="width: 100px; height: 150px;" class="bg-light rounded border d-flex align-items-center justify-content-center overflow-hidden position-relative">
-                                <img id="posterImg" class="d-none w-100 h-100 object-fit-cover" src="" alt="Постер" loading="lazy" />
-                                <div id="posterPlaceholder" class="text-muted small text-center px-2">
-                                    <i class="bi bi-image fs-4 d-block mb-1"></i>
-                                    Постер
+                                    <select class="form-select"
+                                            asp-for="CinemaId"
+                                            asp-items="Model.Cinemas"
+                                            id="cinemaSelect">
+                                        <option value="0">— Оберіть кінотеатр —</option>
+                                    </select>
+
+                                    <span class="text-danger" asp-validation-for="CinemaId"></span>
+                                    <div class="form-text">Після вибору кінотеатру список залів оновиться.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">
+                                        <i class="fa-solid fa-chair me-1"></i>Зал
+                                    </label>
+
+                                    <select class="form-select"
+                                            asp-for="HallId"
+                                            asp-items="Model.Halls"
+                                            id="hallSelect"
+                                            disabled="@isHallDisabled"
+                                            aria-disabled="@isHallDisabled">
+                                        <option value="0">@hallPlaceholder</option>
+                                    </select>
+
+                                    <span class="text-danger" asp-validation-for="HallId"></span>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="flex-grow-1">
-                            <div class="mb-3">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Назва фільму</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">
+                                        <i class="fa-solid fa-clock me-1"></i>Початок
+                                    </label>
+
                                     <input class="form-control"
-                                           list="movieList"
-                                           id="movieTitleInput"
-                                           name="movieTitle"
-                                           placeholder="Введіть назву для пошуку..."
-                                           autocomplete="off"
-                                           value="@movieTitleValue" />
+                                           asp-for="StartTime"
+                                           id="StartTime"
+                                           type="datetime-local"
+                                           step="60" />
+
+                                    <span class="text-danger" asp-validation-for="StartTime"></span>
                                 </div>
-                                <datalist id="movieList">
-                                    @foreach (var m in Model.Movies)
-                                    {
-                                        <option value="@m.Text" data-id="@m.Value"></option>
-                                    }
-                                </datalist>
-                                <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-                                <span class="text-danger small" asp-validation-for="MovieId"></span>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">
+                                        <i class="fa-solid fa-hourglass-end me-1"></i>Кінець
+                                    </label>
+
+                                    <input class="form-control"
+                                           asp-for="EndTime"
+                                           id="EndTime"
+                                           type="datetime-local"
+                                           step="60" />
+
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span class="form-text" id="movieDurationText">Тривалість: —</span>
+                                        <span class="text-danger d-none fw-semibold" id="shortDurationWarn"></span>
+                                    </div>
+
+                                    <span class="text-danger" asp-validation-for="EndTime"></span>
+                                </div>
                             </div>
 
-                            <div class="w-50">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Формат</label>
-                                <select class="form-select form-select-sm" asp-for="PresentationType" asp-items="Model.PresentationTypes"></select>
-                                <span class="text-danger small" asp-validation-for="PresentationType"></span>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm rounded-4 modern-card">
+                        <div class="card-header bg-maroon text-white rounded-top-4">
+                            <h5 class="mb-0">
+                                <i class="fa-solid fa-clapperboard me-2"></i>Фільм
+                            </h5>
+                        </div>
+
+                        <div class="card-body p-4 p-md-5">
+                            <div class="row g-4 align-items-start">
+
+                                <div class="col-auto">
+                                    <div class="card overflow-hidden shadow-sm" style="width:150px;">
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
+                                            <img id="posterImg"
+                                                 class="d-none w-100 h-100"
+                                                 style="object-fit:cover;"
+                                                 src=""
+                                                 alt="Постер"
+                                                 loading="lazy" />
+
+                                            <div id="posterPlaceholder" class="text-muted text-center px-2">
+                                                <i class="fa-regular fa-image fs-3 d-block mb-1"></i>
+                                                Постер
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">
+                                            <i class="fa-solid fa-magnifying-glass me-1"></i>Назва фільму
+                                        </label>
+
+                                        <input class="form-control"
+                                               list="movieList"
+                                               id="movieTitleInput"
+                                               name="movieTitle"
+                                               placeholder="Почніть вводити назву..."
+                                               autocomplete="off"
+                                               value="@movieTitleValue" />
+
+                                        <datalist id="movieList">
+                                            @foreach (var m in Model.Movies)
+                                            {
+                                                <option value="@m.Text" data-id="@m.Value"></option>
+                                            }
+                                        </datalist>
+
+                                        <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+                                        <span class="text-danger" asp-validation-for="MovieId"></span>
+
+                                        <div class="form-text">Пошук фільму по базі.</div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label text-muted">
+                                            <i class="fa-solid fa-ticket me-1"></i>Формат
+                                        </label>
+                                        <select class="form-select"
+                                                asp-for="PresentationType"
+                                                asp-items="Model.PresentationTypes"></select>
+                                        <span class="text-danger" asp-validation-for="PresentationType"></span>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow-sm h-100 border-primary border-opacity-25">
-                <div class="card-header bg-primary bg-opacity-10 py-3">
-                    <h5 class="card-title mb-0 text-primary fs-6 text-uppercase fw-bold">
-                        <i class="bi bi-tag me-2"></i>Ціноутворення
-                    </h5>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-dark mb-1">Шаблон цін</label>
-                    <div class="input-group input-group-sm">
-                        <select class="form-select" id="templateSelect" disabled>
-                            <option value="0">Спочатку оберіть зал</option>
-                        </select>
-                        <button class="btn btn-outline-secondary" type="button" id="applyTemplateBtn" disabled>
-                            <i class="bi bi-arrow-down-square"></i> Заст.
-                        </button>
-                    </div>
-                    <div class="form-text small" id="templateHelp">Автозаповнення цін</div>
-                </div>
+                <div class="col-12 col-lg-4 d-flex flex-column">
 
-                <div class="card-body p-3 bg-light bg-opacity-50">
-                    <div class="alert alert-info py-2 px-3 small mb-3">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Ціна квитка = <strong>База ряду</strong> × <strong>Множник</strong>
-                    </div>
+                    <div class="card shadow-sm rounded-4 modern-card pricing-card d-flex flex-column flex-grow-1">
 
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-dark mb-1">База по рядах (грн)</label>
-                        <div id="rowPricesWrap" class="bg-white border rounded overflow-hidden">
-                            <div class="text-muted small text-center py-3">Оберіть зал</div>
+                        <div class="card-header bg-maroon text-white rounded-top-4">
+                            <h5 class="mb-0">
+                                <i class="fa-solid fa-tags me-2"></i>Ціноутворення
+                            </h5>
                         </div>
-                        <span class="text-danger small" asp-validation-for="RowPrices"></span>
-                    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark mb-1">Множники категорій</label>
-                        <div id="catMultipliersWrap" class="bg-white border rounded overflow-hidden">
-                            <div class="text-muted small text-center py-3">Оберіть зал</div>
+                        <div class="card-body p-4 p-md-5 flex-grow-1"
+                             style="min-height:0; overflow:hidden; display:flex; flex-direction:column;">
+
+                            <!-- ✅ Adjustments: шаблони цін -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold mb-1">
+                                    <i class="fa-solid fa-layer-group me-1"></i>Шаблон цін
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <select class="form-select" id="templateSelect" disabled>
+                                        <option value="0">Спочатку оберіть зал</option>
+                                    </select>
+                                    <button class="btn btn-outline-secondary" type="button" id="applyTemplateBtn" disabled>
+                                        <i class="fa-solid fa-arrow-down"></i> Заст.
+                                    </button>
+                                </div>
+                                <div class="form-text small" id="templateHelp">Автозаповнення цін за шаблоном.</div>
+                            </div>
+
+                            <div class="alert alert-warning py-2 px-3 small mb-3">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                Формула: <strong>ціна ряду</strong> × <strong>множник категорії</strong>
+                            </div>
+
+                            <div style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:16px;">
+
+                                <div style="flex:1 1 0; min-height:0; display:flex; flex-direction:column;">
+                                    <label class="form-label fw-semibold mb-2">База по рядах (грн)</label>
+
+                                    <div id="rowPricesWrap"
+                                         class="bg-white border rounded overflow-auto pricing-scroll"
+                                         style="flex:1 1 auto; min-height:0;">
+                                        <div class="text-muted small text-center py-3">Оберіть зал</div>
+                                    </div>
+
+                                    <span class="text-danger" asp-validation-for="RowPrices"></span>
+                                </div>
+
+                                <div style="flex:1 1 0; min-height:0; display:flex; flex-direction:column;">
+                                    <label class="form-label fw-semibold mb-2">Множники категорій</label>
+
+                                    <div id="catMultipliersWrap"
+                                         class="bg-white border rounded overflow-auto pricing-scroll"
+                                         style="flex:1 1 auto; min-height:0;">
+                                        <div class="text-muted small text-center py-3">Оберіть зал</div>
+                                    </div>
+
+                                    <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
+                                </div>
+
+                            </div>
                         </div>
-                        <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
+
+                        <div class="card-footer bg-white border-top-0 p-4 p-md-5 pt-0">
+                            <button class="btn btn-maroon w-100" type="submit">
+                                <i class="fa-solid fa-check me-2"></i>Створити
+                            </button>
+                        </div>
+
                     </div>
+
                 </div>
 
-                <div class="card-footer bg-white border-top-0 p-3">
-                    <button class="btn btn-primary w-100 fw-bold py-2" type="submit">
-                        <i class="bi bi-check-lg me-1"></i> Створити сеанс
-                    </button>
-                </div>
             </div>
-        </div>
+        </form>
+
     </div>
-</form>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         (function () {
+            // --- CONFIG ---
             const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
             const hallsUrl = '@Url.Action("HallsByCinema", "Sessions")';
+
+            // ✅ Adjustments: template endpoints
             const templatesUrl = '@Url.Action("GetTemplatesByHall", "Sessions")';
             const loadTemplateUrl = '@Url.Action("LoadTemplateData", "Sessions")';
-            const templateSelect = document.getElementById('templateSelect');
-            const applyTemplateBtn = document.getElementById('applyTemplateBtn');
 
+            // Server Data
             const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
             const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
 
+            // Initial Data
             const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
             const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
 
+            // DOM Elements
             const els = {
                 cinemaSelect: document.getElementById('cinemaSelect'),
                 hallSelect: document.getElementById('hallSelect'),
@@ -219,7 +321,12 @@
                 posterImg: document.getElementById('posterImg'),
                 posterPlaceholder: document.getElementById('posterPlaceholder'),
                 rowWrap: document.getElementById('rowPricesWrap'),
-                catWrap: document.getElementById('catMultipliersWrap')
+                catWrap: document.getElementById('catMultipliersWrap'),
+
+                // ✅ Adjustments
+                templateSelect: document.getElementById('templateSelect'),
+                applyTemplateBtn: document.getElementById('applyTemplateBtn'),
+                templateHelp: document.getElementById('templateHelp')
             };
 
             if (!els.cinemaSelect || !els.hallSelect) return;
@@ -240,6 +347,18 @@
             const initRowMap = buildMap(initialRowPrices, 'rowNumber', 'basePrice');
             const initCatMap = buildMap(initialCategoryMultipliers, 'category', 'multiplier');
 
+            function resetTemplatesUI(message) {
+                if (!els.templateSelect || !els.applyTemplateBtn) return;
+                els.templateSelect.innerHTML = `<option value="0">${message || "Спочатку оберіть зал"}</option>`;
+                els.templateSelect.disabled = true;
+                els.applyTemplateBtn.disabled = true;
+                if (els.templateHelp) {
+                    els.templateHelp.textContent = "Автозаповнення цін за шаблоном.";
+                    els.templateHelp.classList.remove('text-success');
+                }
+            }
+
+            // --- RENDERERS ---
             function renderRowPrices(rows) {
                 if (!els.rowWrap) return;
 
@@ -263,7 +382,7 @@
                           <td class="text-end pe-2 py-1">
                             <input type="hidden" name="RowPrices[${i}].RowNumber" value="${rn}" />
                             <input class="form-control form-control-sm text-end"
-                                   style="max-width: 80px; display: inline-block;"
+                                   style="max-width: 90px; display: inline-block;"
                                    type="number" step="1" min="0"
                                    name="RowPrices[${i}].BasePrice"
                                    value="${val}" required />
@@ -294,11 +413,11 @@
                         const val = initCatMap.get(id) ?? '1';
                         return `
                         <tr>
-                          <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 100px;" title="${title}">${title}</td>
+                          <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 160px;" title="${title}">${title}</td>
                           <td class="text-end pe-2 py-1">
                             <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
                             <input class="form-control form-control-sm text-end"
-                                   style="max-width: 80px; display: inline-block;"
+                                   style="max-width: 90px; display: inline-block;"
                                    type="number" step="0.1" min="0.1"
                                    name="CategoryMultipliers[${i}].Multiplier"
                                    value="${val}" required />
@@ -309,15 +428,18 @@
                 </table>`;
             }
 
+            // --- FETCHERS ---
             async function loadHalls(cinemaId) {
-                if (cinemaId <= 0) {
+                const cid = Number(cinemaId || 0);
+                if (cid <= 0) {
                     els.hallSelect.innerHTML = '<option value="0">— Спершу кінотеатр —</option>';
                     els.hallSelect.disabled = true;
                     clearPricing();
+                    resetTemplatesUI("Спочатку оберіть зал");
                     return;
                 }
                 try {
-                    const res = await fetch(hallsUrl + '?cinemaId=' + cinemaId);
+                    const res = await fetch(hallsUrl + '?cinemaId=' + cid);
                     if (!res.ok) throw new Error();
                     const halls = await res.json();
 
@@ -329,7 +451,12 @@
                         els.hallSelect.appendChild(opt);
                     });
                     els.hallSelect.disabled = false;
-                } catch { }
+
+                    clearPricing();
+                    resetTemplatesUI("Спочатку оберіть зал");
+                } catch {
+                    // noop
+                }
             }
 
             function clearPricing() {
@@ -339,10 +466,8 @@
 
             async function loadPricingMeta(hallId) {
                 const hid = Number(hallId || 0);
-                if (hid < 1) {
-                     clearPricing();
-                    return;
-                }
+                if (hid < 1) { clearPricing(); return; }
+
                 try {
                     const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid));
                     if (!res.ok) throw new Error();
@@ -352,6 +477,92 @@
                 } catch {
                     els.rowWrap.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
                     els.catWrap.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
+                }
+            }
+
+            // ✅ Adjustments: templates
+            async function loadTemplates(hallId) {
+                if (!els.templateSelect || !els.applyTemplateBtn) return;
+
+                const hid = Number(hallId || 0);
+                if (hid < 1) {
+                    resetTemplatesUI("Спочатку оберіть зал");
+                    return;
+                }
+
+                els.templateSelect.innerHTML = '<option value="0">Завантаження...</option>';
+                els.templateSelect.disabled = true;
+                els.applyTemplateBtn.disabled = true;
+
+                try {
+                    const res = await fetch(templatesUrl + '?hallId=' + hid);
+                    if (!res.ok) throw new Error();
+                    const list = await res.json();
+
+                    if (!Array.isArray(list) || list.length === 0) {
+                        els.templateSelect.innerHTML = '<option value="0">Шаблони відсутні</option>';
+                        els.templateSelect.disabled = true;
+                        els.applyTemplateBtn.disabled = true;
+                    } else {
+                        els.templateSelect.innerHTML = '<option value="0">— Оберіть шаблон —</option>';
+                        list.forEach(t => {
+                            const opt = document.createElement('option');
+                            opt.value = t.id;
+                            opt.textContent = t.title;
+                            els.templateSelect.appendChild(opt);
+                        });
+                        els.templateSelect.disabled = false;
+                        els.applyTemplateBtn.disabled = true;
+                    }
+                } catch {
+                    els.templateSelect.innerHTML = '<option value="0">Помилка завантаження</option>';
+                    els.templateSelect.disabled = true;
+                    els.applyTemplateBtn.disabled = true;
+                }
+            }
+
+            async function applySelectedTemplate() {
+                if (!els.templateSelect || !els.applyTemplateBtn) return;
+
+                const tid = Number(els.templateSelect.value || 0);
+                if (tid < 1) return;
+
+                const oldHtml = els.applyTemplateBtn.innerHTML;
+                try {
+                    els.applyTemplateBtn.disabled = true;
+                    els.applyTemplateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                    const res = await fetch(loadTemplateUrl + '?templateId=' + tid);
+                    if (!res.ok) throw new Error();
+
+                    const data = await res.json();
+
+                    initRowMap.clear();
+                    initCatMap.clear();
+
+                    if (Array.isArray(data.rowPrices)) {
+                        data.rowPrices.forEach(x => initRowMap.set(Number(x.row), x.basePrice));
+                    }
+                    if (Array.isArray(data.categoryMultipliers)) {
+                        data.categoryMultipliers.forEach(x => initCatMap.set(Number(x.category), x.multiplier));
+                    }
+
+                    await loadPricingMeta(els.hallSelect.value);
+
+                    if (els.templateHelp) {
+                        els.templateHelp.textContent = "Ціни успішно завантажено!";
+                        els.templateHelp.classList.add('text-success');
+                        setTimeout(() => {
+                            els.templateHelp.textContent = "Автозаповнення цін за шаблоном.";
+                            els.templateHelp.classList.remove('text-success');
+                        }, 2500);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert("Не вдалося застосувати шаблон.");
+                } finally {
+                    els.applyTemplateBtn.innerHTML = oldHtml;
+                    els.applyTemplateBtn.disabled = Number(els.templateSelect.value || 0) < 1;
                 }
             }
 
@@ -374,7 +585,6 @@
                 els.movieIdHidden.value = newId;
                 const id = Number(newId || 0);
 
-                // Poster
                 const path = moviePosters[id];
                 const url = posterUrl(path);
                 if (url) {
@@ -386,7 +596,6 @@
                     els.posterPlaceholder.classList.remove('d-none');
                 }
 
-                // Duration & Dates
                 const dur = movieDurations[id];
                 els.durationText.textContent = (dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
 
@@ -400,7 +609,6 @@
                     }
                 }
 
-                // Validation Warn
                 const start = new Date(els.startInput.value);
                 const end = new Date(els.endInput.value);
                 if (dur > 0 && !isNaN(start) && !isNaN(end)) {
@@ -416,106 +624,37 @@
                 }
             }
 
-            async function loadTemplates(hallId) {
-                if (!templateSelect) return;
-
-                templateSelect.innerHTML = '<option value="0">Завантаження...</option>';
-                templateSelect.disabled = true;
-                applyTemplateBtn.disabled = true;
-
-                const hid = Number(hallId || 0);
-                if (hid < 1) {
-                    templateSelect.innerHTML = '<option value="0">Спочатку оберіть зал</option>';
-                    return;
-                }
-
-                try {
-                    const res = await fetch(templatesUrl + '?hallId=' + hid);
-                    if (!res.ok) throw new Error();
-                    const list = await res.json();
-
-                    if (list.length === 0) {
-                        templateSelect.innerHTML = '<option value="0">Шаблони відсутні</option>';
-                    } else {
-                        templateSelect.innerHTML = '<option value="0">-- Оберіть шаблон --</option>';
-                        list.forEach(t => {
-                            const opt = document.createElement('option');
-                            opt.value = t.id;
-                            opt.textContent = t.title;
-                            templateSelect.appendChild(opt);
-                        });
-                        templateSelect.disabled = false;
-                    }
-                } catch {
-                    templateSelect.innerHTML = '<option value="0">Помилка завантаження</option>';
-                }
-            }
-
-            async function applySelectedTemplate() {
-                const tid = Number(templateSelect.value || 0);
-                if (tid < 1) return;
-
-                try {
-                    applyTemplateBtn.disabled = true;
-                    applyTemplateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-                    const res = await fetch(loadTemplateUrl + '?templateId=' + tid);
-                    if (!res.ok) throw new Error();
-
-                    const data = await res.json();
-
-                    initRowMap.clear();
-                    initCatMap.clear();
-
-                    if (Array.isArray(data.rowPrices)) {
-                        data.rowPrices.forEach(x => initRowMap.set(x.row, x.basePrice));
-                    }
-                    if (Array.isArray(data.categoryMultipliers)) {
-                        data.categoryMultipliers.forEach(x => initCatMap.set(x.category, x.multiplier));
-                    }
-
-                    await loadPricingMeta(els.hallSelect.value);
-
-                    const help = document.getElementById('templateHelp');
-                    if(help) {
-                        help.textContent = "Ціни успішно завантажено!";
-                        help.classList.add('text-success');
-                        setTimeout(() => {
-                            help.textContent = "Автозаповнення цін";
-                            help.classList.remove('text-success');
-                        }, 3000);
-                    }
-
-                } catch (e) {
-                    alert("Не вдалося застосувати шаблон.");
-                    console.error(e);
-                } finally {
-                    applyTemplateBtn.disabled = false;
-                    applyTemplateBtn.innerHTML = '<i class="bi bi-arrow-down-square"></i> Заст.';
-                }
-            }
-
             // --- EVENTS ---
-            els.cinemaSelect.addEventListener('change', () => loadHalls(els.cinemaSelect.value));
-            els.hallSelect.addEventListener('change', () => loadPricingMeta(els.hallSelect.value));
+            els.cinemaSelect.addEventListener('change', async () => {
+                await loadHalls(els.cinemaSelect.value);
+            });
+
+            els.hallSelect.addEventListener('change', async () => {
+                const hid = els.hallSelect.value;
+                await loadPricingMeta(hid);
+                await loadTemplates(hid);
+            });
 
             els.titleInput.addEventListener('input', updateUIForMovie);
             els.startInput.addEventListener('change', updateUIForMovie);
             els.endInput.addEventListener('change', updateUIForMovie);
 
-            els.hallSelect.addEventListener('change', async () => {
-                const hid = els.hallSelect.value;
-                loadPricingMeta(hid);
-                loadTemplates(hid);
-            });
+            if (els.templateSelect && els.applyTemplateBtn) {
+                els.templateSelect.addEventListener('change', () => {
+                    els.applyTemplateBtn.disabled = Number(els.templateSelect.value || 0) < 1;
+                });
+                els.applyTemplateBtn.addEventListener('click', applySelectedTemplate);
+            }
 
-            templateSelect.addEventListener('change', () => {
-                applyTemplateBtn.disabled = templateSelect.value == "0";
-            });
+            // Init
+            const initialHall = Number(els.hallSelect.value || 0);
+            if (initialHall > 0) {
+                loadPricingMeta(initialHall);
+                loadTemplates(initialHall);
+            } else {
+                resetTemplatesUI("Спочатку оберіть зал");
+            }
 
-            applyTemplateBtn.addEventListener('click', applySelectedTemplate);
-
-            if (els.hallSelect.value > 0) loadPricingMeta(els.hallSelect.value);
             updateUIForMovie();
 
         })();
