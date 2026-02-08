@@ -34,6 +34,9 @@ namespace Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -242,6 +245,9 @@ namespace Infrastructure.Data.Migrations
                     b.Property<string>("BackdropPath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<short?>("AgeRating")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("Description")
                         .HasMaxLength(4000)

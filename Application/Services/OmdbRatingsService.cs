@@ -19,55 +19,103 @@ public sealed class OmdbRatingsService : IExternalRatingsService
     private readonly OmdbOptions _opt;
     private readonly IMemoryCache _cache;
 
-    public OmdbRatingsService(HttpClient http, IOptions<OmdbOptions> opt, IMemoryCache cache)
+    public OmdbRatingsService(
+        HttpClient http,
+        IOptions<OmdbOptions> opt,
+        IMemoryCache cache)
     {
         _http = http;
         _opt = opt.Value;
         _cache = cache;
     }
 
-    public async Task<ExternalRatingsDto> GetRatingsAsync(string imdbId, CancellationToken ct = default)
+    public async Task<ExternalRatingsDto> GetRatingsAsync(
+        string imdbId,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(imdbId))
             return new ExternalRatingsDto();
 
-        var cacheKey = $"omdb-ratings:{imdbId.Trim()}";
-        if (_cache.TryGetValue(cacheKey, out ExternalRatingsDto? cached) && cached is not null)
+        var cacheKey = $"omdb:imdb:{imdbId}";
+        if (_cache.TryGetValue(cacheKey, out ExternalRatingsDto cached))
             return cached;
 
-        // 1) Запрос в OMDb
-        var url = $"?apikey={Uri.EscapeDataString(_opt.ApiKey)}&i={Uri.EscapeDataString(imdbId.Trim())}";
-        OmdbMovieResponse? resp = null;
+        var url = $"?apikey={_opt.ApiKey}&i={Uri.EscapeDataString(imdbId)}";
 
+        OmdbMovieResponse? response;
         try
         {
-            resp = await _http.GetFromJsonAsync<OmdbMovieResponse>(url, JsonOpts, ct);
+            response = await _http.GetFromJsonAsync<OmdbMovieResponse>(url, JsonOpts, ct);
         }
         catch
         {
-            return new ExternalRatingsDto(); 
+            return new ExternalRatingsDto();
         }
 
-        if (resp?.Response?.Equals("True", StringComparison.OrdinalIgnoreCase) != true)
+        if (response?.Response?.Equals("True", StringComparison.OrdinalIgnoreCase) != true)
             return new ExternalRatingsDto();
 
-        string? GetValue(string source) =>
-            resp.Ratings
-                .FirstOrDefault(r => r.Source?.Equals(source, StringComparison.OrdinalIgnoreCase) == true)
-                ?.Value
-                ?.Trim();
+        string? Get(string source) =>
+            response.Ratings
+                .FirstOrDefault(r =>
+                    r.Source?.Equals(source, StringComparison.OrdinalIgnoreCase) == true)
+                ?.Value;
 
         var dto = new ExternalRatingsDto
         {
-            Imdb = Normalize(GetValue("Internet Movie Database")),
-            RottenTomatoes = Normalize(GetValue("Rotten Tomatoes")),
-            Metacritic = Normalize(GetValue("Metacritic"))
+            Imdb = Get("Internet Movie Database"),
+            RottenTomatoes = Get("Rotten Tomatoes"),
+            Metacritic = Get("Metacritic")
         };
 
         _cache.Set(cacheKey, dto, TimeSpan.FromHours(12));
         return dto;
     }
 
-    private static string? Normalize(string? v)
-        => string.IsNullOrWhiteSpace(v) || v.Equals("N/A", StringComparison.OrdinalIgnoreCase) ? null : v;
+    public async Task<ExternalRatingsDto> GetRatingsByTitleAsync(
+        string title,
+        int? year,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return new ExternalRatingsDto();
+
+        var cacheKey = $"omdb:title:{title}:{year}";
+        if (_cache.TryGetValue(cacheKey, out ExternalRatingsDto cached))
+            return cached;
+
+        var encodedTitle = Uri.EscapeDataString(title);
+        var yearPart = year.HasValue ? $"&y={year.Value}" : string.Empty;
+
+        var url = $"?apikey={_opt.ApiKey}&t={encodedTitle}{yearPart}";
+
+        OmdbMovieResponse? response;
+        try
+        {
+            response = await _http.GetFromJsonAsync<OmdbMovieResponse>(url, JsonOpts, ct);
+        }
+        catch
+        {
+            return new ExternalRatingsDto();
+        }
+
+        if (response?.Response?.Equals("True", StringComparison.OrdinalIgnoreCase) != true)
+            return new ExternalRatingsDto();
+
+        string? Get(string source) =>
+            response.Ratings
+                .FirstOrDefault(r =>
+                    r.Source?.Equals(source, StringComparison.OrdinalIgnoreCase) == true)
+                ?.Value;
+
+        var dto = new ExternalRatingsDto
+        {
+            Imdb = Get("Internet Movie Database"),
+            RottenTomatoes = Get("Rotten Tomatoes"),
+            Metacritic = Get("Metacritic")
+        };
+
+        _cache.Set(cacheKey, dto, TimeSpan.FromHours(12));
+        return dto;
+    }
 }

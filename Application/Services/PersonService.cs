@@ -73,6 +73,10 @@ public class PersonService : IPersonService
         var middle = p.MiddleName is null ? "" : $" {p.MiddleName}";
         p.FullName = $"{p.FirstName}{middle} {p.LastName}".Trim();
 
+        var dup = await _people.GetByFullNameAsync(p.FullName, ct);
+        if (dup != null && dup.Id != p.Id)
+            return "Person with the same full name already exists.";
+
         if (string.IsNullOrWhiteSpace(p.FirstName) || p.FirstName.Length > 60) return "First name is required (<= 60).";
         if (p.MiddleName != null && p.MiddleName.Length > 60) return "Middle name must be <= 60.";
         if (string.IsNullOrWhiteSpace(p.LastName) || p.LastName.Length > 60) return "Last name is required (<= 60).";

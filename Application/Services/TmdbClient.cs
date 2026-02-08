@@ -92,6 +92,15 @@ public sealed class TmdbClient : ITmdbClient
         var resp = await _http.GetFromJsonAsync<TmdbVideosResponse>(url, JsonOpts, ct);
         return resp ?? new TmdbVideosResponse();
     }
+    public async Task<TmdbMovieReleaseDatesResponse> GetReleaseDatesAsync(int tmdbMovieId, CancellationToken ct = default)
+    {
+        var url = $"movie/{tmdbMovieId}/release_dates{BuildQuery(new Dictionary<string, string?>
+        {
+            ["api_key"] = _opt.ApiKey
+        })}";
+        var resp = await _http.GetFromJsonAsync<TmdbMovieReleaseDatesResponse>(url, JsonOpts, ct);
+        return resp ?? new TmdbMovieReleaseDatesResponse();
+    }
 
     private static string BuildQuery(Dictionary<string, string?> kv)
     {

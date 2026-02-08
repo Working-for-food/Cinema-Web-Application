@@ -28,45 +28,87 @@ public sealed class MovieImportRepository : IMovieImportRepository
 
     public async Task<Genre> UpsertGenreByTmdbAsync(int tmdbGenreId, string name, CancellationToken ct)
     {
+        name = NormalizeWs(name);
+        if (string.IsNullOrWhiteSpace(name)) name = "—";
+        if (name.Length > 120) name = name[..120];
+
         var genre = await _db.Genres.FirstOrDefaultAsync(g => g.TmdbId == tmdbGenreId, ct);
-        if (genre is null)
+        if (genre != null)
         {
-            genre = new Genre { TmdbId = tmdbGenreId, Name = name };
-            _db.Genres.Add(genre);
-        }
-        else if (!string.IsNullOrWhiteSpace(name))
-        {
-            genre.Name = name;
+            if (!string.Equals(genre.Name, name, StringComparison.OrdinalIgnoreCase))
+                genre.Name = name;
+
+            await _db.SaveChangesAsync(ct);
+            return genre;
         }
 
+        var byName = await _db.Genres.FirstOrDefaultAsync(g => g.Name == name, ct);
+        if (byName != null)
+        {
+            if (!byName.TmdbId.HasValue)
+                byName.TmdbId = tmdbGenreId;
+
+            if (byName.TmdbId != tmdbGenreId)
+                return byName;
+
+            await _db.SaveChangesAsync(ct);
+            return byName;
+        }
+
+        genre = new Genre { TmdbId = tmdbGenreId, Name = name };
+        _db.Genres.Add(genre);
         await _db.SaveChangesAsync(ct);
         return genre;
     }
 
+
     public async Task<Person> UpsertPersonByTmdbAsync(int tmdbPersonId, string fullName, string? photoPath, CancellationToken ct)
     {
+        fullName = NormalizeWs(fullName);
+        if (string.IsNullOrWhiteSpace(fullName)) fullName = "Unknown";
+        if (fullName.Length > 180) fullName = fullName[..180];
+
+        photoPath = NormalizeNullable(photoPath, 700);
+
         var person = await _db.People.FirstOrDefaultAsync(p => p.TmdbId == tmdbPersonId, ct);
-        if (person is null)
+        if (person != null)
         {
-            person = new Person
-            {
-                TmdbId = tmdbPersonId,
-                FullName = string.IsNullOrWhiteSpace(fullName) ? "Unknown" : fullName,
-                PhotoUrl = photoPath,
-                TmdbLastSyncAt = DateTimeOffset.UtcNow
-            };
-            _db.People.Add(person);
-        }
-        else
-        {
-            if (!string.IsNullOrWhiteSpace(fullName)) person.FullName = fullName;
-            if (!string.IsNullOrWhiteSpace(photoPath)) person.PhotoUrl = photoPath;
+            if (!string.IsNullOrWhiteSpace(fullName))
+                person.FullName = fullName;
+
+            if (!string.IsNullOrWhiteSpace(photoPath))
+                person.PhotoUrl = photoPath;
+
             person.TmdbLastSyncAt = DateTimeOffset.UtcNow;
+            await _db.SaveChangesAsync(ct);
+            return person;
         }
 
+        var manual = await _db.People.FirstOrDefaultAsync(p => p.TmdbId == null && p.FullName == fullName, ct);
+        if (manual != null)
+        {
+            manual.TmdbId = tmdbPersonId;
+            if (!string.IsNullOrWhiteSpace(photoPath))
+                manual.PhotoUrl = photoPath;
+
+            manual.TmdbLastSyncAt = DateTimeOffset.UtcNow;
+            await _db.SaveChangesAsync(ct);
+            return manual;
+        }
+
+        person = new Person
+        {
+            TmdbId = tmdbPersonId,
+            FullName = fullName,
+            PhotoUrl = photoPath,
+            TmdbLastSyncAt = DateTimeOffset.UtcNow
+        };
+
+        _db.People.Add(person);
         await _db.SaveChangesAsync(ct);
         return person;
     }
+
 
     public async Task<IReadOnlyList<string>> FilterExistingCountryCodesAsync(IReadOnlyList<string> codes, CancellationToken ct) =>
         await _db.Countries.Where(c => codes.Contains(c.Code)).Select(c => c.Code).ToListAsync(ct);
@@ -91,33 +133,63 @@ public sealed class MovieImportRepository : IMovieImportRepository
     {
         var old = await _db.MovieActors.Where(x => x.MovieId == movieId).ToListAsync(ct);
         _db.MovieActors.RemoveRange(old);
-        var sorted = actors.OrderBy(a => a.order).ToList();
+
+        var unique = actors
+            .Where(a => a.person != null)
+            .GroupBy(a => a.person.Id)
+            .Select(g => g.OrderBy(x => x.order).First())
+            .OrderBy(x => x.order)
+            .ToList();
+
         short cust = 1;
-        foreach (var a in actors)
+        foreach (var a in unique)
         {
             _db.MovieActors.Add(new MovieActor
             {
                 MovieId = movieId,
                 ActorId = a.person.Id,
                 CustOrder = cust++,
-                CharacterName = a.character
+                CharacterName = string.IsNullOrWhiteSpace(a.character) ? null : a.character.Trim()
             });
         }
     }
+
 
     public async Task ReplaceMovieDirectorsAsync(int movieId, IReadOnlyList<(Person person, short order)> directors, CancellationToken ct)
     {
         var old = await _db.MovieDirectors.Where(x => x.MovieId == movieId).ToListAsync(ct);
         _db.MovieDirectors.RemoveRange(old);
+        var unique = directors
+            .Where(d => d.person != null)
+            .GroupBy(d => d.person.Id)
+            .Select(g => g.OrderBy(x => x.order).First())
+            .OrderBy(x => x.order)
+            .ToList();
 
-        foreach (var d in directors)
+        short billing = 1;
+        foreach (var d in unique)
         {
             _db.MovieDirectors.Add(new MovieDirector
             {
                 MovieId = movieId,
-                Director = d.person,
-                BillingOrder = d.order
+                DirectorId = d.person.Id,
+                BillingOrder = billing++
             });
         }
     }
+
+    private static string NormalizeWs(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "";
+        return string.Join(' ', s.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)).Trim();
+    }
+
+    private static string? NormalizeNullable(string? s, int maxLen)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        var x = NormalizeWs(s);
+        return x.Length <= maxLen ? x : x[..maxLen];
+    }
+
+
 }

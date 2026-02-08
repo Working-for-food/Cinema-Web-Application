@@ -1,0 +1,77 @@
+﻿@model Web.ViewModels.Roles.ChangeRoleVm
+@{
+    ViewData["Title"] = "Зміна ролей";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">
+                Зміна ролей для: <span class="text-primary">@Model.Username</span>
+            </h4>
+            <small class="text-muted">(@Model.UserEmail)</small>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" name="userId" value="@Model.UserId" />
+
+                <div class="form-group mb-4">
+                    <label class="form-label text-muted mb-3">Оберіть права доступу:</label>
+
+                    @foreach (var role in Model.AllRoles)
+                    {
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input role-checkbox" type="checkbox" name="roles"
+                                   value="@role.Name"
+                                   id="role_@role.Name"
+                            @(Model.UserRoles.Contains(role.Name) ? "checked=\"checked\"" : "") />
+                            <label class="form-check-label" for="role_@role.Name">
+                                @if (role.Name == "admin")
+                                {
+                                    <strong>Адміністратор</strong>
+                                }
+                                else if (role.Name == "user")
+                                {
+                                    <span>Користувач</span>
+                                }
+                                else
+                                {
+                                    <span>@role.Name</span>
+                                }
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Зберегти
+                    </button>
+                    <a asp-action="UserList" class="btn btn-outline-secondary">Скасувати</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const adminCheck = $('input[value="admin"]');
+            const userCheck = $('input[value="user"]');
+
+            function updateVisibility() {
+                if (adminCheck.is(':checked')) {
+                    userCheck.prop('checked', false);
+                    userCheck.prop('disabled', true);
+                } else {
+                    userCheck.prop('disabled', false);
+                    userCheck.prop('checked', true);
+                }
+            }
+
+            updateVisibility();
+            adminCheck.on('change', updateVisibility);
+        });
+    </script>
+}

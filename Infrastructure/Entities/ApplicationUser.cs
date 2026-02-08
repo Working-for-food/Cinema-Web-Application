@@ -4,4 +4,5 @@ namespace Infrastructure.Entities;
 
 public class ApplicationUser : IdentityUser
 {
+    public DateOnly? DateOfBirth { get; set; }
 }

@@ -1,0 +1,18 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Створити роль";
+}
+
+<div class="container mt-4">
+    <h2>Створити нову роль</h2>
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <form asp-action="Create" method="post">
+        <div class="form-group mb-3">
+            <label for="name" class="form-label">Назва ролі</label>
+            <input name="name" class="form-control" placeholder="наприклад: manager" />
+        </div>
+        <button type="submit" class="btn btn-primary">Створити</button>
+        <a asp-action="Index" class="btn btn-secondary">Назад</a>
+    </form>
+</div>

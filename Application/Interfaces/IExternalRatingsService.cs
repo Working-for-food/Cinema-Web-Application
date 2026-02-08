@@ -5,4 +5,6 @@ namespace Application.Interfaces;
 public interface IExternalRatingsService
 {
     Task<ExternalRatingsDto> GetRatingsAsync(string imdbId, CancellationToken ct = default);
+    Task<ExternalRatingsDto> GetRatingsByTitleAsync(string title, int? year, CancellationToken ct = default);
+
 }

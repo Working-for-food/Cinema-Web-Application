@@ -17,6 +17,7 @@ public class Movie
     public string? TrailerUrl { get; set; }
     public decimal? Rating { get; set; } // decimal(4,1)
     public bool IsDeleted { get; set; } = false;
+    public int? AgeRating { get; set; }
     public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     public ICollection<MovieDirector> MovieDirectors { get; set; } = new List<MovieDirector>();
     public ICollection<MovieCountry> MovieCountries { get; set; } = new List<MovieCountry>();

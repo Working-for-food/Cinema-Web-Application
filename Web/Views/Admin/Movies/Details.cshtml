@@ -1,117 +1,270 @@
-﻿@model Web.ViewModels.Admin.MovieDetailsVm
+﻿@using Web.Helpers
+@model Web.ViewModels.Admin.MovieDetailsVm
 
 @{
-    ViewData["Title"] = "Movie details";
-    var genres = Model.Movie.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
-    var countries = Model.Movie.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).ToList() ?? new();
-    var actors = Model.Movie.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).ToList() ?? new();
-    var directors = Model.Movie.MovieDirectors?.OrderBy(x => x.BillingOrder).Select(x => x.Director?.FullName ?? x.DirectorId.ToString()).ToList() ?? new();
+    ViewData["Title"] = "Деталі фільму";
+
+    var genres = Model.Movie.MovieGenres?
+        .Select(mg => mg.Genre?.Name)
+        .Where(n => !string.IsNullOrWhiteSpace(n))
+        .ToList() ?? new();
+
+    var countries = Model.Movie.MovieCountries?
+        .Select(x => x.Country?.Name ?? x.CountryCode)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
+
+    var actors = Model.Movie.MovieActors?
+        .OrderBy(x => x.CustOrder)
+        .Select(x => x.Actor?.FullName ?? x.ActorId.ToString())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
+
+    var directors = Model.Movie.MovieDirectors?
+        .OrderBy(x => x.BillingOrder)
+        .Select(x => x.Director?.FullName ?? x.DirectorId.ToString())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
+
+    var posterUrl = TmdbImage.Build(Model.Movie.PosterPath, "w342");
+    var backdropUrl = TmdbImage.Build(Model.Movie.BackdropPath, "w1280");
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>@Model.Movie.Title</h2>
-        <div>
-            <a asp-action="Edit" asp-route-id="@Model.Movie.Id" class="btn btn-warning">Edit</a>
-            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
-        </div>
-    </div>
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
 
-    <div class="card shadow">
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Release date</dt>
-                <dd class="col-sm-9">@(Model.Movie.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")</dd>
+        <h1 class="section-title text-center mb-5">Деталі фільму</h1>
 
-                <dt class="col-sm-3">Duration</dt>
-                <dd class="col-sm-9">@(Model.Movie.Duration.HasValue ? $"{Model.Movie.Duration} min" : "-")</dd>
-                <dt class="col-sm-3">Metacritic</dt>
-                <dd class="col-sm-9">@Model.Metacritic</dd>
-                <dt class="col-sm-3">Rotten Tomatoes</dt>
-                <dd class="col-sm-9">@Model.RottenTomatoes</dd>
-                <dt class="col-sm-3">IMDb</dt>
-                <dd class="col-sm-9">@Model.ImdbRating</dd>
-                <dt class="col-sm-3">Directors</dt>
-                <dd class="col-sm-9">
-                    @if (directors.Count == 0)
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                    else
-                    {
-                        @string.Join(", ", directors)
-                    }
-                </dd>
+        <div class="card shadow-sm col-lg-10 col-xl-9 mx-auto overflow-hidden">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Інформація про фільм
+                </h5>
+            </div>
 
-                <dt class="col-sm-3">Genres</dt>
-                <dd class="col-sm-9">
-                    @if (genres.Count == 0)
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                    else
-                    {
-                        foreach (var g in genres)
+            @if (!string.IsNullOrWhiteSpace(backdropUrl))
+            {
+                <img src="@backdropUrl"
+                     alt="Backdrop"
+                     class="w-100"
+                     style="max-height:320px;object-fit:cover" />
+            }
+
+            <div class="card-body p-4">
+
+                <div class="row g-4 align-items-start">
+                    <div class="col-12 col-md-4 col-lg-3">
+                        @if (!string.IsNullOrWhiteSpace(posterUrl))
                         {
-                            <span class="badge bg-info text-dark me-1">@g</span>
+                            <img src="@posterUrl" alt="Poster" class="img-fluid rounded shadow-sm" />
                         }
-                    }
-                </dd>
+                        else
+                        {
+                            <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+                                 style="height:420px">
+                                <span class="text-muted">Немає постера</span>
+                            </div>
+                        }
+                    </div>
 
-                <dt class="col-sm-3">Countries</dt>
-                <dd class="col-sm-9">
-                    @if (countries.Count == 0)
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                    else
-                    {
-                        @string.Join(", ", countries)
-                    }
-                </dd>
+                    <div class="col-12 col-md-8 col-lg-9">
 
-                <dt class="col-sm-3">Actors</dt>
-                <dd class="col-sm-9">
-                    @if (actors.Count == 0)
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                    else
-                    {
-                        @string.Join(", ", actors)
-                    }
-                </dd>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-clapperboard me-1"></i>
+                                Назва
+                            </label>
+                            <div class="fw-semibold fs-4">@Model.Movie.Title</div>
+                        </div>
 
-                <dt class="col-sm-3">Sessions</dt>
-                <dd class="col-sm-9">@(Model.Movie.Sessions?.Count ?? 0)</dd>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label text-muted">
+                                    <i class="fa-solid fa-calendar-days me-1"></i>
+                                    Дата виходу
+                                </label>
+                                <div class="fw-semibold">
+                                    @(Model.Movie.ReleaseDate?.ToString("dd.MM.yyyy") ?? "-")
+                                </div>
+                            </div>
 
-                <dt class="col-sm-3">Original name</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.OriginalName) ? "-" : Model.Movie.OriginalName)</dd>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label text-muted">
+                                    <i class="fa-solid fa-clock me-1"></i>
+                                    Тривалість
+                                </label>
+                                <div class="fw-semibold">
+                                    @(Model.Movie.Duration.HasValue ? $"{Model.Movie.Duration} хв" : "-")
+                                </div>
+                            </div>
+                        </div>
 
-                <dt class="col-sm-3">Language</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.Language) ? "-" : Model.Movie.Language)</dd>
+                        <div class="mt-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-star me-1"></i>
+                                Рейтинги
+                            </label>
+                            <div class="fw-semibold">
+                                IMDb @Model.ImdbRating | Rotten Tomatoes @Model.RottenTomatoes | Metacritic @Model.Metacritic
+                            </div>
+                            <div class="text-muted" style="font-size:0.9rem;">
+                                IMDb — оцінка глядачів · Rotten Tomatoes — критики · Metacritic — експерти
+                            </div>
+                        </div>
 
-                <dt class="col-sm-3">Trailer</dt>
-                <dd class="col-sm-9">
-                    @if (string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                    else
-                    {
-                        <a href="@Model.Movie.TrailerUrl" target="_blank" rel="noopener">Open trailer</a>
-                    }
-                </dd>
+                        <hr class="my-4" />
 
-                <dt class="col-sm-3">PosterPath</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.PosterPath) ? "-" : Model.Movie.PosterPath)</dd>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-video me-1"></i>
+                                Режисери
+                            </label>
+                            <div class="fw-semibold">
+                                @(directors.Count == 0 ? "-" : string.Join(", ", directors))
+                            </div>
+                        </div>
 
-                <dt class="col-sm-3">BackdropPath</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.BackdropPath) ? "-" : Model.Movie.BackdropPath)</dd>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-tags me-1"></i>
+                                Жанри
+                            </label>
+                            <div class="fw-semibold">
+                                @if (genres.Count == 0)
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    foreach (var g in genres)
+                                    {
+                                        <span class="badge bg-info text-dark me-1 mb-1">@g</span>
+                                    }
+                                }
+                            </div>
+                        </div>
 
-                <dt class="col-sm-3">Description</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Movie.Description) ? "-" : Model.Movie.Description)</dd>
-            </dl>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-globe me-1"></i>
+                                Країни
+                            </label>
+                            <div class="fw-semibold">
+                                @(countries.Count == 0 ? "-" : string.Join(", ", countries))
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-user-group me-1"></i>
+                                Актори
+                            </label>
+                            <div class="fw-semibold">
+                                @(actors.Count == 0 ? "-" : string.Join(", ", actors))
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-ticket me-1"></i>
+                                Сеанси
+                            </label>
+                            <div class="fw-semibold">
+                                @(Model.Movie.Sessions?.Count ?? 0)
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-pen-nib me-1"></i>
+                                Оригінальна назва
+                            </label>
+                            <div class="fw-semibold">
+                                @(string.IsNullOrWhiteSpace(Model.Movie.OriginalName) ? "-" : Model.Movie.OriginalName)
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label text-muted">
+                                    <i class="fa-solid fa-language me-1"></i>
+                                    Мова
+                                </label>
+                                <div class="fw-semibold">
+                                    @(string.IsNullOrWhiteSpace(Model.Movie.Language) ? "-" : Model.Movie.Language)
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label text-muted">
+                                    <i class="fa-solid fa-link me-1"></i>
+                                    Трейлер
+                                </label>
+                                <div class="fw-semibold">
+                                    @if (string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="@Model.Movie.TrailerUrl" target="_blank" rel="noopener">
+                                            Відкрити трейлер
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label text-muted">
+                                    <i class="fa-solid fa-image me-1"></i>
+                                    PosterPath
+                                </label>
+                                <div class="fw-semibold">
+                                    @(string.IsNullOrWhiteSpace(Model.Movie.PosterPath) ? "-" : Model.Movie.PosterPath)
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label text-muted">
+                                    <i class="fa-solid fa-panorama me-1"></i>
+                                    BackdropPath
+                                </label>
+                                <div class="fw-semibold">
+                                    @(string.IsNullOrWhiteSpace(Model.Movie.BackdropPath) ? "-" : Model.Movie.BackdropPath)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label text-muted">
+                                <i class="fa-solid fa-align-left me-1"></i>
+                                Опис
+                            </label>
+                            <div class="fw-semibold">
+                                @(string.IsNullOrWhiteSpace(Model.Movie.Description) ? "-" : Model.Movie.Description)
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fa-solid fa-arrow-left me-1"></i>
+                                Назад
+                            </a>
+
+                            <a asp-action="Edit" asp-route-id="@Model.Movie.Id" class="btn btn-maroon">
+                                <i class="fa-solid fa-pen-to-square me-1"></i>
+                                Редагувати
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
+
     </div>
-</div>
+</section>
