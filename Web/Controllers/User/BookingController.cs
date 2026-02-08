@@ -5,6 +5,7 @@ using Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using QRCoder;
 using Web.ViewModels;
 
 namespace Web.Controllers.User;
@@ -132,5 +133,19 @@ public class BookingController : Controller
         }
 
         return RedirectToAction(nameof(My));
+    }
+
+    [HttpGet]
+    public IActionResult GenerateQr(string text)
+    {
+        using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+        {
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+            using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
+            {
+                byte[] qrCodeImage = qrCode.GetGraphic(20);
+                return File(qrCodeImage, "image/png");
+            }
+        }
     }
 }
