@@ -1,4 +1,29 @@
-﻿html {
+﻿/* _base.css (Soft UI / Modern Enterprise 2026) */
+
+:root {
+    /* Typography */
+    --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    /* Palette */
+    --bg: #F8FAFC; /* page background */
+    --surface: #FFFFFF; /* cards / panels */
+    --surface-2: #F1F5F9; /* soft blocks */
+    --text: #1E293B; /* text main */
+    --muted: #64748B; /* text muted */
+    --border: #E2E8F0; /* borders */
+    --danger: #EF4444; /* danger */
+    /* Accent (single clean primary) */
+    --accent: #6366F1; /* indigo */
+    --accent-2: #4F46E5; /* indigo hover */
+    --accent-soft: rgba(99, 102, 241, 0.14);
+    /* Radius / shadow */
+    --radius: 12px;
+    --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 14px 34px rgba(15, 23, 42, 0.10);
+    /* Focus ring */
+    --focus-ring: 0 0 0 0.22rem rgba(99, 102, 241, 0.16);
+}
+
+html {
     font-size: 14px;
     position: relative;
     min-height: 100%;
@@ -13,11 +38,14 @@
 html, body {
     min-height: 100vh;
     margin: 0;
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    background-color: #fefefe;
-    color: #333;
+    font-family: var(--font-sans);
+    background-color: var(--bg);
+    color: var(--text);
     display: flex;
     flex-direction: column;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 main {
@@ -37,12 +65,17 @@ main {
     margin: 0 auto;
 }
 
+/* Seats page background: subtle, “airy”, minimal */
 .seats-page {
-    background: radial-gradient(1200px 600px at 10% 10%, rgba(128,0,0,.08), transparent 60%), radial-gradient(900px 500px at 90% 0%, rgba(0,0,0,.06), transparent 55%), #f6f7fb;
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(99, 102, 241, .10), transparent 60%), radial-gradient(900px 500px at 90% 0%, rgba(15, 23, 42, .05), transparent 55%), linear-gradient(180deg, #FAFBFF 0%, #F6F8FD 100%);
     min-height: 100%;
 }
 
+/* Backward compatibility: keep name, new accent color */
 .text-maroon {
-    color: #800020;
+    color: var(--accent);
 }
 
+.text-accent {
+    color: var(--accent);
+}

@@ -3,85 +3,145 @@
 <link rel="stylesheet" href="~/css/afisha.css" />
 
 <div class="afisha-page">
-    <h1 class="afisha-title">Афіша</h1>
+    <div class="afisha-bg" aria-hidden="true"></div>
 
-    <section class="afisha-section">
-        <h2 class="afisha-section-title">ЗАРАЗ У ПРОКАТІ</h2>
+    <div class="afisha-header">
+        <h1 class="afisha-title">Афіша</h1>
 
-        <div class="afisha-row">
-            @foreach (var m in Model.NowShowing)
-            {
-                <a asp-route="MovieDetails"
-                   asp-route-id="@m.Id"
-                   class="movie-card movie-card-link">
+        <!-- Tabs -->
+        <div class="afisha-tabs" role="tablist" aria-label="Афіша вкладки">
+            <button type="button"
+                    class="afisha-tab-btn is-active"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="tab-now"
+                    id="tabBtnNow"
+                    data-tab="now">
+                У ПРОКАТІ
+            </button>
 
-                    <div class="movie-poster-wrap">
-                        @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
-                        {
-                            <div class="badge badge-age">@m.AgeLabel</div>
-                        }
-                        @if (m.Year is not null)
-                        {
-                            <div class="badge badge-year">@m.Year</div>
-                        }
+            <button type="button"
+                    class="afisha-tab-btn"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="tab-soon"
+                    id="tabBtnSoon"
+                    data-tab="soon">
+                СКОРО БУДЕ
+            </button>
+        </div>
+    </div>
+    @* end .afisha-header *@
 
-                        @if (!string.IsNullOrWhiteSpace(m.PosterUrl) &&
-                       (m.PosterUrl.StartsWith("http://") || m.PosterUrl.StartsWith("https://")))
-                        {
-                            <img class="afisha-poster" src="@m.PosterUrl" alt="" />
-                        }
-                        else
-                        {
-                            <div class="afisha-poster afisha-poster-placeholder"></div>
-                        }
-                    </div>
+    <!-- Tab: Now showing -->
+    <section id="tab-now"
+             class="afisha-tab-panel is-active"
+             role="tabpanel"
+             aria-labelledby="tabBtnNow">
 
-                    <div class="movie-name">@m.Title</div>
+        <div class="afisha-carousel" data-carousel="now">
+            <button type="button"
+                    class="afisha-car-btn prev"
+                    aria-label="Попередній слайд">
+                ‹
+            </button>
 
-                    <div class="btn-details">Показати деталі</div>
-                </a>
-            }
+            <div class="afisha-car-stage">
+                <div class="afisha-car-track">
+                    @for (var i = 0; i < (Model.NowShowing?.Count ?? 0); i++)
+                    {
+                        var m = Model.NowShowing[i];
+
+                        <a asp-route="MovieDetails"
+                           asp-route-id="@m.Id"
+                           class="afisha-car-item movie-card-link"
+                           data-index="@i"
+                           aria-label="@m.Title">
+
+                            <div class="movie-poster-wrap">
+                                @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
+                                {
+                                    <div class="badge badge-age">@m.AgeLabel</div>
+                                }
+                                @if (m.Year is not null)
+                                {
+                                    <div class="badge badge-year">@m.Year</div>
+                                }
+
+                                <img class="afisha-poster"
+                                     src="@m.PosterUrl"
+                                     alt="@m.Title" />
+
+                                <div class="poster-title">@m.Title</div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <button type="button"
+                    class="afisha-car-btn next"
+                    aria-label="Наступний слайд">
+                ›
+            </button>
         </div>
     </section>
 
-    <section class="afisha-section">
-        <h2 class="afisha-section-title">СКОРО У ПРОКАТІ</h2>
+    <!-- Tab: Coming soon -->
+    <section id="tab-soon"
+             class="afisha-tab-panel"
+             role="tabpanel"
+             aria-labelledby="tabBtnSoon">
 
-        <div class="afisha-row">
-            @foreach (var m in Model.ComingSoon)
-            {
-                <a asp-route="MovieDetails"
-                   asp-route-id="@m.Id"
-                   class="movie-card movie-card-soon movie-card-link">
+        <div class="afisha-carousel" data-carousel="soon">
+            <button type="button"
+                    class="afisha-car-btn prev"
+                    aria-label="Попередній слайд">
+                ‹
+            </button>
 
-                    <div class="movie-poster-wrap">
-                        <div class="soon-badge">СКОРО</div>
+            <div class="afisha-car-stage">
+                <div class="afisha-car-track">
+                    @for (var i = 0; i < (Model.ComingSoon?.Count ?? 0); i++)
+                    {
+                        var m = Model.ComingSoon[i];
 
-                        @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
-                        {
-                            <div class="badge badge-age">@m.AgeLabel</div>
-                        }
-                        @if (m.Year is not null)
-                        {
-                            <div class="badge badge-year">@m.Year</div>
-                        }
+                        <a asp-route="MovieDetails"
+                           asp-route-id="@m.Id"
+                           class="afisha-car-item movie-card-link movie-card-soon"
+                           data-index="@i"
+                           aria-label="@m.Title">
 
-                        @if (!string.IsNullOrWhiteSpace(m.PosterUrl) &&
-                       (m.PosterUrl.StartsWith("http://") || m.PosterUrl.StartsWith("https://")))
-                        {
-                            <img class="afisha-poster" src="@m.PosterUrl" alt="" />
-                        }
-                        else
-                        {
-                            <div class="afisha-poster afisha-poster-placeholder"></div>
-                        }
-                    </div>
+                            <div class="movie-poster-wrap">
+                                <div class="soon-badge">СКОРО</div>
 
-                    <div class="movie-name">@m.Title</div>
+                                @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
+                                {
+                                    <div class="badge badge-age">@m.AgeLabel</div>
+                                }
+                                @if (m.Year is not null)
+                                {
+                                    <div class="badge badge-year">@m.Year</div>
+                                }
 
-                    <div class="btn-details">Показати деталі</div>
-                </a>
-            }
+                                <img class="afisha-poster"
+                                     src="@m.PosterUrl"
+                                     alt="@m.Title" />
+
+                                <div class="poster-title">@m.Title</div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <button type="button"
+                    class="afisha-car-btn next"
+                    aria-label="Наступний слайд">
+                ›
+            </button>
         </div>
     </section>
 </div>
+
+<script src="~/js/afisha-carousel.js"></script>

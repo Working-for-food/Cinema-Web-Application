@@ -3,16 +3,47 @@
     ViewData["Title"] = "Створити роль";
 }
 
-<div class="container mt-4">
-    <h2>Створити нову роль</h2>
-    <div asp-validation-summary="All" class="text-danger"></div>
+<section class="py-5 gray-bg">
+    <div class="container">
 
-    <form asp-action="Create" method="post">
-        <div class="form-group mb-3">
-            <label for="name" class="form-label">Назва ролі</label>
-            <input name="name" class="form-control" placeholder="наприклад: manager" />
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Додати нову роль</h1>
+            <p class="text-muted small text-uppercase fw-semibold">Визначте нові права доступу для системи</p>
         </div>
-        <button type="submit" class="btn btn-primary">Створити</button>
-        <a asp-action="Index" class="btn btn-secondary">Назад</a>
-    </form>
-</div>
+
+        <div class="card shadow-sm border-0 col-lg-6 mx-auto br-12 overflow-hidden bg-white">
+            <div class="card-body p-4 p-lg-5">
+
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-4">
+                        <label for="name" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-shield-halved me-1"></i> Назва ролі
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-2 border-end-0 br-left-8 text-muted">
+                                <i class="fa-solid fa-key"></i>
+                            </span>
+                            <input name="name" id="name" class="form-control form-control-lg border-2 br-right-8 shadow-none"
+                                   placeholder="наприклад: manager, moderator..." required />
+                        </div>
+                        <div class="form-text x-small text-muted mt-2">
+                            <i class="fa-solid fa-circle-info me-1"></i> Використовуйте латиницю для системних назв ролей.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a asp-action="Index" class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
+                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
+                        </a>
+
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                            <i class="fa-solid fa-plus me-2"></i> СТВОРИТИ РОЛЬ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,6 +1,8 @@
 ﻿using Application.DTOs;
 using Application.Exceptions;
 using Application.Interfaces;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Web.ViewModels.Admin.Cinemas;
@@ -11,6 +13,7 @@ namespace Web.Controllers.Admin;
 public class CinemasController : Controller
 {
     private readonly ICinemaService _cinemaService;
+    private readonly Cloudinary _cloudinary;
 
     private const string IndexViewPath = "~/Views/Admin/Cinemas/Index.cshtml";
     private const string CreateViewPath = "~/Views/Admin/Cinemas/Create.cshtml";
@@ -18,9 +21,10 @@ public class CinemasController : Controller
     private const string DeleteViewPath = "~/Views/Admin/Cinemas/Delete.cshtml";
     private const string DetailsViewPath = "~/Views/Admin/Cinemas/Details.cshtml";
 
-    public CinemasController(ICinemaService cinemaService)
+    public CinemasController(ICinemaService cinemaService, Cloudinary cloudinary)
     {
         _cinemaService = cinemaService;
+        _cloudinary = cloudinary;
     }
 
     // GET: /Admin/Cinemas?city=&search=&sort=
@@ -79,6 +83,24 @@ public class CinemasController : Controller
 
         try
         {
+            // ✅ Upload в Cloudinary (якщо файл вибраний)
+            if (vm.Image != null && vm.Image.Length > 0)
+            {
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(vm.Image.FileName, vm.Image.OpenReadStream()),
+                    Folder = "cinemas",
+                    Transformation = new Transformation().Height(500).Width(500).Crop("fill")
+                };
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams, ct);
+
+                if (uploadResult.Error != null)
+                    throw new DomainException(uploadResult.Error.Message);
+
+                vm.ImageUrl = uploadResult.SecureUrl?.ToString();
+            }
+
             await _cinemaService.CreateAsync(ToDto(vm), ct);
 
             TempData["Success"] = "Кінотеатр успішно створено.";
@@ -111,6 +133,25 @@ public class CinemasController : Controller
 
         try
         {
+            // ✅ Upload тільки якщо вибрали новий файл
+            if (vm.Image != null && vm.Image.Length > 0)
+            {
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(vm.Image.FileName, vm.Image.OpenReadStream()),
+                    Folder = "cinemas",
+                    Transformation = new Transformation().Height(500).Width(500).Crop("fill")
+                };
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams, ct);
+
+                if (uploadResult.Error != null)
+                    throw new DomainException(uploadResult.Error.Message);
+
+                vm.ImageUrl = uploadResult.SecureUrl?.ToString();
+            }
+            // якщо файл не вибрали — vm.ImageUrl лишається тим, що прийшло з форми (hidden/або прив’язка)
+
             await _cinemaService.UpdateAsync(ToDto(vm), ct);
 
             TempData["Success"] = "Кінотеатр успішно оновлено.";
@@ -156,7 +197,8 @@ public class CinemasController : Controller
         Id = vm.Id,
         Name = vm.Name,
         Address = vm.Address,
-        City = vm.City
+        City = vm.City,
+        ImageUrl = vm.ImageUrl // ✅ додано
     };
 
     private static CinemaEditVm ToVm(CinemaEditDto dto) => new()
@@ -164,14 +206,15 @@ public class CinemasController : Controller
         Id = dto.Id,
         Name = dto.Name,
         Address = dto.Address,
-        City = dto.City
+        City = dto.City,
+        ImageUrl = dto.ImageUrl // ✅ додано
     };
 
     private static List<SelectListItem> BuildCitiesSelectList(List<string> cities, string? selectedCity)
     {
         var list = new List<SelectListItem>
         {
-            new SelectListItem
+            new()
             {
                 Value = "",
                 Text = "Усі міста",

@@ -5,48 +5,45 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Деталі жанру</h1>
+        @* Заголовок секції прибрано для чистоти дизайну *@
 
-        <div class="card shadow-sm col-lg-6 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-circle-info me-2"></i>
-                    Інформація про жанр
-                </h5>
-            </div>
+        <div class="card shadow-sm border-0 col-lg-6 mx-auto br-12 overflow-hidden">
+            
+            <div class="card-body p-4 p-lg-5">
 
-            <div class="card-body p-4">
-
-                <div class="mb-4">
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-tags me-1"></i>
-                            Назва жанру
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Name</div>
+                <div class="text-center mb-5">
+                    <div class="genre-icon-circle mx-auto mb-4">
+                        <i class="fa-solid fa-tags fa-2x"></i>
                     </div>
-
+                    <div class="header-subtitle text-uppercase fw-bold mb-1">Інформація про жанр</div>
+                    <h2 class="header-title display-6">@Model.Name</h2>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
+                <div class="panel bg-light-soft border-0 shadow-none mb-4" style="background: var(--surface-2);">
+                    <div class="info-item border-0">
+                        <span class="info-item-label">
+                            <i class="fa-solid fa-hashtag me-2"></i>Системний ID
+                        </span>
+                        <span class="info-item-value text-muted">#@Model.Id</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 mt-5 pt-4 border-top">
                     <a asp-area="Admin"
                        asp-controller="Genres"
                        asp-action="Index"
-                       class="btn btn-secondary">
-                        <i class="fa-solid fa-arrow-left me-1"></i>
-                        Назад
+                       class="btn btn-secondary px-5 py-2 fw-bold text-uppercase">
+                        <i class="fa-solid fa-arrow-left me-2"></i> Назад
                     </a>
 
                     <a asp-area="Admin"
                        asp-controller="Genres"
                        asp-action="Edit"
                        asp-route-id="@Model.Id"
-                       class="btn btn-maroon">
-                        <i class="fa-solid fa-pen-to-square me-1"></i>
-                        Редагувати жанр
+                       class="btn btn-maroon px-5 py-2 fw-bold text-uppercase shadow-sm">
+                        <i class="fa-solid fa-pen-to-square me-2"></i> Редагувати
                     </a>
                 </div>
 
@@ -56,3 +53,22 @@
     </div>
 </section>
 
+<style>
+    .bg-light-soft {
+        background-color: #f8fafc;
+        border-radius: 16px;
+    }
+    
+    /* Збереження іконки в колі для візуального акценту */
+    .genre-icon-circle {
+        width: 70px;
+        height: 70px;
+        background-color: var(--surface-2);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+    }
+</style>

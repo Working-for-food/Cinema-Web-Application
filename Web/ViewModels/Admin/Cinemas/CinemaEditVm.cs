@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace Web.ViewModels.Admin.Cinemas;
 
@@ -17,4 +18,7 @@ public class CinemaEditVm
     [Required(ErrorMessage = "Місто є обов’язковим")]
     [StringLength(50, MinimumLength = 2, ErrorMessage = "Назва міста має містити від 2 до 50 символів")]
     public string City { get; set; } = "";
+
+    public string? ImageUrl { get; set; }
+    public IFormFile? Image { get; set; }
 }
