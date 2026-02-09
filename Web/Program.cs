@@ -138,12 +138,12 @@ app.UseAuthorization();
 // Area route (Admin)
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Afisha}/{action=Index}/{id?}");
 
 // Default route
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Afisha}/{action=Index}/{id?}");
 
 // Seed Countries and Roles + Test User
 using (var scope = app.Services.CreateScope())
