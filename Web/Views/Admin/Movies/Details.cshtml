@@ -70,6 +70,16 @@
                                 <div class="no-poster-placeholder">Немає постера</div>
                             }
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
+                        {
+                            <a href="@Model.Movie.TrailerUrl"
+                               target="_blank"
+                               rel="noopener"
+                               class="poster-trailer-link">
+                                ▶ ДИВИТИСЬ ТРЕЙЛЕР
+                            </a>
+                        }
+
 
                         <div class="text-white pb-2">
                             <h1 class="display-5 fw-bold mb-1">@Model.Movie.Title</h1>

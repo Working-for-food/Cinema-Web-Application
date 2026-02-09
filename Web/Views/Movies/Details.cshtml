@@ -40,7 +40,20 @@
                      alt="@Model.Title"
                      loading="lazy"
                      onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+
+                @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                {
+                    <a class="poster-trailer-link"
+                       href="@Model.TrailerUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        ▶ Дивитися трейлер
+                    </a>
+                }
             </div>
+
+
+
 
             <div class="movie-details-info">
                 <div class="movie-details-title">@Model.Title</div>
@@ -102,22 +115,13 @@
                 }
 
                 <div class="movie-details-actions">
-                    @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
-                    {
-                        <a class="btn-secondary"
-                           href="@Model.TrailerUrl"
-                           target="_blank"
-                           rel="noopener noreferrer">
-                            Дивитися трейлер
-                        </a>
-                    }
-
-                    <a class="btn-details"
+                    <a class="btn-details btn-back"
                        asp-controller="Afisha"
                        asp-action="Index">
                         Назад до афіші
                     </a>
                 </div>
+
             </div>
         </div>
     </div>
