@@ -44,23 +44,28 @@
             <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
         }
 
-        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate id="editForm" asp-antiforgery="true">
+        <form asp-action="Edit"
+              asp-route-id="@Model.Id"
+              method="post"
+              novalidate
+              id="editForm"
+              asp-antiforgery="true">
             @Html.AntiForgeryToken()
 
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="CinemaId" id="hiddenCinemaId" />
-            <input type="hidden" asp-for="HallId" id="hiddenHallId" />
+            <input type="hidden" asp-for="CinemaId" />
+            <input type="hidden" asp-for="HallId" />
 
             <div class="row g-3 align-items-stretch">
 
-                <div class="col-12 col-lg-7 d-flex flex-column">
-
-                    <div class="card shadow-sm rounded-4 modern-card mb-3">
+                <div class="col-12 col-lg-8 d-flex">
+                    <div class="card shadow-sm rounded-4 modern-card flex-grow-1">
                         <div class="card-header bg-maroon text-white rounded-top-4">
                             <h5 class="mb-0">
                                 <i class="fa-solid fa-location-dot me-2"></i>Локація та час
                             </h5>
                         </div>
+
                         <div class="card-body p-4 p-md-5">
 
                             <div class="row g-3 mb-2">
@@ -68,7 +73,12 @@
                                     <label class="form-label text-muted">
                                         <i class="fa-solid fa-film me-1"></i>Кінотеатр
                                     </label>
-                                    <select class="form-select" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect" disabled></select>
+                                    <select class="form-select"
+                                            asp-for="CinemaId"
+                                            asp-items="Model.Cinemas"
+                                            id="cinemaSelect"
+                                            disabled>
+                                    </select>
                                     <div class="form-text">Локацію не можна змінити під час редагування.</div>
                                 </div>
 
@@ -76,7 +86,12 @@
                                     <label class="form-label text-muted">
                                         <i class="fa-solid fa-chair me-1"></i>Зал
                                     </label>
-                                    <select class="form-select" asp-for="HallId" asp-items="Model.Halls" id="hallSelect" disabled></select>
+                                    <select class="form-select"
+                                            asp-for="HallId"
+                                            asp-items="Model.Halls"
+                                            id="hallSelect"
+                                            disabled>
+                                    </select>
                                 </div>
                             </div>
 
@@ -85,7 +100,12 @@
                                     <label class="form-label text-muted">
                                         <i class="fa-solid fa-clock me-1"></i>Початок
                                     </label>
-                                    <input class="form-control" asp-for="StartTime" id="StartTime" type="datetime-local" step="60" value="@FormatDt(Model.StartTime)" />
+                                    <input class="form-control"
+                                           asp-for="StartTime"
+                                           id="StartTime"
+                                           type="datetime-local"
+                                           step="60"
+                                           value="@FormatDt(Model.StartTime)" />
                                     <span class="text-danger" asp-validation-for="StartTime"></span>
                                 </div>
 
@@ -93,44 +113,67 @@
                                     <label class="form-label text-muted">
                                         <i class="fa-solid fa-hourglass-end me-1"></i>Кінець
                                     </label>
-                                    <input class="form-control" asp-for="EndTime" id="EndTime" type="datetime-local" step="60" value="@FormatDt(Model.EndTime)" />
+                                    <input class="form-control"
+                                           asp-for="EndTime"
+                                           id="EndTime"
+                                           type="datetime-local"
+                                           step="60"
+                                           value="@FormatDt(Model.EndTime)" />
 
                                     <div class="d-flex justify-content-between mt-2">
                                         <span class="form-text" id="movieDurationText">Тривалість: —</span>
                                         <span class="text-danger d-none fw-semibold" id="shortDurationWarn"></span>
                                     </div>
+
                                     <span class="text-danger" asp-validation-for="EndTime"></span>
                                 </div>
                             </div>
 
                         </div>
                     </div>
+                </div>
 
-                    <div class="card shadow-sm rounded-4 modern-card">
+                <div class="col-12 col-lg-4 d-flex">
+                    <div class="card shadow-sm rounded-4 modern-card flex-grow-1">
                         <div class="card-header bg-maroon text-white rounded-top-4">
                             <h5 class="mb-0">
                                 <i class="fa-solid fa-clapperboard me-2"></i>Фільм
                             </h5>
                         </div>
+
                         <div class="card-body p-4 p-md-5">
-                            <div class="row g-4 align-items-start">
-                                <div class="col-auto">
-                                    <div class="card overflow-hidden shadow-sm" style="width:150px;">
-                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
-                                            <img id="posterImg" class="d-none w-100 h-100" style="object-fit:cover;" src="" alt="Постер" loading="lazy" />
+                            <div class="d-flex gap-3 align-items-start">
+
+                                <div class="flex-shrink-0">
+                                    <div class="card overflow-hidden shadow-sm" style="width:120px;">
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width:120px;height:180px;">
+                                            <img id="posterImg"
+                                                 class="d-none w-100 h-100"
+                                                 style="object-fit:cover;"
+                                                 src=""
+                                                 alt="Постер"
+                                                 loading="lazy" />
                                             <div id="posterPlaceholder" class="text-muted text-center px-2">
-                                                <i class="fa-regular fa-image fs-3 d-block mb-1"></i> Постер
+                                                <i class="fa-regular fa-image fs-3 d-block mb-1"></i>
+                                                Постер
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col">
+                                <div class="flex-grow-1" style="min-width:0;">
                                     <div class="mb-3">
                                         <label class="form-label text-muted">
-                                            <i class="fa-solid fa-magnifying-glass me-1"></i>Назва фільму
+                                            <i class="fa-solid fa-magnifying-glass me-1"></i>Назва
                                         </label>
-                                        <input class="form-control" list="movieList" id="movieTitleInput" name="movieTitle" placeholder="Почніть вводити назву..." autocomplete="off" value="@movieTitleValue" />
+
+                                        <input class="form-control"
+                                               list="movieList"
+                                               id="movieTitleInput"
+                                               name="movieTitle"
+                                               placeholder="Почніть вводити..."
+                                               autocomplete="off"
+                                               value="@movieTitleValue" />
 
                                         <datalist id="movieList">
                                             @foreach (var m in Model.Movies)
@@ -143,75 +186,28 @@
                                         <span class="text-danger" asp-validation-for="MovieId"></span>
                                     </div>
 
-                                    <div class="col-12 col-md-6">
+                                    <div>
                                         <label class="form-label text-muted">
                                             <i class="fa-solid fa-ticket me-1"></i>Формат
                                         </label>
-                                        <select class="form-select" asp-for="PresentationType" asp-items="Model.PresentationTypes"></select>
+                                        <select class="form-select"
+                                                asp-for="PresentationType"
+                                                asp-items="Model.PresentationTypes">
+                                        </select>
                                         <span class="text-danger" asp-validation-for="PresentationType"></span>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                </div>
-
-                <div class="col-12 col-lg-5 d-flex flex-column">
-
-                    <div class="card shadow-sm rounded-4 modern-card pricing-card d-flex flex-column flex-grow-1">
-                        <div class="card-header bg-maroon text-white rounded-top-4">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-tags me-2"></i>Ціноутворення
-                            </h5>
-                        </div>
-
-                        <div class="card-body p-4 p-md-5 flex-grow-1" style="min-height:0; overflow-y:auto;">
-
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold mb-1">
-                                    <i class="fa-solid fa-layer-group me-1"></i>Шаблон цін
-                                </label>
-                                <div class="input-group">
-                                    <select class="form-select" id="templateSelect" disabled>
-                                        <option value="0">Завантаження...</option>
-                                    </select>
-                                    <button class="btn btn-outline-secondary" type="button" id="applyTemplateBtn" disabled>
-                                        <i class="fa-solid fa-arrow-down"></i> Заст.
-                                    </button>
-                                </div>
-                                <div class="form-text small" id="templateHelp">Можна перезаписати ціни шаблоном.</div>
-                            </div>
-
-                            <hr class="my-3 opacity-25" />
-
-                            <label class="form-label fw-semibold mb-2">Налаштування рядів</label>
-                            <div id="rowPricesUi" class="bg-white border rounded p-3 bg-light mb-3">
-                                <div class="text-muted small text-center py-3">Завантаження...</div>
-                            </div>
-
-                            <div id="hiddenRowPrices"></div>
-                            <span class="text-danger" asp-validation-for="RowPrices"></span>
-
-                            <label class="form-label fw-semibold mb-2">Множники категорій</label>
-                            <div id="catMultipliersWrap" class="bg-white border rounded overflow-hidden p-3 bg-light mb-3">
-                                <div class="text-muted small text-center py-3">Завантаження...</div>
-                            </div>
-                            <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
-
-                            <div class="alert alert-warning py-2 px-3 small mb-0 mt-auto">
-                                <i class="fa-solid fa-circle-info me-1"></i>
-                                Ціна квитка = <strong>База ряду</strong> × <strong>Множник</strong>
                             </div>
                         </div>
 
-                        <div class="card-footer bg-white border-top-0 p-4 p-md-5 pt-0 mt-auto">
+                        <div class="card-footer bg-white border-top-0 p-4 p-md-5 pt-0">
                             <button class="btn btn-maroon w-100" type="submit">
                                 <i class="fa-solid fa-floppy-disk me-2"></i>Зберегти зміни
                             </button>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
 
             </div>
@@ -222,24 +218,12 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script>
         (function () {
-            const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
-            const templatesUrl = '@Url.Action("GetTemplatesByHall", "Sessions")';
-            const loadTemplateUrl = '@Url.Action("LoadTemplateData", "Sessions")';
-
             const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
             const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
 
-            const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
-            const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
-
             const els = {
-                cinemaSelect: document.getElementById('cinemaSelect'),
-                hallSelect: document.getElementById('hallSelect'),
-                hiddenHallId: document.getElementById('hiddenHallId'),
-
                 titleInput: document.getElementById('movieTitleInput'),
                 movieIdHidden: document.getElementById('movieIdHidden'),
                 movieList: document.getElementById('movieList'),
@@ -248,364 +232,71 @@
                 durationText: document.getElementById('movieDurationText'),
                 warn: document.getElementById('shortDurationWarn'),
                 posterImg: document.getElementById('posterImg'),
-                posterPlaceholder: document.getElementById('posterPlaceholder'),
-
-                rowUi: document.getElementById('rowPricesUi'),
-                hiddenContainer: document.getElementById('hiddenRowPrices'),
-                catWrap: document.getElementById('catMultipliersWrap'),
-                templateSelect: document.getElementById('templateSelect'),
-                applyTemplateBtn: document.getElementById('applyTemplateBtn'),
-                templateHelp: document.getElementById('templateHelp')
+                posterPlaceholder: document.getElementById('posterPlaceholder')
             };
-
-            let allRows = [];
-            let pricesMap = new Map();
-            let currentBasePrice = 100;
-
-            let catMap = new Map();
-            if (initialCategoryMultipliers && initialCategoryMultipliers.length > 0) {
-                initialCategoryMultipliers.forEach(x => {
-                    const catId = x.Category ?? x.category;
-                    const mult = x.Multiplier ?? x.multiplier;
-                    if (catId !== undefined) catMap.set(Number(catId), mult);
-                });
-            }
-
-            function parsePricesToState(flatPrices) {
-                if (!flatPrices || flatPrices.length === 0) return;
-
-                const counts = {};
-                const normalized = flatPrices.map(p => ({
-                    row: Number(p.RowNumber ?? p.row ?? p.Row ?? 0),
-                    price: Number(p.BasePrice ?? p.basePrice ?? 0)
-                })).filter(p => p.row > 0);
-
-                if (normalized.length === 0) return;
-
-                normalized.forEach(p => {
-                    counts[p.price] = (counts[p.price] || 0) + 1;
-                });
-
-                const sortedPrices = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-                const modePrice = Number(sortedPrices[0]);
-                currentBasePrice = modePrice;
-
-                pricesMap.clear();
-                normalized.forEach(p => {
-                    if (allRows.includes(p.row) && p.price !== currentBasePrice) {
-                        pricesMap.set(p.row, p.price);
-                    }
-                });
-            }
-
-            function renderRowUi() {
-                if (!els.rowUi) return;
-
-                let html = `
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark" for="basePriceInput">Базова ціна (грн)</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white">₴</span>
-                            <input type="number" id="basePriceInput" class="form-control fw-bold" value="${currentBasePrice}" min="0" />
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold text-dark mb-1">Винятки</label>
-                        <div id="exceptionsContainer" class="d-flex flex-column gap-2 mb-2">
-                `;
-
-                if (pricesMap.size === 0) {
-                    html += `<div class="text-muted small fst-italic ms-1">Немає (всі ряди по ${currentBasePrice} грн)</div>`;
-                } else {
-                    const sortedRows = Array.from(pricesMap.keys()).sort((a, b) => a - b);
-                    sortedRows.forEach(row => {
-                        const price = pricesMap.get(row);
-                        html += `
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-secondary fw-normal" style="min-width: 50px;">Ряд ${row}</span>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white">₴</span>
-                                    <input type="number" class="form-control text-end js-ex-price" data-row="${row}" value="${price}" />
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger js-remove-ex" data-row="${row}" title="Видалити">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
-                        `;
-                    });
-                }
-
-                html += `
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-2 rounded border">
-                        <div class="d-flex gap-2">
-                            <select id="exceptionRowSelect" class="form-select form-select-sm">
-                                <option value="">+ Ряд</option>
-                `;
-
-                allRows.forEach(r => {
-                    if (!pricesMap.has(r)) {
-                        html += `<option value="${r}">Ряд ${r}</option>`;
-                    }
-                });
-
-                html += `
-                            </select>
-                            <button type="button" id="addExceptionBtn" class="btn btn-sm btn-secondary text-nowrap">
-                                Додати
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                els.rowUi.innerHTML = html;
-                generateHiddenInputs();
-                attachPricingEvents();
-            }
-
-            function generateHiddenInputs() {
-                els.hiddenContainer.innerHTML = '';
-                allRows.forEach((r, index) => {
-                    const price = pricesMap.has(r) ? pricesMap.get(r) : currentBasePrice;
-
-                    const inputRow = document.createElement('input');
-                    inputRow.type = 'hidden';
-                    inputRow.name = `RowPrices[${index}].RowNumber`;
-                    inputRow.value = r;
-
-                    const inputPrice = document.createElement('input');
-                    inputPrice.type = 'hidden';
-                    inputPrice.name = `RowPrices[${index}].BasePrice`;
-                    inputPrice.value = price;
-
-                    els.hiddenContainer.appendChild(inputRow);
-                    els.hiddenContainer.appendChild(inputPrice);
-                });
-            }
-
-            function attachPricingEvents() {
-                document.getElementById('basePriceInput')?.addEventListener('input', function() {
-                    const val = parseInt(this.value);
-                    if (!isNaN(val)) {
-                        currentBasePrice = val;
-                        generateHiddenInputs();
-                        const noExText = document.querySelector('#exceptionsContainer .fst-italic');
-                        if (noExText) noExText.textContent = `Немає (всі ряди по ${currentBasePrice} грн)`;
-                    }
-                });
-
-                document.getElementById('addExceptionBtn')?.addEventListener('click', function() {
-                    const select = document.getElementById('exceptionRowSelect');
-                    const row = parseInt(select.value);
-                    if (row) {
-                        pricesMap.set(row, currentBasePrice);
-                        renderRowUi();
-                    }
-                });
-
-                document.querySelectorAll('.js-remove-ex').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = parseInt(this.dataset.row);
-                        pricesMap.delete(row);
-                        renderRowUi();
-                    });
-                });
-
-                document.querySelectorAll('.js-ex-price').forEach(input => {
-                    input.addEventListener('input', function() {
-                        const row = parseInt(this.dataset.row);
-                        const val = parseInt(this.value) || 0;
-                        pricesMap.set(row, val);
-                        generateHiddenInputs();
-                    });
-                });
-            }
-
-            function renderCats(apiCategories) {
-                if (!els.catWrap) return;
-                if (!Array.isArray(apiCategories) || apiCategories.length === 0) {
-                    els.catWrap.innerHTML = `<div class="text-muted small text-center py-3">Немає категорій</div>`;
-                    return;
-                }
-
-                els.catWrap.innerHTML = `
-                    <table class="table table-sm table-borderless align-middle mb-0">
-                    <thead class="table-light border-bottom"><tr><th class="ps-3 small">Категорія</th><th class="text-end pe-3 small">x</th></tr></thead>
-                    <tbody>
-                        ${apiCategories.map((c, i) => {
-                        const id = Number(c.id);
-                        const title = String(c.title ?? id);
-                        const val = catMap.has(id) ? catMap.get(id) : 1;
-
-                        return `
-                        <tr><td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 90px;" title="${title}">${title}</td>
-                        <td class="text-end pe-2 py-1">
-                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
-                            <input class="form-control form-control-sm text-end" style="width:80px; display:inline;" type="number" step="0.1" name="CategoryMultipliers[${i}].Multiplier" value="${val}" />
-                        </td></tr>
-                        `}).join('')}
-                    </tbody></table>`;
-            }
-
-            async function loadPricingMeta(hallId) {
-                const hid = Number(hallId || 0);
-                if (hid < 1) return;
-
-                try {
-                    const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid));
-                    if (!res.ok) throw new Error();
-                    const meta = await res.json();
-
-                    allRows = meta.rows ? meta.rows.map(Number) : [];
-
-                    if (initialRowPrices && initialRowPrices.length > 0) {
-                        parsePricesToState(initialRowPrices);
-                        initialRowPrices.length = 0;
-                    } else if (pricesMap.size === 0) {
-                        currentBasePrice = 100;
-                    }
-
-                    renderRowUi();
-                    renderCats(meta.categories);
-                } catch (e) {
-                    console.error(e);
-                    els.rowUi.innerHTML = '<div class="text-danger small text-center py-2">Помилка завантаження</div>';
-                }
-            }
-
-            async function loadTemplates(hallId) {
-                if (!els.templateSelect) return;
-                const hid = Number(hallId || 0);
-                if (hid < 1) return;
-
-                els.templateSelect.innerHTML = '<option value="0">Завантаження...</option>';
-                els.templateSelect.disabled = true;
-
-                try {
-                    const res = await fetch(templatesUrl + '?hallId=' + hid);
-                    const list = await res.json();
-
-                    if (!Array.isArray(list) || list.length === 0) {
-                        els.templateSelect.innerHTML = '<option value="0">Шаблони відсутні</option>';
-                    } else {
-                        els.templateSelect.innerHTML = '<option value="0">— Оберіть шаблон —</option>';
-                        list.forEach(t => {
-                            const opt = document.createElement('option');
-                            opt.value = t.id;
-                            opt.textContent = t.title;
-                            els.templateSelect.appendChild(opt);
-                        });
-                        els.templateSelect.disabled = false;
-                    }
-                } catch {
-                    els.templateSelect.innerHTML = '<option value="0">Помилка</option>';
-                }
-            }
-
-            async function applySelectedTemplate() {
-                const tid = Number(els.templateSelect.value || 0);
-                if (tid < 1) return;
-
-                const oldHtml = els.applyTemplateBtn.innerHTML;
-                els.applyTemplateBtn.disabled = true;
-                els.applyTemplateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-                try {
-                    const res = await fetch(loadTemplateUrl + '?templateId=' + tid);
-                    if (!res.ok) throw new Error();
-                    const data = await res.json();
-
-                    catMap.clear();
-                    if (Array.isArray(data.categoryMultipliers)) {
-                        data.categoryMultipliers.forEach(x => {
-                            catMap.set(Number(x.category), x.multiplier);
-                        });
-                    }
-
-                    if (Array.isArray(data.rowPrices)) {
-                        parsePricesToState(data.rowPrices);
-                    }
-
-                    await loadPricingMeta(els.hiddenHallId.value);
-
-                    if (els.templateHelp) {
-                        els.templateHelp.textContent = "Успішно застосовано!";
-                        els.templateHelp.classList.add('text-success');
-                        setTimeout(() => {
-                            els.templateHelp.textContent = "Можна перезаписати ціни шаблоном.";
-                            els.templateHelp.classList.remove('text-success');
-                        }, 2000);
-                    }
-                } catch (e) {
-                    alert("Помилка застосування шаблону");
-                } finally {
-                    els.applyTemplateBtn.innerHTML = oldHtml;
-                    els.applyTemplateBtn.disabled = false;
-                }
-            }
 
             function posterUrl(path) {
                 if (!path) return '';
-                if (path.startsWith('http')) return path;
-                return `https://image.tmdb.org/t/p/w154${path.startsWith('/') ? path : '/' + path}`;
+                const p = String(path);
+                if (p.startsWith('http')) return p;
+                return `https://image.tmdb.org/t/p/w154${p.startsWith('/') ? p : '/' + p}`;
             }
 
             function updateUIForMovie() {
-                const val = (els.titleInput.value || '').trim();
+                const val = (els.titleInput?.value || '').trim();
                 let id = 0;
+
                 if (els.movieList) {
                     const opt = Array.from(els.movieList.options).find(o => o.value === val);
                     id = Number(opt ? opt.dataset.id : 0);
                 }
-                els.movieIdHidden.value = id;
+
+                if (els.movieIdHidden) els.movieIdHidden.value = String(id);
 
                 const path = moviePosters[id];
-                if (path) {
+                if (path && els.posterImg && els.posterPlaceholder) {
                     els.posterImg.src = posterUrl(path);
                     els.posterImg.classList.remove('d-none');
                     els.posterPlaceholder.classList.add('d-none');
-                } else {
+                } else if (els.posterImg && els.posterPlaceholder) {
                     els.posterImg.classList.add('d-none');
                     els.posterPlaceholder.classList.remove('d-none');
                 }
 
-                const dur = movieDurations[id] || 0;
-                els.durationText.textContent = (dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
+                const dur = Number(movieDurations[id] || 0);
+                if (els.durationText) els.durationText.textContent = dur > 0 ? `Тривалість: ${dur} хв` : 'Тривалість: —';
 
-                const start = new Date(els.startInput.value);
-                const end = new Date(els.endInput.value);
-                if (dur > 0 && !isNaN(start) && !isNaN(end)) {
-                    const diffMins = (end - start) / 60000;
-                    if (diffMins < dur) {
-                        els.warn.classList.remove('d-none');
-                        els.warn.textContent = `Увага: час сеансу (${Math.round(diffMins)} хв) менший за фільм (${dur} хв).`;
+                const startVal = els.startInput?.value;
+                const endVal = els.endInput?.value;
+
+                if (dur > 0 && startVal && endVal && els.warn) {
+                    const start = new Date(startVal);
+                    const end = new Date(endVal);
+
+                    if (!isNaN(start) && !isNaN(end)) {
+                        const diffMins = (end - start) / 60000;
+                        if (diffMins < dur) {
+                            els.warn.classList.remove('d-none');
+                            els.warn.textContent = `Увага: час сеансу (${Math.round(diffMins)} хв) менший за фільм (${dur} хв).`;
+                        } else {
+                            els.warn.classList.add('d-none');
+                            els.warn.textContent = '';
+                        }
                     } else {
                         els.warn.classList.add('d-none');
+                        els.warn.textContent = '';
                     }
-                } else {
+                } else if (els.warn) {
                     els.warn.classList.add('d-none');
+                    els.warn.textContent = '';
                 }
             }
 
-            els.titleInput.addEventListener('input', updateUIForMovie);
-            els.startInput.addEventListener('change', updateUIForMovie);
-            els.endInput.addEventListener('change', updateUIForMovie);
+            els.titleInput?.addEventListener('input', updateUIForMovie);
+            els.startInput?.addEventListener('change', updateUIForMovie);
+            els.endInput?.addEventListener('change', updateUIForMovie);
 
-            els.templateSelect?.addEventListener('change', () => {
-                els.applyTemplateBtn.disabled = Number(els.templateSelect.value || 0) < 1;
-            });
-            els.applyTemplateBtn?.addEventListener('click', applySelectedTemplate);
-
-            const currentHall = Number(els.hiddenHallId.value || 0);
-            if (currentHall > 0) {
-                loadPricingMeta(currentHall);
-                loadTemplates(currentHall);
-            }
             updateUIForMovie();
-
         })();
     </script>
 }

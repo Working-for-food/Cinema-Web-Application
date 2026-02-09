@@ -22,6 +22,14 @@ namespace Web.Controllers.Admin
         private const string DetailsViewPath = "~/Views/Admin/Sessions/Details.cshtml";
         private const string PricingViewPath = "~/Views/Admin/Sessions/Pricing.cshtml";
 
+        private static string CategoryTitle(SeatCategory c) => c switch
+        {
+            SeatCategory.Standard => "Стандарт",
+            SeatCategory.Vip => "VIP",
+            SeatCategory.Accessible => "Доступне",
+            _ => c.ToString()
+        };
+
         private static List<SelectListItem> BuildSortOptions(string? selected)
         {
             var items = new[]
@@ -187,14 +195,54 @@ namespace Web.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> PricingMeta(int hallId, CancellationToken ct)
         {
-            if (hallId < 1) return Ok(new { rows = Array.Empty<int>(), categories = Array.Empty<object>() });
+            if (hallId < 1)
+                return Ok(new
+                {
+                    rows = Array.Empty<int>(),
+                    categories = Array.Empty<object>(),
+                    seats = Array.Empty<object>(),
+                    maxSeats = 0
+                });
 
-            var meta = await _lookups.GetHallPricingMetaAsync(hallId, ct);
+            var seats = await _lookups.GetHallSeatsAsync(hallId, ct);
+
+            if (seats.Count == 0)
+                return Ok(new
+                {
+                    rows = Array.Empty<int>(),
+                    categories = Array.Empty<object>(),
+                    seats = Array.Empty<object>(),
+                    maxSeats = 0
+                });
+
+            var rows = seats.Select(s => s.RowNumber)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToArray();
+
+            var categories = seats.Select(s => s.Category)
+                .Distinct()
+                .OrderBy(x => x)
+                .Select(c => new { id = (int)c, title = CategoryTitle(c) })
+                .ToArray();
+
+            var maxSeats = seats.GroupBy(s => s.RowNumber)
+                .Select(g => g.Max(x => x.SeatNumber))
+                .DefaultIfEmpty(0)
+                .Max();
 
             return Ok(new
             {
-                rows = meta.Rows,
-                categories = meta.Categories.Select(c => new { id = c.Id, title = c.Title })
+                rows,
+                categories,
+                maxSeats,
+                seats = seats.Select(s => new
+                {
+                    id = s.Id,
+                    row = s.RowNumber,
+                    number = s.SeatNumber,
+                    category = (int)s.Category
+                })
             });
         }
 

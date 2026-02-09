@@ -9,6 +9,7 @@ public interface ISessionLookupService
     Task<List<LookupItemDto>> GetHallsAsync(CancellationToken ct);
     Task<List<LookupItemDto>> GetCinemasAsync(CancellationToken ct);
     Task<List<LookupItemDto>> GetHallsByCinemaAsync(int cinemaId, CancellationToken ct);
+    Task<List<SeatDto>> GetHallSeatsAsync(int hallId, CancellationToken ct);
     Task<string?> GetMovieTitleByIdAsync(int movieId, CancellationToken ct);
     Task<HallPricingMetaDto> GetHallPricingMetaAsync(int hallId, CancellationToken ct);
 }

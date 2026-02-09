@@ -52,14 +52,14 @@
 
             <div class="row g-3 align-items-stretch">
 
-                <div class="col-12 col-lg-7 d-flex flex-column">
-
-                    <div class="card shadow-sm rounded-4 modern-card mb-3">
+                <div class="col-12 col-lg-8 d-flex">
+                    <div class="card shadow-sm rounded-4 modern-card flex-grow-1">
                         <div class="card-header bg-maroon text-white rounded-top-4">
                             <h5 class="mb-0">
                                 <i class="fa-solid fa-location-dot me-2"></i>Локація та час
                             </h5>
                         </div>
+
                         <div class="card-body p-4 p-md-5">
 
                             <div class="row g-3 mb-2">
@@ -134,8 +134,10 @@
 
                         </div>
                     </div>
+                </div>
 
-                    <div class="card shadow-sm rounded-4 modern-card">
+                <div class="col-12 col-lg-4 d-flex">
+                    <div class="card shadow-sm rounded-4 modern-card flex-grow-1">
                         <div class="card-header bg-maroon text-white rounded-top-4">
                             <h5 class="mb-0">
                                 <i class="fa-solid fa-clapperboard me-2"></i>Фільм
@@ -143,11 +145,12 @@
                         </div>
 
                         <div class="card-body p-4 p-md-5">
-                            <div class="row g-4 align-items-start">
 
-                                <div class="col-auto">
-                                    <div class="card overflow-hidden shadow-sm" style="width:150px;">
-                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width:150px;height:224px;">
+                            <div class="d-flex gap-3 align-items-start">
+
+                                <div class="flex-shrink-0">
+                                    <div class="card overflow-hidden shadow-sm" style="width:120px;">
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width:120px;height:180px;">
                                             <img id="posterImg"
                                                  class="d-none w-100 h-100"
                                                  style="object-fit:cover;"
@@ -163,17 +166,17 @@
                                     </div>
                                 </div>
 
-                                <div class="col">
+                                <div class="flex-grow-1" style="min-width:0;">
                                     <div class="mb-3">
                                         <label class="form-label text-muted">
-                                            <i class="fa-solid fa-magnifying-glass me-1"></i>Назва фільму
+                                            <i class="fa-solid fa-magnifying-glass me-1"></i>Назва
                                         </label>
 
                                         <input class="form-control"
                                                list="movieList"
                                                id="movieTitleInput"
                                                name="movieTitle"
-                                               placeholder="Почніть вводити назву..."
+                                               placeholder="Почніть вводити..."
                                                autocomplete="off"
                                                value="@movieTitleValue" />
 
@@ -190,7 +193,7 @@
                                         <div class="form-text">Пошук фільму по базі.</div>
                                     </div>
 
-                                    <div class="col-12 col-md-6">
+                                    <div>
                                         <label class="form-label text-muted">
                                             <i class="fa-solid fa-ticket me-1"></i>Формат
                                         </label>
@@ -202,22 +205,24 @@
                                 </div>
 
                             </div>
+
                         </div>
                     </div>
-
                 </div>
 
-                <div class="col-12 col-lg-5 d-flex flex-column">
+            </div>
 
-                    <div class="card shadow-sm rounded-4 modern-card pricing-card d-flex flex-column flex-grow-1">
+            <div class="row g-4 mt-1">
 
+                <div class="col-lg-4">
+                    <div class="card shadow-sm rounded-4 modern-card h-100">
                         <div class="card-header bg-maroon text-white rounded-top-4">
                             <h5 class="mb-0">
                                 <i class="fa-solid fa-tags me-2"></i>Ціноутворення
                             </h5>
                         </div>
 
-                        <div class="card-body p-4 p-md-5 flex-grow-1" style="min-height:0; overflow-y:auto;">
+                        <div class="card-body p-4 d-flex flex-column" style="min-height:0;">
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold mb-1">
@@ -258,458 +263,675 @@
                                 Ціна квитка = <strong>База ряду</strong> × <strong>Множник</strong>
                             </div>
 
-                        </div>
-
-                        <div class="card-footer bg-white border-top-0 p-4 p-md-5 pt-0 mt-auto">
-                            <button class="btn btn-maroon w-100" type="submit">
+                            <button class="btn btn-maroon w-100 mt-4" type="submit">
                                 <i class="fa-solid fa-check me-2"></i>Створити сеанс
                             </button>
                         </div>
-
                     </div>
+                </div>
 
+                <div class="col-lg-8">
+                    <div class="card shadow-sm rounded-4 modern-card h-100" style="background-color:#fff9e6;">
+                        <div class="card-header bg-secondary text-white rounded-top-4">
+                            <h5 class="mb-0"><i class="fa-solid fa-eye me-2"></i>Попередній перегляд цін у залі</h5>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div id="seatPreviewWrap" class="bg-white border rounded p-3 bg-light">
+                                <div class="text-muted small text-center py-3">Оберіть зал</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
+
         </form>
 
     </div>
 </section>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<script>
+    (function () {
+        const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions", new { Area = "Admin" })';
+        const hallsUrl = '@Url.Action("HallsByCinema", "Sessions", new { Area = "Admin" })';
+        const templatesUrl = '@Url.Action("GetTemplatesByHall", "Sessions", new { Area = "Admin" })';
+        const loadTemplateUrl = '@Url.Action("LoadTemplateData", "Sessions", new { Area = "Admin" })';
 
-    <script>
-        (function () {
-            const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
-            const hallsUrl = '@Url.Action("HallsByCinema", "Sessions")';
-            const templatesUrl = '@Url.Action("GetTemplatesByHall", "Sessions")';
-            const loadTemplateUrl = '@Url.Action("LoadTemplateData", "Sessions")';
+        const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
+        const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
 
-            const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
-            const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
+        const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
+        const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
 
-            const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
-            const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
+        const CAT = {
+            Standard: @((int)SeatCategory.Standard),
+            Vip: @((int)SeatCategory.Vip),
+            Accessible: @((int)SeatCategory.Accessible)
+        };
 
-            const els = {
-                cinemaSelect: document.getElementById('cinemaSelect'),
-                hallSelect: document.getElementById('hallSelect'),
-                titleInput: document.getElementById('movieTitleInput'),
-                movieIdHidden: document.getElementById('movieIdHidden'),
-                movieList: document.getElementById('movieList'),
-                startInput: document.getElementById('StartTime'),
-                endInput: document.getElementById('EndTime'),
-                durationText: document.getElementById('movieDurationText'),
-                warn: document.getElementById('shortDurationWarn'),
-                posterImg: document.getElementById('posterImg'),
-                posterPlaceholder: document.getElementById('posterPlaceholder'),
+        const els = {
+            cinemaSelect: document.getElementById('cinemaSelect'),
+            hallSelect: document.getElementById('hallSelect'),
 
-                rowUi: document.getElementById('rowPricesUi'),
-                hiddenContainer: document.getElementById('hiddenRowPrices'),
-                catWrap: document.getElementById('catMultipliersWrap'),
-                templateSelect: document.getElementById('templateSelect'),
-                applyTemplateBtn: document.getElementById('applyTemplateBtn'),
-                templateHelp: document.getElementById('templateHelp')
-            };
+            titleInput: document.getElementById('movieTitleInput'),
+            movieIdHidden: document.getElementById('movieIdHidden'),
+            movieList: document.getElementById('movieList'),
+            startInput: document.getElementById('StartTime'),
+            endInput: document.getElementById('EndTime'),
+            durationText: document.getElementById('movieDurationText'),
+            warn: document.getElementById('shortDurationWarn'),
+            posterImg: document.getElementById('posterImg'),
+            posterPlaceholder: document.getElementById('posterPlaceholder'),
 
-            if (!els.cinemaSelect || !els.hallSelect) return;
+            rowUi: document.getElementById('rowPricesUi'),
+            hiddenContainer: document.getElementById('hiddenRowPrices'),
+            catWrap: document.getElementById('catMultipliersWrap'),
 
-            let allRows = [];
-            let pricesMap = new Map();
-            let currentBasePrice = 100;
+            templateSelect: document.getElementById('templateSelect'),
+            applyTemplateBtn: document.getElementById('applyTemplateBtn'),
+            templateHelp: document.getElementById('templateHelp'),
 
-            let catMap = new Map();
-            if (initialCategoryMultipliers && initialCategoryMultipliers.length > 0) {
-                initialCategoryMultipliers.forEach(x => {
-                    const catId = x.Category ?? x.category;
-                    const mult = x.Multiplier ?? x.multiplier;
-                    if (catId !== undefined) catMap.set(Number(catId), mult);
-                });
+            seatPreviewWrap: document.getElementById('seatPreviewWrap')
+        };
+
+        if (!els.cinemaSelect || !els.hallSelect) return;
+
+        let allRows = [];
+        const pricesMap = new Map();
+        let currentBasePrice = 100;
+
+        const catMap = new Map();
+        if (Array.isArray(initialCategoryMultipliers) && initialCategoryMultipliers.length > 0) {
+            initialCategoryMultipliers.forEach(x => {
+                const catId = x.Category ?? x.category;
+                const mult = x.Multiplier ?? x.multiplier;
+                if (catId !== undefined && mult !== undefined) {
+                    catMap.set(Number(catId), Number(mult));
+                }
+            });
+        }
+
+        let hallMeta = null;
+
+        function posterUrl(path) {
+            if (!path) return '';
+            const p = String(path);
+            if (p.startsWith('http')) return p;
+            return `https://image.tmdb.org/t/p/w154${p.startsWith('/') ? p : '/' + p}`;
+        }
+
+        function seatUiClass(catId) {
+            if (catId === CAT.Vip) return 'seat-bg-vip';
+            if (catId === CAT.Accessible) return 'seat-bg-acc';
+            return 'seat-bg-std';
+        }
+
+        function calcFinal(row, catId) {
+            const base = pricesMap.has(row) ? Number(pricesMap.get(row)) : Number(currentBasePrice);
+            const mult = catMap.has(catId) ? Number(catMap.get(catId)) : 1;
+            return Math.round(base * mult);
+        }
+
+        function updateUIForMovie() {
+            const val = (els.titleInput?.value || '').trim();
+            let id = 0;
+
+            if (els.movieList) {
+                const opt = Array.from(els.movieList.options).find(o => o.value === val);
+                id = Number(opt ? opt.dataset.id : 0);
             }
 
-            function parsePricesToState(flatPrices) {
-                if (!flatPrices || flatPrices.length === 0) return;
+            if (els.movieIdHidden) els.movieIdHidden.value = String(id);
 
-                const counts = {};
-                const normalized = flatPrices.map(p => ({
+            const path = moviePosters[id];
+            if (path && els.posterImg && els.posterPlaceholder) {
+                els.posterImg.src = posterUrl(path);
+                els.posterImg.classList.remove('d-none');
+                els.posterPlaceholder.classList.add('d-none');
+            } else if (els.posterImg && els.posterPlaceholder) {
+                els.posterImg.classList.add('d-none');
+                els.posterPlaceholder.classList.remove('d-none');
+            }
+
+            const dur = Number(movieDurations[id] || 0);
+            if (els.durationText) els.durationText.textContent = dur > 0 ? `Тривалість: ${dur} хв` : 'Тривалість: —';
+
+            const startVal = els.startInput?.value;
+            if (dur > 0 && startVal && els.endInput) {
+                const start = new Date(startVal);
+                if (!isNaN(start)) {
+                    const end = new Date(start.getTime() + dur * 60000);
+                    const pad = n => String(n).padStart(2, '0');
+                    els.endInput.value = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`;
+                }
+            }
+        }
+
+        function parsePricesToState(flatPrices) {
+            if (!flatPrices || flatPrices.length === 0) return;
+
+            const counts = {};
+            const normalized = flatPrices
+                .map(p => ({
                     row: Number(p.RowNumber ?? p.row ?? p.Row ?? 0),
                     price: Number(p.BasePrice ?? p.basePrice ?? 0)
-                })).filter(p => p.row > 0);
+                }))
+                .filter(p => p.row > 0);
 
-                if (normalized.length === 0) return;
+            if (normalized.length === 0) return;
 
-                normalized.forEach(p => {
-                    counts[p.price] = (counts[p.price] || 0) + 1;
-                });
+            normalized.forEach(p => {
+                const k = String(p.price);
+                counts[k] = (counts[k] || 0) + 1;
+            });
 
-                const sortedPrices = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-                const modePrice = Number(sortedPrices[0]);
-                currentBasePrice = modePrice;
+            const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+            const modePrice = Number(sorted[0] ?? 100);
+            currentBasePrice = Number.isFinite(modePrice) ? modePrice : 100;
 
-                pricesMap.clear();
-                normalized.forEach(p => {
-                    if (allRows.includes(p.row) && p.price !== currentBasePrice) {
-                        pricesMap.set(p.row, p.price);
-                    }
-                });
-            }
-
-            function renderRowUi() {
-                if (!els.rowUi) return;
-
-                let html = `
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark" for="basePriceInput">Базова ціна (грн)</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white">₴</span>
-                            <input type="number" id="basePriceInput" class="form-control fw-bold" value="${currentBasePrice}" min="0" />
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold text-dark mb-1">Винятки</label>
-                        <div id="exceptionsContainer" class="d-flex flex-column gap-2 mb-2">
-                `;
-
-                if (pricesMap.size === 0) {
-                    html += `<div class="text-muted small fst-italic ms-1">Немає (всі ряди по ${currentBasePrice} грн)</div>`;
-                } else {
-                    const sortedRows = Array.from(pricesMap.keys()).sort((a, b) => a - b);
-                    sortedRows.forEach(row => {
-                        const price = pricesMap.get(row);
-                        html += `
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-secondary fw-normal" style="min-width: 50px;">Ряд ${row}</span>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white">₴</span>
-                                    <input type="number" class="form-control text-end js-ex-price" data-row="${row}" value="${price}" />
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger js-remove-ex" data-row="${row}" title="Видалити">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
-                        `;
-                    });
+            pricesMap.clear();
+            normalized.forEach(p => {
+                if (allRows.includes(p.row) && p.price !== currentBasePrice) {
+                    pricesMap.set(p.row, p.price);
                 }
+            });
+        }
 
-                html += `
-                        </div>
+        function generateHiddenInputs() {
+            if (!els.hiddenContainer) return;
+
+            els.hiddenContainer.innerHTML = '';
+            allRows.forEach((r, index) => {
+                const price = pricesMap.has(r) ? Number(pricesMap.get(r)) : Number(currentBasePrice);
+
+                const inputRow = document.createElement('input');
+                inputRow.type = 'hidden';
+                inputRow.name = `RowPrices[${index}].RowNumber`;
+                inputRow.value = String(r);
+
+                const inputPrice = document.createElement('input');
+                inputPrice.type = 'hidden';
+                inputPrice.name = `RowPrices[${index}].BasePrice`;
+                inputPrice.value = String(price);
+
+                els.hiddenContainer.appendChild(inputRow);
+                els.hiddenContainer.appendChild(inputPrice);
+            });
+
+            recalcVisualMap();
+        }
+
+        function renderRowUi() {
+            if (!els.rowUi) return;
+
+            let html = `
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark" for="basePriceInput">Базова ціна (грн)</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white">₴</span>
+                        <input type="number" id="basePriceInput" class="form-control fw-bold" value="${currentBasePrice}" min="0" />
                     </div>
+                </div>
 
-                    <div class="bg-white p-2 rounded border">
-                        <div class="d-flex gap-2">
-                            <select id="exceptionRowSelect" class="form-select form-select-sm">
-                                <option value="">+ Ряд</option>
-                `;
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-dark mb-1">Винятки</label>
+                    <div id="exceptionsContainer" class="d-flex flex-column gap-2 mb-2">
+            `;
 
-                allRows.forEach(r => {
-                    if (!pricesMap.has(r)) {
-                        html += `<option value="${r}">Ряд ${r}</option>`;
-                    }
-                });
-
-                html += `
-                            </select>
-                            <button type="button" id="addExceptionBtn" class="btn btn-sm btn-secondary text-nowrap">
-                                Додати
+            if (pricesMap.size === 0) {
+                html += `<div class="text-muted small fst-italic ms-1" id="noExMsg">Немає (всі ряди по ${currentBasePrice} грн)</div>`;
+            } else {
+                const sortedRows = Array.from(pricesMap.keys()).sort((a, b) => a - b);
+                sortedRows.forEach(row => {
+                    const price = Number(pricesMap.get(row));
+                    html += `
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary fw-normal" style="min-width: 50px;">Ряд ${row}</span>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white">₴</span>
+                                <input type="number" class="form-control text-end js-ex-price" data-row="${row}" value="${price}" min="0" />
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger js-remove-ex" data-row="${row}" title="Видалити виняток">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
+                    `;
+                });
+            }
+
+            html += `
                     </div>
-                `;
+                </div>
 
-                els.rowUi.innerHTML = html;
+                <div class="bg-white p-2 rounded border">
+                    <div class="d-flex gap-2">
+                        <select id="exceptionRowSelect" class="form-select form-select-sm">
+                            <option value="">+ Ряд</option>
+            `;
 
-                generateHiddenInputs();
+            allRows.forEach(r => {
+                if (!pricesMap.has(r)) html += `<option value="${r}">Ряд ${r}</option>`;
+            });
 
-                attachPricingEvents();
-            }
+            html += `
+                        </select>
+                        <button type="button" id="addExceptionBtn" class="btn btn-sm btn-secondary text-nowrap">Додати</button>
+                    </div>
+                    <div class="form-text small mt-1">Виняток перевизначає базову ціну для конкретного ряду.</div>
+                </div>
+            `;
 
-            function generateHiddenInputs() {
-                els.hiddenContainer.innerHTML = '';
-                allRows.forEach((r, index) => {
-                    const price = pricesMap.has(r) ? pricesMap.get(r) : currentBasePrice;
+            els.rowUi.innerHTML = html;
 
-                    const inputRow = document.createElement('input');
-                    inputRow.type = 'hidden';
-                    inputRow.name = `RowPrices[${index}].RowNumber`;
-                    inputRow.value = r;
+            generateHiddenInputs();
+            attachRowEvents();
+        }
 
-                    const inputPrice = document.createElement('input');
-                    inputPrice.type = 'hidden';
-                    inputPrice.name = `RowPrices[${index}].BasePrice`;
-                    inputPrice.value = price;
+        function attachRowEvents() {
+            document.getElementById('basePriceInput')?.addEventListener('input', function () {
+                const val = Number(this.value);
+                if (Number.isFinite(val) && val >= 0) {
+                    currentBasePrice = val;
+                    generateHiddenInputs();
 
-                    els.hiddenContainer.appendChild(inputRow);
-                    els.hiddenContainer.appendChild(inputPrice);
-                });
-            }
+                    const msg = document.getElementById('noExMsg');
+                    if (msg) msg.textContent = `Немає (всі ряди по ${currentBasePrice} грн)`;
+                }
+            });
 
-            function attachPricingEvents() {
-                document.getElementById('basePriceInput')?.addEventListener('input', function() {
-                    const val = parseInt(this.value);
-                    if (!isNaN(val)) {
-                        currentBasePrice = val;
-                        generateHiddenInputs();
-                        const noExText = document.querySelector('#exceptionsContainer .fst-italic');
-                        if (noExText) noExText.textContent = `Немає (всі ряди по ${currentBasePrice} грн)`;
-                    }
-                });
+            document.getElementById('addExceptionBtn')?.addEventListener('click', function () {
+                const select = document.getElementById('exceptionRowSelect');
+                const row = Number(select?.value || 0);
+                if (row > 0) {
+                    pricesMap.set(row, currentBasePrice);
+                    renderRowUi();
+                }
+            });
 
-                document.getElementById('addExceptionBtn')?.addEventListener('click', function() {
-                    const select = document.getElementById('exceptionRowSelect');
-                    const row = parseInt(select.value);
-                    if (row) {
-                        pricesMap.set(row, currentBasePrice);
-                        renderRowUi();
-                    }
-                });
-
-                document.querySelectorAll('.js-remove-ex').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = parseInt(this.dataset.row);
+            document.querySelectorAll('.js-remove-ex').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const row = Number(this.dataset.row || 0);
+                    if (row > 0) {
                         pricesMap.delete(row);
                         renderRowUi();
-                    });
+                    }
                 });
+            });
 
-                document.querySelectorAll('.js-ex-price').forEach(input => {
-                    input.addEventListener('input', function() {
-                        const row = parseInt(this.dataset.row);
-                        const val = parseInt(this.value) || 0;
+            document.querySelectorAll('.js-ex-price').forEach(input => {
+                input.addEventListener('input', function () {
+                    const row = Number(this.dataset.row || 0);
+                    const val = Number(this.value);
+                    if (row > 0 && Number.isFinite(val) && val >= 0) {
                         pricesMap.set(row, val);
                         generateHiddenInputs();
-                    });
+                    }
                 });
+            });
+        }
+
+        function renderCats(apiCategories) {
+            if (!els.catWrap) return;
+
+            if (!Array.isArray(apiCategories) || apiCategories.length === 0) {
+                els.catWrap.innerHTML = `<div class="text-muted small text-center py-3">Немає категорій</div>`;
+                return;
             }
 
-            function renderCats(apiCategories) {
-                if (!els.catWrap) return;
-                if (!Array.isArray(apiCategories) || apiCategories.length === 0) {
-                    els.catWrap.innerHTML = `<div class="text-muted small text-center py-3">Немає категорій</div>`;
-                    return;
-                }
-
-                els.catWrap.innerHTML = `
-                    <table class="table table-sm table-borderless align-middle mb-0">
-                    <thead class="table-light border-bottom"><tr><th class="ps-3 small">Категорія</th><th class="text-end pe-3 small">x</th></tr></thead>
+            els.catWrap.innerHTML = `
+                <table class="table table-sm table-borderless align-middle mb-0">
+                    <thead class="table-light border-bottom">
+                        <tr>
+                            <th class="ps-3 small">Категорія</th>
+                            <th class="text-end pe-3 small">x</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         ${apiCategories.map((c, i) => {
-                        const id = Number(c.id);
-                        const title = String(c.title ?? id);
-                        const val = catMap.has(id) ? catMap.get(id) : 1;
+                            const id = Number(c.id);
+                            const title = String(c.title ?? id);
+                            const val = catMap.has(id) ? Number(catMap.get(id)) : 1;
 
-                        return `
-                        <tr><td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 90px;" title="${title}">${title}</td>
-                        <td class="text-end pe-2 py-1">
-                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
-                            <input class="form-control form-control-sm text-end" style="width:80px; display:inline;" type="number" step="0.1" name="CategoryMultipliers[${i}].Multiplier" value="${val}" />
-                        </td></tr>
-                        `}).join('')}
-                    </tbody></table>`;
+                            if (!catMap.has(id)) catMap.set(id, val);
+
+                            return `
+                                <tr>
+                                    <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 160px;" title="${title}">${title}</td>
+                                    <td class="text-end pe-2 py-1">
+                                        <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
+                                        <input class="form-control form-control-sm text-end js-cat-mult"
+                                               style="width:80px; display:inline;"
+                                               type="number" step="0.1" min="0.1"
+                                               data-cat="${id}"
+                                               name="CategoryMultipliers[${i}].Multiplier"
+                                               value="${val}" />
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        els.catWrap?.addEventListener('input', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLInputElement)) return;
+            if (!t.classList.contains('js-cat-mult')) return;
+
+            const cid = Number(t.dataset.cat);
+            const mult = Number(t.value);
+
+            if (Number.isFinite(cid) && Number.isFinite(mult)) {
+                catMap.set(cid, mult);
+                recalcVisualMap();
+            }
+        });
+
+        function renderSeatPreviewFromMeta(meta) {
+            const wrap = els.seatPreviewWrap;
+            if (!wrap) return;
+
+            const seats = Array.isArray(meta?.seats) ? meta.seats : [];
+            const maxSeats = Number(meta?.maxSeats || 0);
+
+            if (!seats.length || maxSeats <= 0) {
+                wrap.innerHTML = '<div class="text-muted small text-center py-3">Немає місць у залі</div>';
+                return;
             }
 
-            async function loadPricingMeta(hallId) {
-                const hid = Number(hallId || 0);
-                if (hid < 1) {
-                    els.rowUi.innerHTML = '<div class="text-muted small text-center py-3">Оберіть зал</div>';
-                    els.catWrap.innerHTML = '<div class="text-muted small text-center py-3">Оберіть зал</div>';
-                    return;
-                }
+            const byRow = new Map();
+            seats.forEach(s => {
+                const r = Number(s.row);
+                const n = Number(s.number);
+                const c = Number(s.category);
+                if (!byRow.has(r)) byRow.set(r, new Map());
+                byRow.get(r).set(n, { row: r, number: n, category: c });
+            });
 
-                try {
-                    const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid));
-                    if (!res.ok) throw new Error();
-                    const meta = await res.json();
+            const rows = Array.isArray(meta?.rows) && meta.rows.length
+                ? meta.rows.map(Number)
+                : Array.from(byRow.keys()).sort((a, b) => a - b);
 
-                    allRows = meta.rows ? meta.rows.map(Number) : [];
+            let gridHtml = '';
+            rows.forEach(row => {
+                const seatsInRow = byRow.get(row) || new Map();
 
-                    if (initialRowPrices && initialRowPrices.length > 0) {
-                        parsePricesToState(initialRowPrices);
-                        initialRowPrices.length = 0;
-                    } else if (pricesMap.size === 0) {
-                        currentBasePrice = 100;
-                        pricesMap.clear();
+                gridHtml += `<div class="row-label">${row}</div>`;
+
+                for (let s = 1; s <= maxSeats; s++) {
+                    const seat = seatsInRow.get(s);
+                    if (!seat) {
+                        gridHtml += `<div class="seat seat-empty"></div>`;
+                        continue;
                     }
 
-                    renderRowUi();
-                    renderCats(meta.categories);
-                } catch {
-                    els.rowUi.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
-                    els.catWrap.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
+                    const catId = Number(seat.category);
+                    const price = calcFinal(row, catId);
+
+                    gridHtml += `
+                        <div class="seat ${seatUiClass(catId)} js-seat-item"
+                             data-row="${row}"
+                             data-cat="${catId}"
+                             data-seat="${s}"
+                             title="Ряд ${row}, місце ${s} — ${price} грн">
+                            <div class="seat-text">
+                                <div class="seat-no">${s}</div>
+                                <div class="seat-price js-seat-price">${price}</div>
+                            </div>
+                        </div>
+                    `;
                 }
-            }
+            });
 
-            async function loadHalls(cinemaId) {
-                const cid = Number(cinemaId || 0);
-                if (cid <= 0) {
-                    els.hallSelect.innerHTML = '<option value="0">— Спершу кінотеатр —</option>';
-                    els.hallSelect.disabled = true;
-                    resetTemplatesUI();
-                    return;
+            wrap.innerHTML = `
+                <div class="cinema-map-wrap">
+                    <div class="cinema-map">
+                        <div class="cinema-screen">
+                            <div class="cinema-screen-arc"></div>
+                            <div class="cinema-screen-title">ЕКРАН</div>
+                        </div>
+
+                        <div class="cinema-grid" style="--cols:${maxSeats};">
+                            ${gridHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function recalcVisualMap() {
+            const wrap = els.seatPreviewWrap;
+            if (!wrap) return;
+
+            wrap.querySelectorAll('.js-seat-item').forEach(el => {
+                const row = Number(el.dataset.row);
+                const cat = Number(el.dataset.cat);
+                const seatNo = el.dataset.seat || '';
+
+                const final = calcFinal(row, cat);
+
+                const priceEl = el.querySelector('.js-seat-price');
+                if (priceEl && priceEl.textContent !== String(final)) {
+                    priceEl.style.opacity = '0.5';
+                    priceEl.textContent = String(final);
+                    setTimeout(() => priceEl.style.opacity = '1', 150);
                 }
-                try {
-                    const res = await fetch(hallsUrl + '?cinemaId=' + cid);
-                    if (!res.ok) throw new Error();
-                    const halls = await res.json();
 
-                    els.hallSelect.innerHTML = '<option value="0">— Оберіть зал —</option>';
-                    halls.forEach(h => {
-                        const opt = document.createElement('option');
-                        opt.value = h.id;
-                        opt.textContent = h.title;
-                        els.hallSelect.appendChild(opt);
-                    });
-                    els.hallSelect.disabled = false;
-                    resetTemplatesUI();
-                } catch {}
+                el.title = `Ряд ${row}, місце ${seatNo} — ${final} грн`;
+            });
+        }
+
+        async function loadPricingMeta(hallId) {
+            const hid = Number(hallId || 0);
+            if (hid < 1) {
+                clearPricingUI();
+                return;
             }
 
-            async function loadTemplates(hallId) {
-                if (!els.templateSelect || !els.applyTemplateBtn) return;
-                const hid = Number(hallId || 0);
+            try {
+                const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid));
+                if (!res.ok) throw new Error();
 
-                if (hid < 1) { resetTemplatesUI(); return; }
+                const meta = await res.json();
+                hallMeta = meta;
 
-                els.templateSelect.innerHTML = '<option value="0">Завантаження...</option>';
-                els.templateSelect.disabled = true;
+                allRows = Array.isArray(meta.rows) ? meta.rows.map(Number) : [];
 
-                try {
-                    const res = await fetch(templatesUrl + '?hallId=' + hid);
-                    const list = await res.json();
-                    if (!Array.isArray(list) || list.length === 0) {
-                        els.templateSelect.innerHTML = '<option value="0">Шаблони відсутні</option>';
-                        els.templateSelect.disabled = true;
-                        els.applyTemplateBtn.disabled = true;
-                    } else {
-                        els.templateSelect.innerHTML = '<option value="0">— Оберіть шаблон —</option>';
-                        list.forEach(t => {
-                            const opt = document.createElement('option');
-                            opt.value = t.id;
-                            opt.textContent = t.title;
-                            els.templateSelect.appendChild(opt);
-                        });
-                        els.templateSelect.disabled = false;
-                    }
-                } catch {
-                    els.templateSelect.innerHTML = '<option value="0">Помилка</option>';
+                if (Array.isArray(initialRowPrices) && initialRowPrices.length > 0) {
+                    parsePricesToState(initialRowPrices);
+                    initialRowPrices.length = 0; // avoid reapplying
+                } else if (pricesMap.size === 0 && !Number.isFinite(currentBasePrice)) {
+                    currentBasePrice = 100;
+                } else if (pricesMap.size === 0 && currentBasePrice == null) {
+                    currentBasePrice = 100;
                 }
+
+                renderRowUi();
+                renderCats(meta.categories);
+                renderSeatPreviewFromMeta(meta);
+                recalcVisualMap();
+            } catch (e) {
+                console.error(e);
+                if (els.rowUi) els.rowUi.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
+                if (els.catWrap) els.catWrap.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
+                if (els.seatPreviewWrap) els.seatPreviewWrap.innerHTML = '<div class="text-danger small text-center py-2">Помилка</div>';
+            }
+        }
+
+        async function loadHalls(cinemaId) {
+            const cid = Number(cinemaId || 0);
+
+            if (cid <= 0) {
+                els.hallSelect.innerHTML = '<option value="0">— Спершу кінотеатр —</option>';
+                els.hallSelect.disabled = true;
+                resetTemplatesUI();
+                clearPricingUI();
+                return;
             }
 
-            async function applySelectedTemplate() {
-                const tid = Number(els.templateSelect.value || 0);
-                if (tid < 1) return;
+            try {
+                const res = await fetch(hallsUrl + '?cinemaId=' + encodeURIComponent(cid));
+                if (!res.ok) throw new Error();
 
-                const oldHtml = els.applyTemplateBtn.innerHTML;
-                els.applyTemplateBtn.disabled = true;
-                els.applyTemplateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                const halls = await res.json();
 
-                try {
-                    const res = await fetch(loadTemplateUrl + '?templateId=' + tid);
-                    if (!res.ok) throw new Error();
-                    const data = await res.json();
+                els.hallSelect.innerHTML = '<option value="0">— Оберіть зал —</option>';
+                halls.forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = String(h.id);
+                    opt.textContent = h.title;
+                    els.hallSelect.appendChild(opt);
+                });
 
-                    catMap.clear();
-                    if (Array.isArray(data.categoryMultipliers)) {
-                        data.categoryMultipliers.forEach(x => {
-                            catMap.set(Number(x.category), x.multiplier);
-                        });
-                    }
+                els.hallSelect.disabled = false;
 
-                    if (Array.isArray(data.rowPrices)) {
-                        parsePricesToState(data.rowPrices);
-                    }
-
-                    await loadPricingMeta(els.hallSelect.value);
-
-                    if (els.templateHelp) {
-                        els.templateHelp.textContent = "Успішно застосовано!";
-                        els.templateHelp.classList.add('text-success');
-                        setTimeout(() => {
-                            els.templateHelp.textContent = "Автозаповнення цін за шаблоном.";
-                            els.templateHelp.classList.remove('text-success');
-                        }, 2000);
-                    }
-
-                } catch (e) {
-                    console.error(e);
-                    alert("Помилка застосування шаблону");
-                } finally {
-                    els.applyTemplateBtn.innerHTML = oldHtml;
-                    els.applyTemplateBtn.disabled = false;
-                }
+                resetTemplatesUI();
+                clearPricingUI();
+            } catch (e) {
+                console.error(e);
             }
+        }
 
-            function resetTemplatesUI() {
-                els.templateSelect.innerHTML = '<option value="0">Спочатку оберіть зал</option>';
-                els.templateSelect.disabled = true;
-                els.applyTemplateBtn.disabled = true;
-            }
+        async function loadTemplates(hallId) {
+            if (!els.templateSelect || !els.applyTemplateBtn) return;
 
-            function posterUrl(path) {
-                if (!path) return '';
-                if (path.startsWith('http')) return path;
-                return `https://image.tmdb.org/t/p/w154${path.startsWith('/') ? path : '/' + path}`;
-            }
+            const hid = Number(hallId || 0);
+            if (hid < 1) { resetTemplatesUI(); return; }
 
-            function updateUIForMovie() {
-                const val = (els.titleInput.value || '').trim();
-                let id = 0;
-                if (els.movieList) {
-                    const opt = Array.from(els.movieList.options).find(o => o.value === val);
-                    id = Number(opt ? opt.dataset.id : 0);
-                }
-                els.movieIdHidden.value = id;
+            els.templateSelect.innerHTML = '<option value="0">Завантаження...</option>';
+            els.templateSelect.disabled = true;
+            els.applyTemplateBtn.disabled = true;
 
-                const path = moviePosters[id];
-                if (path) {
-                    els.posterImg.src = posterUrl(path);
-                    els.posterImg.classList.remove('d-none');
-                    els.posterPlaceholder.classList.add('d-none');
+            try {
+                const res = await fetch(templatesUrl + '?hallId=' + encodeURIComponent(hid));
+                if (!res.ok) throw new Error();
+
+                const list = await res.json();
+                if (!Array.isArray(list) || list.length === 0) {
+                    els.templateSelect.innerHTML = '<option value="0">Шаблони відсутні</option>';
+                    els.templateSelect.disabled = true;
+                    els.applyTemplateBtn.disabled = true;
                 } else {
-                    els.posterImg.classList.add('d-none');
-                    els.posterPlaceholder.classList.remove('d-none');
+                    els.templateSelect.innerHTML = '<option value="0">— Оберіть шаблон —</option>';
+                    list.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = String(t.id);
+                        opt.textContent = t.title;
+                        els.templateSelect.appendChild(opt);
+                    });
+                    els.templateSelect.disabled = false;
+                }
+            } catch (e) {
+                console.error(e);
+                els.templateSelect.innerHTML = '<option value="0">Помилка</option>';
+                els.templateSelect.disabled = true;
+                els.applyTemplateBtn.disabled = true;
+            }
+        }
+
+        async function applySelectedTemplate() {
+            const tid = Number(els.templateSelect?.value || 0);
+            if (tid < 1) return;
+
+            const oldHtml = els.applyTemplateBtn.innerHTML;
+            els.applyTemplateBtn.disabled = true;
+            els.applyTemplateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            try {
+                const res = await fetch(loadTemplateUrl + '?templateId=' + encodeURIComponent(tid));
+                if (!res.ok) throw new Error();
+
+                const data = await res.json();
+
+                catMap.clear();
+                if (Array.isArray(data.categoryMultipliers)) {
+                    data.categoryMultipliers.forEach(x => {
+                        const cat = Number(x.category ?? x.Category);
+                        const mult = Number(x.multiplier ?? x.Multiplier);
+                        if (Number.isFinite(cat) && Number.isFinite(mult)) catMap.set(cat, mult);
+                    });
                 }
 
-                const dur = movieDurations[id] || 0;
-                els.durationText.textContent = (dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
-
-                const startVal = els.startInput.value;
-                if (dur > 0 && startVal) {
-                    const start = new Date(startVal);
-                    if (!isNaN(start)) {
-                        const end = new Date(start.getTime() + dur * 60000);
-                        const pad = n => String(n).padStart(2, '0');
-                        els.endInput.value = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`;
-                    }
+                if (Array.isArray(data.rowPrices)) {
+                    parsePricesToState(data.rowPrices);
                 }
+
+                if (hallMeta) {
+                    renderRowUi();
+                    renderCats(hallMeta.categories);
+                    renderSeatPreviewFromMeta(hallMeta);
+                    recalcVisualMap();
+                } else {
+                    await loadPricingMeta(els.hallSelect.value);
+                }
+
+                if (els.templateHelp) {
+                    els.templateHelp.textContent = "Успішно застосовано!";
+                    els.templateHelp.classList.add('text-success');
+                    setTimeout(() => {
+                        els.templateHelp.textContent = "Автозаповнення цін за шаблоном.";
+                        els.templateHelp.classList.remove('text-success');
+                    }, 2000);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Помилка застосування шаблону");
+            } finally {
+                els.applyTemplateBtn.innerHTML = oldHtml;
+                els.applyTemplateBtn.disabled = false;
             }
+        }
 
-            els.cinemaSelect.addEventListener('change', async () => {
-                await loadHalls(els.cinemaSelect.value);
-            });
+        function resetTemplatesUI() {
+            els.templateSelect.innerHTML = '<option value="0">Спочатку оберіть зал</option>';
+            els.templateSelect.disabled = true;
+            els.applyTemplateBtn.disabled = true;
+        }
 
-            els.hallSelect.addEventListener('change', async () => {
-                const hid = els.hallSelect.value;
-                await loadPricingMeta(hid);
-                await loadTemplates(hid);
-            });
+        function clearPricingUI() {
+            if (els.rowUi) els.rowUi.innerHTML = '<div class="text-muted small text-center py-3">Оберіть зал</div>';
+            if (els.catWrap) els.catWrap.innerHTML = '<div class="text-muted small text-center py-3">Оберіть зал</div>';
+            if (els.seatPreviewWrap) els.seatPreviewWrap.innerHTML = '<div class="text-muted small text-center py-3">Оберіть зал</div>';
+            if (els.hiddenContainer) els.hiddenContainer.innerHTML = '';
 
-            els.titleInput.addEventListener('input', updateUIForMovie);
-            els.startInput.addEventListener('change', updateUIForMovie);
-            els.endInput.addEventListener('change', updateUIForMovie);
+            allRows = [];
+            pricesMap.clear();
+            currentBasePrice = 100;
+            hallMeta = null;
+        }
 
-            els.templateSelect.addEventListener('change', () => {
-                els.applyTemplateBtn.disabled = Number(els.templateSelect.value || 0) < 1;
-            });
-            els.applyTemplateBtn.addEventListener('click', applySelectedTemplate);
+        els.cinemaSelect.addEventListener('change', async () => {
+            await loadHalls(els.cinemaSelect.value);
+        });
 
-            const initialHall = Number(els.hallSelect.value || 0);
-            if (initialHall > 0) {
-                loadPricingMeta(initialHall);
-                loadTemplates(initialHall);
-            }
-            updateUIForMovie();
+        els.hallSelect.addEventListener('change', async () => {
+            const hid = els.hallSelect.value;
+            await loadPricingMeta(hid);
+            await loadTemplates(hid);
+        });
 
-        })();
-    </script>
-}
+        els.titleInput?.addEventListener('input', updateUIForMovie);
+        els.startInput?.addEventListener('change', updateUIForMovie);
+        els.endInput?.addEventListener('change', updateUIForMovie);
+
+        els.templateSelect?.addEventListener('change', () => {
+            els.applyTemplateBtn.disabled = Number(els.templateSelect.value || 0) < 1;
+        });
+        els.applyTemplateBtn?.addEventListener('click', applySelectedTemplate);
+
+        const initialHall = Number(els.hallSelect.value || 0);
+        if (initialHall > 0) {
+            loadPricingMeta(initialHall);
+            loadTemplates(initialHall);
+        } else {
+            clearPricingUI();
+            resetTemplatesUI();
+        }
+
+        updateUIForMovie();
+    })();
+</script>
+
+

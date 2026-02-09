@@ -1,4 +1,5 @@
-﻿@using Web.ViewModels.Admin.PricingTemplates
+﻿@using Infrastructure.Entities
+@using Web.ViewModels.Admin.PricingTemplates
 @using System.Text.Json
 @model PricingTemplateEditVm
 
@@ -120,6 +121,20 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card shadow-sm mt-3 border-warning border-opacity-25" style="background-color:#fff9e6;">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h5 class="card-title mb-0 text-warning-emphasis fs-6 fw-bold">
+                        <i class="bi bi-eye me-1"></i>Превʼю цін у залі
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="seatPreviewWrap" class="bg-white border rounded p-3 bg-light">
+                        <div class="text-center text-muted small mt-4">Завантаження даних...</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </form>
@@ -128,21 +143,166 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-            const metaUrl = '@Url.Action("PricingMeta", "Sessions")';
+            const metaUrl = '@Url.Action("PricingMeta", "Sessions", new { Area = "Admin" })';
 
             const existingRowPrices = @Html.Raw(jsonRowPrices);
             const existingCatMultipliers = @Html.Raw(jsonCategoryMultipliers);
 
-            const currentHallId = '@Model.HallId';
+            const CAT = {
+                Standard: @((int)SeatCategory.Standard),
+                Vip: @((int)SeatCategory.Vip),
+                Accessible: @((int)SeatCategory.Accessible)
+            };
+
+            const currentHallId = Number('@Model.HallId');
 
             const rowUi = document.getElementById('rowPricesUi');
             const hiddenContainer = document.getElementById('hiddenRowPrices');
             const catWrap = document.getElementById('catMultipliersWrap');
+            const seatPreviewWrap = document.getElementById('seatPreviewWrap');
 
-            // State
             let allRows = [];
-            let pricesMap = new Map();
+            const pricesMap = new Map();
             let currentBasePrice = 100;
+
+            const catMap = new Map();
+            if (Array.isArray(existingCatMultipliers)) {
+                existingCatMultipliers.forEach(x => {
+                    const cid = Number(x.Category ?? x.category);
+                    const mult = Number(x.Multiplier ?? x.multiplier);
+                    if (Number.isFinite(cid) && Number.isFinite(mult)) catMap.set(cid, mult);
+                });
+            }
+
+            let hallMeta = null;
+
+            function seatUiClass(catId) {
+                if (catId === CAT.Vip) return 'seat-bg-vip';
+                if (catId === CAT.Accessible) return 'seat-bg-acc';
+                return 'seat-bg-std';
+            }
+
+            function calcFinal(row, catId) {
+                const base = pricesMap.has(row) ? Number(pricesMap.get(row)) : Number(currentBasePrice);
+                const mult = catMap.has(catId) ? Number(catMap.get(catId)) : 1;
+                return Math.round(base * mult);
+            }
+
+            function renderSeatPreviewFromMeta(meta) {
+                if (!seatPreviewWrap) return;
+
+                const seats = Array.isArray(meta?.seats) ? meta.seats : [];
+                const maxSeats = Number(meta?.maxSeats || 0);
+
+                if (!seats.length || maxSeats <= 0) {
+                    seatPreviewWrap.innerHTML = '<div class="text-muted small text-center py-3">Немає місць у залі</div>';
+                    return;
+                }
+
+                const byRow = new Map();
+                seats.forEach(s => {
+                    const r = Number(s.row);
+                    const n = Number(s.number);
+                    const c = Number(s.category);
+                    if (!byRow.has(r)) byRow.set(r, new Map());
+                    byRow.get(r).set(n, { row: r, number: n, category: c });
+                });
+
+                const rows = Array.isArray(meta?.rows) && meta.rows.length
+                    ? meta.rows.map(Number)
+                    : Array.from(byRow.keys()).sort((a, b) => a - b);
+
+                let gridHtml = '';
+                rows.forEach(row => {
+                    const seatsInRow = byRow.get(row) || new Map();
+
+                    gridHtml += `<div class="row-label">${row}</div>`;
+
+                    for (let s = 1; s <= maxSeats; s++) {
+                        const seat = seatsInRow.get(s);
+                        if (!seat) {
+                            gridHtml += `<div class="seat seat-empty"></div>`;
+                            continue;
+                        }
+
+                        const catId = Number(seat.category);
+                        const price = calcFinal(row, catId);
+
+                        gridHtml += `
+                            <div class="seat ${seatUiClass(catId)} js-seat-item"
+                                 data-row="${row}"
+                                 data-cat="${catId}"
+                                 data-seat="${s}"
+                                 title="Ряд ${row}, місце ${s} — ${price} грн">
+                                <div class="seat-text">
+                                    <div class="seat-no">${s}</div>
+                                    <div class="seat-price js-seat-price">${price}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                seatPreviewWrap.innerHTML = `
+                    <div class="cinema-map-wrap">
+                        <div class="cinema-map">
+                            <div class="cinema-screen">
+                                <div class="cinema-screen-arc"></div>
+                                <div class="cinema-screen-title">ЕКРАН</div>
+                            </div>
+
+                            <div class="cinema-grid" style="--cols:${maxSeats};">
+                                ${gridHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function recalcVisualMap() {
+                if (!seatPreviewWrap) return;
+
+                seatPreviewWrap.querySelectorAll('.js-seat-item').forEach(el => {
+                    const row = Number(el.dataset.row);
+                    const cat = Number(el.dataset.cat);
+                    const seatNo = el.dataset.seat || '';
+
+                    const final = calcFinal(row, cat);
+
+                    const priceEl = el.querySelector('.js-seat-price');
+                    if (priceEl && priceEl.textContent !== String(final)) {
+                        priceEl.style.opacity = '0.5';
+                        priceEl.textContent = String(final);
+                        setTimeout(() => priceEl.style.opacity = '1', 150);
+                    }
+
+                    el.title = `Ряд ${row}, місце ${seatNo} — ${final} грн`;
+                });
+            }
+
+            function updateHiddenInputsOnly() {
+                if (!hiddenContainer) return;
+
+                hiddenContainer.innerHTML = '';
+                allRows.forEach((r, index) => {
+                    const price = pricesMap.has(r) ? Number(pricesMap.get(r)) : Number(currentBasePrice);
+
+                    const inputRow = document.createElement('input');
+                    inputRow.type = 'hidden';
+                    inputRow.name = `RowPrices[${index}].Row`;
+                    inputRow.value = String(r);
+
+                    const inputPrice = document.createElement('input');
+                    inputPrice.type = 'hidden';
+                    inputPrice.name = `RowPrices[${index}].BasePrice`;
+                    inputPrice.value = String(price);
+
+                    hiddenContainer.appendChild(inputRow);
+                    hiddenContainer.appendChild(inputPrice);
+                });
+
+                recalcVisualMap();
+            }
 
             function renderRowUi() {
                 if (!rowUi) return;
@@ -164,15 +324,17 @@
                 `;
 
                 if (pricesMap.size === 0) {
-                    html += `<div class="text-muted small fst-italic ms-1 py-2">Винятків немає. Всі ряди коштують ${currentBasePrice} грн.</div>`;
+                    html += `<div class="text-muted small fst-italic ms-1 py-2" id="noExMsg">Винятків немає. Всі ряди коштують ${currentBasePrice} грн.</div>`;
                 } else {
-                    pricesMap.forEach((price, row) => {
+                    const sortedRows = Array.from(pricesMap.keys()).sort((a, b) => a - b);
+                    sortedRows.forEach(row => {
+                        const price = Number(pricesMap.get(row));
                         html += `
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-secondary fw-normal" style="min-width: 60px;">Ряд ${row}</span>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">₴</span>
-                                    <input type="number" class="form-control text-end js-ex-price" data-row="${row}" value="${price}" />
+                                    <input type="number" class="form-control text-end js-ex-price" data-row="${row}" value="${price}" min="0" />
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-danger js-remove-ex" data-row="${row}" title="Видалити виняток">
                                     <i class="bi bi-trash"></i>
@@ -194,9 +356,7 @@
                 `;
 
                 allRows.forEach(r => {
-                    if (!pricesMap.has(r)) {
-                        html += `<option value="${r}">Ряд ${r}</option>`;
-                    }
+                    if (!pricesMap.has(r)) html += `<option value="${r}">Ряд ${r}</option>`;
                 });
 
                 html += `
@@ -210,86 +370,72 @@
 
                 rowUi.innerHTML = html;
 
-                generateHiddenInputs();
-
-                attachEvents();
+                updateHiddenInputsOnly();
+                attachRowEvents();
             }
 
-            function generateHiddenInputs() {
-                hiddenContainer.innerHTML = '';
-                allRows.forEach((r, index) => {
-                    const price = pricesMap.has(r) ? pricesMap.get(r) : currentBasePrice;
-
-                    const inputRow = document.createElement('input');
-                    inputRow.type = 'hidden';
-                    inputRow.name = `RowPrices[${index}].Row`;
-                    inputRow.value = r;
-
-                    const inputPrice = document.createElement('input');
-                    inputPrice.type = 'hidden';
-                    inputPrice.name = `RowPrices[${index}].BasePrice`;
-                    inputPrice.value = price;
-
-                    hiddenContainer.appendChild(inputRow);
-                    hiddenContainer.appendChild(inputPrice);
-                });
-            }
-
-            function attachEvents() {
-                document.getElementById('basePriceInput')?.addEventListener('input', function() {
-                    const val = parseInt(this.value);
-                    if (!isNaN(val)) {
+            function attachRowEvents() {
+                document.getElementById('basePriceInput')?.addEventListener('input', function () {
+                    const val = Number(this.value);
+                    if (Number.isFinite(val) && val >= 0) {
                         currentBasePrice = val;
-                        generateHiddenInputs();
-                        const noExText = document.querySelector('#exceptionsContainer .fst-italic');
-                        if (noExText) noExText.textContent = `Винятків немає. Всі ряди коштують ${currentBasePrice} грн.`;
+                        updateHiddenInputsOnly();
+                        const msg = document.getElementById('noExMsg');
+                        if (msg) msg.textContent = `Винятків немає. Всі ряди коштують ${currentBasePrice} грн.`;
                     }
                 });
 
-                document.getElementById('addExceptionBtn')?.addEventListener('click', function() {
+                document.getElementById('addExceptionBtn')?.addEventListener('click', function () {
                     const select = document.getElementById('exceptionRowSelect');
-                    const row = parseInt(select.value);
-                    if (row) {
+                    const row = Number(select?.value || 0);
+                    if (row > 0) {
                         pricesMap.set(row, currentBasePrice);
                         renderRowUi();
                     }
                 });
 
                 document.querySelectorAll('.js-remove-ex').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = parseInt(this.dataset.row);
-                        pricesMap.delete(row);
-                        renderRowUi();
+                    btn.addEventListener('click', function () {
+                        const row = Number(this.dataset.row || 0);
+                        if (row > 0) {
+                            pricesMap.delete(row);
+                            renderRowUi();
+                        }
                     });
                 });
 
                 document.querySelectorAll('.js-ex-price').forEach(input => {
-                    input.addEventListener('input', function() {
-                        const row = parseInt(this.dataset.row);
-                        const val = parseInt(this.value) || 0;
-                        pricesMap.set(row, val);
-                        generateHiddenInputs();
+                    input.addEventListener('input', function () {
+                        const row = Number(this.dataset.row || 0);
+                        const val = Number(this.value);
+                        if (row > 0 && Number.isFinite(val) && val >= 0) {
+                            pricesMap.set(row, val);
+                            updateHiddenInputsOnly();
+                        }
                     });
                 });
             }
 
             function initRowData(rows) {
-                allRows = rows || [];
+                allRows = Array.isArray(rows) ? rows.map(Number) : [];
                 pricesMap.clear();
 
-                if (existingRowPrices && existingRowPrices.length > 0 && allRows.length > 0) {
+                if (Array.isArray(existingRowPrices) && existingRowPrices.length > 0 && allRows.length > 0) {
                     const counts = {};
                     existingRowPrices.forEach(p => {
-                        counts[p.BasePrice] = (counts[p.BasePrice] || 0) + 1;
+                        const price = Number(p.BasePrice);
+                        counts[price] = (counts[price] || 0) + 1;
                     });
 
-                    const sortedPrices = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-                    const modePrice = sortedPrices[0];
-                    currentBasePrice = parseInt(modePrice);
+                    const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                    const modePrice = Number(sorted[0] ?? 100);
+                    currentBasePrice = Number.isFinite(modePrice) ? modePrice : 100;
 
                     existingRowPrices.forEach(p => {
-                        if (p.BasePrice != currentBasePrice && allRows.includes(p.Row)) {
-                            pricesMap.set(p.Row, p.BasePrice);
+                        const row = Number(p.Row);
+                        const price = Number(p.BasePrice);
+                        if (allRows.includes(row) && price !== currentBasePrice) {
+                            pricesMap.set(row, price);
                         }
                     });
                 } else {
@@ -301,53 +447,87 @@
 
             function renderCats(apiCategories) {
                 if (!catWrap) return;
-                if (!apiCategories || apiCategories.length === 0) {
+
+                if (!Array.isArray(apiCategories) || apiCategories.length === 0) {
                     catWrap.innerHTML = '<div class="text-muted small text-center py-3">Дані відсутні</div>';
                     return;
                 }
 
-                const savedMults = {};
-                if (existingCatMultipliers) {
-                    existingCatMultipliers.forEach(m => {
-                        savedMults[m.Category] = m.Multiplier;
-                    });
-                }
-
                 catWrap.innerHTML = `
-                 <table class="table table-sm table-borderless align-middle mb-0">
-                   <thead class="table-light border-bottom"><tr><th class="ps-3 small">Категорія</th><th class="text-end pe-3 small">Множник</th></tr></thead>
-                   <tbody>
-                     ${apiCategories.map((c, i) => {
-                       const val = savedMults[c.id] !== undefined ? savedMults[c.id] : 1;
+                    <table class="table table-sm table-borderless align-middle mb-0">
+                        <thead class="table-light border-bottom">
+                            <tr>
+                                <th class="ps-3 small">Категорія</th>
+                                <th class="text-end pe-3 small">Множник</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${apiCategories.map((c, i) => {
+                                const id = Number(c.id);
+                                const title = String(c.title ?? id);
+                                const val = catMap.has(id) ? Number(catMap.get(id)) : 1;
+                                if (!catMap.has(id)) catMap.set(id, val);
 
-                       return `
-                       <tr><td class="ps-3 small fw-bold text-muted">${c.title}</td>
-                       <td class="text-end pe-2 py-1">
-                         <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${c.id}" />
-                         <input class="form-control form-control-sm text-end" style="width:70px; display:inline;" type="number" step="0.1" name="CategoryMultipliers[${i}].Multiplier" value="${val}" />
-                       </td></tr>
-                     `}).join('')}
-                   </tbody></table>`;
+                                return `
+                                    <tr>
+                                        <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 220px;" title="${title}">${title}</td>
+                                        <td class="text-end pe-2 py-1">
+                                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
+                                            <input class="form-control form-control-sm text-end js-cat-mult"
+                                                   style="width:80px; display:inline;"
+                                                   type="number" step="0.1" min="0.1"
+                                                   data-cat="${id}"
+                                                   name="CategoryMultipliers[${i}].Multiplier"
+                                                   value="${val}" />
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
             }
+
+            catWrap?.addEventListener('input', (e) => {
+                const t = e.target;
+                if (!(t instanceof HTMLInputElement)) return;
+                if (!t.classList.contains('js-cat-mult')) return;
+
+                const cid = Number(t.dataset.cat);
+                const mult = Number(t.value);
+
+                if (Number.isFinite(cid) && Number.isFinite(mult)) {
+                    catMap.set(cid, mult);
+                    recalcVisualMap();
+                }
+            });
 
             async function loadMeta(hallId) {
                 if (!hallId) return;
 
                 try {
-                    const res = await fetch(metaUrl + '?hallId=' + hallId);
+                    const res = await fetch(metaUrl + '?hallId=' + encodeURIComponent(hallId));
                     if (!res.ok) throw new Error();
+
                     const data = await res.json();
+                    hallMeta = data;
 
                     initRowData(data.rows);
                     renderCats(data.categories);
 
+                    renderSeatPreviewFromMeta(data);
+                    recalcVisualMap();
+
                 } catch (e) {
                     console.error(e);
                     if (rowUi) rowUi.innerHTML = '<div class="text-danger small text-center mt-4">Помилка завантаження даних</div>';
+                    if (catWrap) catWrap.innerHTML = '<div class="text-danger small text-center mt-4">Помилка завантаження даних</div>';
+                    if (seatPreviewWrap) seatPreviewWrap.innerHTML = '<div class="text-danger small text-center mt-4">Помилка завантаження даних</div>';
+                    hallMeta = null;
                 }
             }
 
-            if (currentHallId) {
+            if (Number.isFinite(currentHallId) && currentHallId > 0) {
                 loadMeta(currentHallId);
             }
         })();

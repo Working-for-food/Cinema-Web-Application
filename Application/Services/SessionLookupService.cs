@@ -63,6 +63,34 @@ public class SessionLookupService : ISessionLookupService
             .ToList();
     }
 
+    public async Task<List<SeatDto>> GetHallSeatsAsync(int hallId, CancellationToken ct)
+    {
+        if (hallId < 1)
+            return new List<SeatDto>();
+
+        ct.ThrowIfCancellationRequested();
+
+        if (!await _halls.ExistsAsync(hallId))
+            return new List<SeatDto>();
+
+        ct.ThrowIfCancellationRequested();
+
+        var seats = await _seats.GetByHallAsync(hallId);
+
+        return seats
+            .OrderBy(s => s.RowNumber)
+            .ThenBy(s => s.SeatNumber)
+            .Select(s => new SeatDto
+            {
+                Id = s.Id,
+                RowNumber = s.RowNumber,
+                SeatNumber = s.SeatNumber,
+                Category = s.Category
+            })
+            .ToList();
+    }
+
+
     public Task<string?> GetMovieTitleByIdAsync(int movieId, CancellationToken ct)
         => _movies.GetTitleByIdAsync(movieId, ct);
 
