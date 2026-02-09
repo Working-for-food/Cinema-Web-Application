@@ -1,0 +1,43 @@
+﻿.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background-color: #f8fafc; 
+}
+
+.btn-login-compact {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    min-height: 40px;
+    line-height: 1.5;
+    border-radius: 8px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-label-spacer {
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.auth-input-group .form-control,
+.auth-input-group .input-group-text {
+    padding: 0.4rem 0.8rem; 
+    font-size: 0.9rem; 
+    height: auto; 
+}
+
+    .auth-input-group .input-group-text i {
+        font-size: 0.9rem;
+    }
+
+.toggle-password:hover {
+    color: var(--accent) !important;
+    background-color: #f1f5f9;
+}

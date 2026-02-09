@@ -3,90 +3,115 @@
     ViewData["Title"] = "Вхід";
 }
 
-<div class="auth-container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="auth-card p-5 shadow-lg rounded">
-            <h1 class="section-title text-center mb-4">
-                <i class="fas fa-right-to-bracket"></i> Вхід
-            </h1>
+<section class="py-5 gray-bg min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-5 col-xl-4">
 
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-            <form asp-action="Login" method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
-
-                <input type="hidden" asp-for="ReturnUrl" />
-
-                <div class="mb-4">
-                    <label class="form-label text-muted">Ім'я користувача</label>
-                    <input asp-for="Username" class="form-control auth-input" placeholder="Введіть логін" />
-                    <span asp-validation-for="Username" class="text-danger"></span>
+                <div class="text-center mb-4">
+                    <h1 class="h2 fw-bold text-dark text-uppercase mb-1">З поверненням!</h1>
+                    <p class="text-muted small">Введіть свої дані для входу в систему</p>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label text-muted">Пароль</label>
-                    <div class="input-group">
-                        <input asp-for="Password" class="form-control auth-input" placeholder="Введіть пароль" type="password" />
-                        <button class="btn btn-outline-secondary toggle-password" type="button">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                <div class="card shadow-sm border-0 br-12 overflow-hidden">
+                    <div class="card-body p-4 p-lg-5">
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
+
+                        <form asp-action="Login" method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
+                            <input type="hidden" asp-for="ReturnUrl" />
+
+                            <div class="mb-3">
+                                <label asp-for="Username" class="form-label small fw-bold text-muted text-uppercase auth-label-spacer">Ім'я користувача</label>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text bg-light border-2 border-end-0 rounded-start text-muted">
+                                        <i class="fa-solid fa-user"></i>
+                                    </span>
+                                    <input asp-for="Username" class="form-control shadow-none border-2 border-start-0 ps-0" placeholder="Введіть логін" />
+                                </div>
+                                <span asp-validation-for="Username" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase auth-label-spacer">Пароль</label>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text bg-light border-2 border-end-0 rounded-start text-muted">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </span>
+                                    <input asp-for="Password" class="form-control shadow-none border-2 border-start-0 border-end-0 ps-0" placeholder="••••••••" type="password" />
+                                    <button class="btn btn-light border-2 border-start-0 text-muted toggle-password" type="button">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger small mt-1 d-block" id="password-error"></span>
+                            </div>
+
+                            <div class="mb-4 d-flex justify-content-between align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input shadow-none" type="checkbox" asp-for="RememberMe" />
+                                    <label class="form-check-label text-muted small" asp-for="RememberMe">
+                                        Запам'ятати мене
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-maroon btn-login-compact fw-bold shadow-sm">
+                                    УВІЙТИ
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger"></span>
+
+                    <div class="card-footer bg-light border-0 p-3 text-center">
+                        <p class="small text-muted mb-0">
+                            Ще не маєте акаунту?
+                            <a asp-action="Register" class="text-maroon fw-bold text-decoration-none">Зареєструватися</a>
+                        </p>
+                    </div>
                 </div>
 
-                <div class="mb-4 form-check">
-                    <input class="form-check-input" asp-for="RememberMe" />
-                    <label class="form-check-label text-muted" asp-for="RememberMe">
-                        Запам'ятати мене
-                    </label>
-                </div>
-
-                <div class="mb-4 text-center">
-                    <button type="submit" class="btn btn-maroon w-100" style="background-color: #800000; color: white;">
-                        Увійти
-                    </button>
-                </div>
-            </form>
-
-            <p class="text-center text-muted mt-3">
-                Ще не маєте акаунту? <a asp-action="Register" class="text-maroon">Зареєструватися</a>
-            </p>
+            </div>
         </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         $(document).ready(function () {
+            // Password Toggle Logic
             $('.toggle-password').on('click', function () {
                 const input = $(this).closest('.input-group').find('input');
                 const icon = $(this).find('i');
 
                 if (input.attr('type') === 'password') {
-                    input.attr('type', 'text'); 
+                    input.attr('type', 'text');
                     icon.removeClass('fa-eye').addClass('fa-eye-slash');
                 } else {
-                    input.attr('type', 'password'); 
-                    icon.removeClass('fa-eye-slash').addClass('fa-eye'); 
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
                 }
             });
-        const passwordInput = $('#Password'); 
-             const errorSpan = $('span[data-valmsg-for="Password"]');
 
-             passwordInput.on('keyup input', function () {
-                 const val = $(this).val();
+            // Keyboard Layout Warning Logic
+            const passwordInput = $('#Password');
+            const errorSpan = $('#password-error');
 
-                 if (/[^\x00-\x7F]/.test(val)) {
-                     errorSpan.text("Увага: використовуйте лише англійську розкладку!");
-                     errorSpan.addClass("text-warning fw-bold"); 
-                 } else {
-                     if (errorSpan.text() === "Увага: використовуйте лише англійську розкладку!") {
-                         errorSpan.text("");
-                         errorSpan.removeClass("text-warning fw-bold");
-                     }
-                 }
-             });
-         });
+            passwordInput.on('keyup input', function () {
+                const val = $(this).val();
+
+                if (/[^\x00-\x7F]/.test(val)) {
+                    errorSpan.html('<i class="fa-solid fa-triangle-exclamation me-1"></i> Увага: використовуйте лише англійську розкладку!');
+                    errorSpan.addClass("text-warning fw-bold").removeClass("text-danger");
+                } else {
+                    if (errorSpan.text().includes("Увага")) {
+                        errorSpan.text("");
+                        errorSpan.removeClass("text-warning fw-bold").addClass("text-danger");
+                    }
+                }
+            });
+        });
     </script>
 }
