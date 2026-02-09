@@ -30,7 +30,8 @@ public class CinemaService : ICinemaService
             Id = c.Id,
             Name = c.Name,
             Address = c.Address,
-            City = c.City ?? ""
+            City = c.City ?? "",
+            ImageUrl = c.ImageUrl 
         }).ToList();
     }
 
@@ -47,7 +48,8 @@ public class CinemaService : ICinemaService
             Id = cinema.Id,
             Name = cinema.Name,
             Address = cinema.Address,
-            City = cinema.City ?? ""
+            City = cinema.City ?? "",
+            ImageUrl = cinema.ImageUrl 
         };
     }
 
@@ -61,7 +63,8 @@ public class CinemaService : ICinemaService
             Id = cinema.Id,
             Name = cinema.Name,
             Address = cinema.Address,
-            City = cinema.City ?? ""
+            City = cinema.City ?? "",
+            ImageUrl = cinema.ImageUrl 
         };
     }
 
@@ -71,7 +74,8 @@ public class CinemaService : ICinemaService
         {
             Name = Normalize(dto.Name),
             Address = Normalize(dto.Address),
-            City = Normalize(dto.City)
+            City = Normalize(dto.City),
+            ImageUrl = dto.ImageUrl 
         };
 
         await _repo.AddAsync(cinema, ct);
@@ -90,6 +94,7 @@ public class CinemaService : ICinemaService
         cinema.Name = Normalize(dto.Name);
         cinema.Address = Normalize(dto.Address);
         cinema.City = Normalize(dto.City);
+        cinema.ImageUrl = dto.ImageUrl; 
 
         await _repo.UpdateAsync(cinema, ct);
     }

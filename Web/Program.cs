@@ -7,6 +7,7 @@ using Infrastructure.Data.Seed;
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -81,6 +82,7 @@ builder.Services.AddScoped<IMoviePublicService, MoviePublicService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionPricingRepository, SessionPricingRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 // Services (реєструємо concrete + interface на той самий scoped-інстанс)
 builder.Services.AddScoped<MovieService>();
