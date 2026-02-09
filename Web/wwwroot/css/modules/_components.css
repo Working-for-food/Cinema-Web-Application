@@ -1163,3 +1163,101 @@
     padding: 0.5rem 1.5rem !important;
     border: 1px solid #e2e8f0;
 }
+
+.letter-spacing-1 {
+    letter-spacing: 1.2px;
+}
+
+.role-item {
+    background-color: #ffffff;
+    border-color: #f1f5f9;
+}
+
+    .role-item:has(.role-switch:checked) {
+        border-color: var(--accent-light, #e2e8f0);
+        background-color: #f8fafc;
+    }
+
+.role-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.role-switch {
+    width: 3.5em !important;
+    height: 1.75em !important;
+}
+
+    .role-switch:checked {
+        background-color: var(--accent, #1e293b);
+        border-color: var(--accent, #1e293b);
+    }
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+.bg-light-soft {
+    background-color: #fcfdfe !important;
+}
+
+.btn-maroon-light {
+    color: var(--maroon);
+    background-color: rgba(128, 0, 0, 0.05);
+    border: 1px solid rgba(128, 0, 0, 0.1);
+}
+
+    .btn-maroon-light:hover {
+        background-color: var(--maroon);
+        color: white;
+    }
+
+.br-6 {
+    border-radius: 6px;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.x-small {
+    font-size: 0.75rem;
+}
+
+.br-16 {
+    border-radius: 16px;
+}
+/* Стиль для імітації Backdrop Overlay з фільмів */
+.backdrop-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1.5px;
+}
+
+.icon-badge {
+    transition: transform 0.2s ease;
+}
+
+.panel:hover .icon-badge {
+    transform: translateY(-3px);
+}
+
+/* Адаптація для коректного Flexbox на мобільних пристроях */
+@media (min-width: 992px) {
+    .col-lg-8 {
+        min-height: 450px;
+    }
+}
