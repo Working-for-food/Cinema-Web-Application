@@ -3,65 +3,61 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container-fluid px-lg-5">
 
-        <h1 class="section-title text-center mb-5">Імпорт з TMDB</h1>
-
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success mb-3">@TempData["Success"]</div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger mb-3">@TempData["Error"]</div>
-        }
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div></div>
-
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fa-solid fa-arrow-left me-1"></i>
-                НАЗАД
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h1 class="section-title mb-0">ІМПОРТ З TMDB</h1>
+            <a asp-action="Index" class="btn btn-outline-modern">
+                <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД ДО СПИСКУ
             </a>
         </div>
 
-        <div class="card shadow-sm rounded">
-            <div class="card-header bg-maroon text-white">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-cloud-arrow-down me-2"></i>
-                    Пошук фільму в TMDB
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-8">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-8">@TempData["Error"]</div>
+        }
+
+        <div class="card shadow-sm border-0 br-12 overflow-hidden">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fs-6 fw-bold text-dark text-uppercase">
+                    <i class="fa-solid fa-cloud-arrow-down me-2 text-primary"></i>
+                    Пошук фільму в глобальній базі
                 </h5>
             </div>
 
-            <div class="card-body p-4">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-lg-8">
-                        <label class="form-label text-muted" for="q">
-                            <i class="fa-solid fa-magnifying-glass me-1"></i>
-                            Назва
-                        </label>
-                        <input id="q"
-                               class="form-control"
-                               placeholder="Напр. Interstellar" />
+            <div class="card-body p-4 p-lg-5">
+                <div class="row g-3 align-items-end justify-content-center">
+                    <div class="col-12 col-lg-7">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="q">Назва фільму</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-2 border-end-0 br-left-8 text-muted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input id="q" class="form-control border-2 border-start-0 br-right-8 shadow-none" 
+                                   placeholder="Напр. Interstellar або Початок..." />
+                        </div>
                     </div>
 
-                    <div class="col-12 col-lg-4">
-                        <div class="d-flex gap-2 justify-content-lg-end">
-                            <button id="btnSearch"
-                                    class="btn btn-maroon flex-grow-1 flex-lg-grow-0"
-                                    type="button">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i>
-                                ПОШУК
-                            </button>
-                        </div>
+                    <div class="col-12 col-lg-2">
+                        <button id="btnSearch" class="btn btn-dark w-100 fw-bold br-8 py-2" type="button">
+                            ПОШУК
+                        </button>
                     </div>
                 </div>
 
-                <div class="mt-4" id="results"></div>
+                <div class="mt-5" id="results">
+                    <div class="text-center py-5 text-muted opacity-50">
+                        <i class="fa-solid fa-film fa-3x mb-3"></i>
+                        <p>Введіть назву фільму для пошуку</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- антифорджері токен в окремій формі, щоб JS міг його взяти -->
         <form id="af" method="post">
             @Html.AntiForgeryToken()
         </form>
@@ -75,9 +71,6 @@
         const q = document.getElementById("q");
         const results = document.getElementById("results");
 
-        // TODO: якщо ти перенесла методи в MoviesController, то зміни маршрути тут:
-        // const SEARCH_URL = "/admin/movies/tmdb/search";
-        // const IMPORT_URL = "/admin/movies/tmdb/import";
         const SEARCH_URL = "/admin/movies/tmdb/search";
         const IMPORT_URL = "/admin/movies/tmdb/import";
 
@@ -90,69 +83,75 @@
             const query = (q.value || "").trim();
             if (!query) return;
 
-            results.innerHTML = `<div class="text-muted">Loading...</div>`;
-
-            const r = await fetch(`${SEARCH_URL}?query=${encodeURIComponent(query)}`);
-            if (!r.ok) {
-                results.innerHTML = `<div class="alert alert-danger mb-0">Search failed</div>`;
-                return;
-            }
-
-            const items = await r.json();
-            if (!items.length) {
-                results.innerHTML = `<div class="alert alert-secondary mb-0">Немає результатів</div>`;
-                return;
-            }
-
             results.innerHTML = `
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width:96px">Постер</th>
-                                <th>Назва</th>
-                                <th style="width:160px">Дата виходу</th>
-                                <th class="text-end" style="width:140px"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${items.map(x => `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2 text-muted">Шукаємо у всесвіті TMDB...</div>
+                </div>`;
+
+            try {
+                const r = await fetch(`${SEARCH_URL}?query=${encodeURIComponent(query)}`);
+                if (!r.ok) throw new Error();
+
+                const items = await r.json();
+                if (!items.length) {
+                    results.innerHTML = `
+                        <div class="alert alert-light border text-center py-4 br-8">
+                            <i class="fa-solid fa-face-frown mb-2 d-block fa-2x"></i>
+                            Нічого не знайдено за запитом "<strong>${escapeHtml(query)}</strong>"
+                        </div>`;
+                    return;
+                }
+
+                results.innerHTML = `
+                    <div class="table-responsive br-8 border overflow-hidden shadow-sm">
+                        <table class="table tmdb-table table-hover align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        ${x.posterPath
-                                            ? `<img class="img-thumbnail" style="width:72px" src="https://image.tmdb.org/t/p/w92${x.posterPath}" alt="Poster" />`
-                                            : `<span class="text-muted">—</span>`
-                                        }
-                                    </td>
-                                    <td>${escapeHtml(x.title ?? "")}</td>
-                                    <td>${escapeHtml(x.releaseDate ?? "")}</td>
-                                    <td class="text-end" style="white-space:nowrap">
-                                        <form method="post" action="${IMPORT_URL}">
-                                            <input name="tmdbId" type="hidden" value="${x.tmdbId}" />
-                                            <input name="__RequestVerificationToken" type="hidden" value="${getAntiforgeryToken()}" />
-                                            <button class="btn btn-sm btn-success" type="submit">
-                                                <i class="bi bi-download"></i> Import
-                                            </button>
-                                        </form>
-                                    </td>
+                                    <th style="width:100px">Постер</th>
+                                    <th>Назва фільму</th>
+                                    <th style="width:180px">Дата виходу</th>
+                                    <th class="text-end" style="width:140px">Дія</th>
                                 </tr>
-                            `).join("")}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+                            </thead>
+                            <tbody class="bg-white">
+                                ${items.map(x => `
+                                    <tr>
+                                        <td class="ps-3">
+                                            ${x.posterPath
+                                                ? `<img class="poster-preview" src="https://image.tmdb.org/t/p/w92${x.posterPath}" alt="Poster" />`
+                                                : `<div class="poster-preview bg-light d-flex align-items-center justify-content-center text-muted small">N/A</div>`
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark">${escapeHtml(x.title ?? "")}</div>
+                                        </td>
+                                        <td class="text-muted small">${escapeHtml(x.releaseDate ?? "—")}</td>
+                                        <td class="text-end pe-3">
+                                            <form method="post" action="${IMPORT_URL}">
+                                                <input name="tmdbId" type="hidden" value="${x.tmdbId}" />
+                                                <input name="__RequestVerificationToken" type="hidden" value="${getAntiforgeryToken()}" />
+                                                <button class="btn btn-sm btn-primary-modern px-3" type="submit">
+                                                    <i class="fa-solid fa-download me-1"></i> Імпорт
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                results.innerHTML = `<div class="alert alert-danger br-8">Помилка під час пошуку. Спробуйте пізніше.</div>`;
+            }
         }
 
         function getAntiforgeryToken() {
             return document.querySelector('#af input[name="__RequestVerificationToken"]')?.value ?? "";
         }
         function escapeHtml(s) {
-            return String(s)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#039;");
+            return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
         }
     </script>
 }

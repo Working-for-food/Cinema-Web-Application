@@ -11,158 +11,144 @@
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-5">Користувачі</h1>
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+            <h1 class="section-title mb-0">Користувачі</h1>
+            <a class="btn btn-maroon shadow-sm" asp-action="Create">
+                <i class="fas fa-plus me-2"></i>ДОДАТИ КОРИСТУВАЧА
+            </a>
+        </div>
 
         @if (TempData["Success"] != null)
         {
-            <div class="alert alert-success mb-3">@TempData["Success"]</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@TempData["Success"]</div>
         }
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-danger mb-3">@TempData["Error"]</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@TempData["Error"]</div>
         }
 
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-            <form method="get" class="d-flex gap-2 align-items-end">
-                <div>
-                    <label class="form-label">Пошук</label>
-                    <input class="form-control"
-                           name="search"
-                           value="@search"
-                           placeholder="Імʼя або прізвище" />
-                </div>
+        <div class="card shadow-sm border-0 mb-4 br-12">
+            <div class="card-body p-4">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Пошук користувача</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-2 border-end-0 br-left-8 text-muted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input name="search" value="@search" class="form-control border-2 border-start-0 br-right-8 shadow-none" 
+                                   placeholder="Імʼя або прізвище..." />
+                        </div>
+                    </div>
 
-                <div>
-                    <label class="form-label invisible">.</label>
-                    <button type="submit" class="btn btn-secondary w-100">
-                        <i class="fas fa-search me-1"></i>ЗНАЙТИ
-                    </button>
-                </div>
-            </form>
-
-            <a class="btn btn-maroon" asp-action="Create">
-                <i class="fas fa-plus me-2"></i>Додати користувача
-            </a>
+                    <div class="col-12 col-md-4 col-lg-2">
+                        <button type="submit" class="btn btn-secondary w-100 fw-bold">ЗНАЙТИ</button>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(search))
+                    {
+                        <div class="col-12 col-lg-auto">
+                            <a asp-action="Index" class="btn btn-soft w-100">СКИНУТИ</a>
+                        </div>
+                    }
+                </form>
+            </div>
         </div>
 
         @if (Model.Count == 0)
         {
-            <div class="card shadow-sm col-lg-8 mx-auto">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fa-solid fa-circle-info me-2"></i>
-                        Немає результатів
-                    </h5>
-                </div>
-                <div class="card-body p-4 text-center">
-                    <p class="mb-0">Користувачів не знайдено.</p>
-                </div>
+            <div class="empty-state mx-auto" style="max-width: 600px;">
+                <div class="empty-icon"><i class="fa-solid fa-users-slash"></i></div>
+                <h5 class="empty-title">Користувачів не знайдено</h5>
+                <p class="empty-sub">Список порожній або нічого не знайдено за запитом "@search".</p>
             </div>
         }
         else
         {
-            <div class="card shadow-sm mb-3 admin-table-card">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table admin-table mb-0 align-middle">
-                            <thead>
+            <div class="admin-table-card col-12 overflow-hidden shadow-sm">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4" style="width:100px;">Фото</th>
+                                <th>ПІБ Користувача</th>
+                                <th style="width:220px;">Країна</th>
+                                <th style="width:180px;">Дата народження</th>
+                                <th class="text-end pe-4" style="width:200px;">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model)
+                            {
                                 <tr>
-                                    <th style="width:84px;">Фото</th>
-                                    <th>ПІБ</th>
-                                    <th style="width:220px;">Країна</th>
-                                    <th style="width:180px;">Дата народження</th>
-                                    <th class="text-end" style="width:250px;">Дії</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @foreach (var p in Model)
-                                {
-                                    <tr>
-                                        <td>
-                                            <div class="person-avatar">
-                                                @if (!string.IsNullOrWhiteSpace(p.PhotoUrl))
-                                                {
-                                                    <img src="@p.PhotoUrl"
-                                                         alt="Фото"
-                                                         loading="lazy"
-                                                         onerror="this.style.display='none'; this.parentElement.classList.add('no-photo');" />
-                                                }
-                                                else
-                                                {
-                                                    <span class="person-avatar__placeholder">
-                                                        <i class="fas fa-user"></i>
-                                                    </span>
-                                                }
-                                            </div>
-                                        </td>
-
-                                        <td class="fw-semibold">
-                                            @(p.FullName ?? $"{p.FirstName} {p.LastName}")
-                                        </td>
-
-                                        <td>
+                                    <td class="ps-4">
+                                        <div class="person-avatar shadow-sm border-2">
+                                            @if (!string.IsNullOrWhiteSpace(p.PhotoUrl))
+                                            {
+                                                <img src="@p.PhotoUrl" alt="User" loading="lazy" 
+                                                     onerror="this.style.display='none'; this.parentElement.classList.add('no-photo');" />
+                                            }
+                                            else
+                                            {
+                                                <span class="person-avatar__placeholder">
+                                                    <i class="fas fa-user"></i>
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark fs-5">@(p.FullName ?? $"{p.FirstName} {p.LastName}")</div>
+                                    </td>
+                                    <td>
+                                        <span class="pill">
+                                            <i class="fa-solid fa-earth-americas me-1 text-primary"></i>
                                             @(p.Country?.Name ?? "—")
-                                        </td>
-
-                                        <td>
-                                            @(p.BirthDate?.ToString("dd.MM.yyyy") ?? "—")
-                                        </td>
-
-                                        <td class="text-end">
-                                            <a asp-action="Edit"
-                                               asp-route-id="@p.Id"
-                                               class="btn btn-sm btn-secondary me-1"
-                                               title="Редагувати">
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="text-dark">@(p.BirthDate?.ToString("dd.MM.yyyy") ?? "—")</div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <a asp-action="Edit" asp-route-id="@p.Id" 
+                                               class="btn btn-sm btn-light border text-primary" title="Редагувати">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
 
-                                            <form method="post"
-                                                  asp-action="Delete"
-                                                  asp-route-id="@p.Id"
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('Видалити цього користувача?');">
+                                            <form method="post" asp-action="Delete" asp-route-id="@p.Id" 
+                                                  class="d-inline" onsubmit="return confirm('Видалити цього користувача?');">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-danger"
-                                                        title="Видалити">
+                                                <button type="submit" class="btn btn-sm btn-light border text-danger" title="Видалити">
                                                     <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </form>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-
-                        </table>
-                    </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         }
 
         @if (totalPages > 1)
         {
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center mb-0">
+            <nav class="mt-5">
+                <ul class="pagination pagination-sm justify-content-center border-0">
                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link"
-                           asp-action="Index"
-                           asp-route-page="@(currentPage - 1)"
-                           asp-route-search="@search">
-                            Prev
+                        <a class="page-link border-0 shadow-sm mx-1 rounded-2" asp-action="Index" 
+                           asp-route-page="@(currentPage - 1)" asp-route-search="@search">
+                            <i class="fa-solid fa-chevron-left"></i>
                         </a>
                     </li>
-
                     <li class="page-item disabled">
-                        <span class="page-link">Сторінка @currentPage з @totalPages</span>
+                        <span class="page-link border-0 bg-transparent text-dark fw-bold px-3">@currentPage / @totalPages</span>
                     </li>
-
                     <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                           asp-action="Index"
-                           asp-route-page="@(currentPage + 1)"
-                           asp-route-search="@search">
-                            Next
+                        <a class="page-link border-0 shadow-sm mx-1 rounded-2" asp-action="Index" 
+                           asp-route-page="@(currentPage + 1)" asp-route-search="@search">
+                            <i class="fa-solid fa-chevron-right"></i>
                         </a>
                     </li>
                 </ul>
