@@ -27,6 +27,8 @@ public class AfishaRepository : IAfishaRepository
 
     public async Task<List<Movie>> GetComingSoonAsync(CancellationToken ct = default)
     {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
         var nowIds = await _db.Sessions
             .AsNoTracking()
             .Where(s => !s.IsCancelled)
@@ -36,7 +38,7 @@ public class AfishaRepository : IAfishaRepository
 
         return await _db.Movies
             .AsNoTracking()
-            .Where(m => !nowIds.Contains(m.Id))
+            .Where(m => !nowIds.Contains(m.Id) && m.ReleaseDate > today)
             .OrderBy(m => m.Title)
             .ToListAsync(ct);
     }

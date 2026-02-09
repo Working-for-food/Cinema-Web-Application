@@ -5,78 +5,99 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Деталі кінотеатру</h1>
-
-        <div class="card shadow-sm col-lg-8 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-circle-info me-2"></i>
-                    Інформація про кінотеатр
-                </h5>
+        <div class="card shadow-sm border-0 mx-auto overflow-hidden br-16" style="max-width: 1100px;">
+            
+            @* Backdrop блок у стилі деталей фільму *@
+            <div class="position-relative">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <div class="backdrop-container" style="height: 350px;">
+                        <img src="@Model.ImageUrl" alt="@Model.Name" class="w-100 backdrop-img" style="height: 350px; object-fit: cover;" />
+                        <div class="backdrop-overlay"></div>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-dark" style="height: 250px; background: linear-gradient(45deg, #1a1a1a, #333);"></div>
+                }
+                
+                <div class="position-absolute bottom-0 start-0 p-4 p-md-5 w-100">
+                    <div class="text-white">
+                        <div class="header-subtitle text-uppercase fw-bold mb-1 opacity-75 letter-spacing-1">Кінотеатр</div>
+                        <h1 class="display-5 fw-bold mb-0 text-uppercase">@Model.Name</h1>
+                    </div>
+                </div>
             </div>
 
-            <div class="card-body p-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="row g-5">
+                    
+                    @* Ліва колонка: Локація та Картка залів *@
+                    <div class="col-lg-4 order-2 order-lg-1">
+                        <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">Локація та контакти</h5>
+                        
+                        <div class="info-list">
+                            <div class="info-item mb-3">
+                                <span class="info-item-label d-block text-muted small text-uppercase fw-bold mb-1">
+                                    <i class="fa-solid fa-location-dot me-2 text-primary"></i>Місто
+                                </span>
+                                <span class="info-item-value fs-5 fw-semibold text-dark">@Model.City</span>
+                            </div>
 
-                <div class="mb-4">
+                            <div class="info-item mb-3">
+                                <span class="info-item-label d-block text-muted small text-uppercase fw-bold mb-1">
+                                    <i class="fa-solid fa-map-location-dot me-2 text-primary"></i>Адреса
+                                </span>
+                                <span class="info-item-value text-secondary">@Model.Address</span>
+                            </div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Назва кінотеатру
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Name</div>
+                        @* Панель переходу до залів (Sidebar стиль) *@
+                        <div class="panel p-4 mt-5 br-12 border-0 shadow-sm" style="background: #f8fafc;">
+                            <div class="text-center">
+                                <div class="icon-badge bg-white shadow-sm text-primary mb-3 mx-auto" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                                    <i class="fa-solid fa-door-open fa-lg"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark text-uppercase small mb-2">Зали та місця</h6>
+                                <p class="text-muted x-small mb-4">Налаштування технічних параметрів та схеми залів</p>
+                                
+                                <a asp-area="Admin" asp-controller="Halls" asp-action="Index" asp-route-cinemaId="@Model.Id" 
+                                   class="btn btn-outline-dark w-100 py-2 fw-bold text-uppercase small br-8 bg-white shadow-none">
+                                     Перейти до залів
+                                </a>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            Місто
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.City</div>
-                    </div>
+                    @* Права колонка: Опис та Кнопки (Flexbox для притискання до низу) *@
+                    <div class="col-lg-8 order-1 order-lg-2 d-flex flex-column">
+                        
+                        @* Контентна частина *@
+                        <div class="flex-grow-1 mb-5">
+                            <h4 class="fw-bold mb-4 text-uppercase letter-spacing-1">Про заклад</h4>
+                            <p class="text-secondary lh-lg fs-5">
+                                Ласкаво просимо до <strong>@Model.Name</strong>. Це сучасний кінотеатр у місті @Model.City, 
+                                обладнаний за останніми стандартами кіноіндустрії для вашого комфорту та незабутніх вражень. 
+                                Ми пропонуємо перегляд фільмів у найкращій якості з використанням сучасних технологій звуку та зображення.
+                            </p>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-map-location-dot me-1"></i>
-                            Адреса
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Address</div>
+                        @* Кнопки дій — Завжди в самому низу *@
+                        <div class="mt-auto pt-4 border-top d-flex flex-wrap gap-3 justify-content-start">
+                            <a asp-area="Admin" asp-controller="Cinemas" asp-action="Index" class="btn btn-secondary px-5 py-2 fw-bold text-uppercase">
+                                <i class="fa-solid fa-arrow-left me-2"></i> Назад
+                            </a>
+                            
+                            <a asp-area="Admin" asp-controller="Cinemas" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-maroon px-5 py-2 fw-bold text-uppercase shadow-sm">
+                                <i class="fa-solid fa-pen-to-square me-2"></i> Редагувати
+                            </a>
+                        </div>
                     </div>
 
                 </div>
-
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a asp-area="Admin"
-                       asp-controller="Cinemas"
-                       asp-action="Index"
-                       class="btn btn-secondary">
-                        <i class="fa-solid fa-arrow-left me-1"></i>
-                        Назад
-                    </a>
-
-                    <a asp-area="Admin"
-                       asp-controller="Halls"
-                       asp-action="Index"
-                       asp-route-cinemaId="@Model.Id"
-                       class="btn btn-danger-second">
-                        <i class="fa-solid fa-door-open me-1"></i>
-                        Зали
-                    </a>
-
-                    <a asp-area="Admin"
-                       asp-controller="Cinemas"
-                       asp-action="Edit"
-                       asp-route-id="@Model.Id"
-                       class="btn btn-maroon">
-                        <i class="fa-solid fa-pen-to-square me-1"></i>
-                        Редагувати
-                    </a>
-                </div>
-
             </div>
         </div>
-
     </div>
 </section>

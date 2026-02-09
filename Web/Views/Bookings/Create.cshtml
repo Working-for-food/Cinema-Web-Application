@@ -1,7 +1,7 @@
 ﻿@model Web.ViewModels.BookingCreateVm
 
 @{
-    ViewData["Title"] = "Booking";
+    ViewData["Title"] = "Бронювання місць";
 
     var grouped = Model.Seats
         .GroupBy(x => x.RowNumber)
@@ -14,140 +14,180 @@
         2 => "seat-accessible",
         _ => "seat-standard"
     };
+
+    string PosterOrFallback()
+    {
+        return string.IsNullOrWhiteSpace(Model.MoviePosterUrl)
+            ? "https://via.placeholder.com/300x450?text=Poster"
+            : Model.MoviePosterUrl!;
+    }
+
+    string DayUa(DayOfWeek d) => d switch
+    {
+        DayOfWeek.Monday => "Понеділок",
+        DayOfWeek.Tuesday => "Вівторок",
+        DayOfWeek.Wednesday => "Середа",
+        DayOfWeek.Thursday => "Четвер",
+        DayOfWeek.Friday => "Пʼятниця",
+        DayOfWeek.Saturday => "Субота",
+        DayOfWeek.Sunday => "Неділя",
+        _ => d.ToString()
+    };
 }
 
-<style>
-    .screen {
-        text-align: center;
-        margin-bottom: 20px;
-        padding: 8px;
-        background: #eee;
-        border-radius: 6px;
-        font-weight: 600;
-    }
+<link rel="stylesheet" href="~/css/booking-create.css" />
 
-    .row-line {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-    }
+<div class="booking-page">
+    <div class="booking-wrap">
 
-    .row-label {
-        width: 70px;
-        font-weight: 600;
-    }
+        <!-- Header -->
+        <div class="booking-header">
+            <div class="booking-poster">
+                <img src="@PosterOrFallback()" alt="Постер" />
+            </div>
 
-    .seat {
-        margin-right: 6px;
-        position: relative;
-    }
+            <div class="booking-info">
+                <div class="booking-title-row">
+                    @if (!string.IsNullOrWhiteSpace(Model.AgeLabel))
+                    {
+                        <span class="booking-age">@Model.AgeLabel</span>
+                    }
+                    <h1 class="booking-title">@Model.MovieTitle</h1>
+                </div>
 
-        .seat input {
-            display: none;
-        }
+                <div class="booking-chips">
+                    @if (!string.IsNullOrWhiteSpace(Model.FormatLabel))
+                    {
+                        <span class="booking-chip">@Model.FormatLabel</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.LanguageLabel))
+                    {
+                        <span class="booking-chip">@Model.LanguageLabel</span>
+                    }
+                </div>
 
-        .seat span {
-            display: inline-block;
-            min-width: 42px;
-            padding: 6px;
-            border-radius: 4px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 13px;
-            border: 1px solid #999;
-            line-height: 1.1;
-        }
+                <div class="booking-meta">
+                    <div class="meta-card">
+                        <div class="meta-ico">📍</div>
+                        <div class="meta-text">
+                            <div class="meta-top">Місце</div>
+                            <div class="meta-main">
+                                @Model.HallName
+                                @if (!string.IsNullOrWhiteSpace(Model.City) || !string.IsNullOrWhiteSpace(Model.CinemaName))
+                                {
+                                    <span>, @Model.City @Model.CinemaName</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
 
-    .seat-standard span {
-        background: #f8f9fa;
-    }
+                    <div class="meta-card">
+                        <div class="meta-ico">📅</div>
+                        <div class="meta-text">
+                            <div class="meta-top">Дата</div>
+                            <div class="meta-main">
+                                @if (Model.StartTime.HasValue)
+                                {
+                                    <div>@Model.StartTime.Value.ToString("dd.MM.yyyy")</div>
+                                    <div>@DayUa(Model.StartTime.Value.DayOfWeek)</div>
+                                }
+                                else
+                                {
+                                    <div>—</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
 
-    .seat-vip span {
-        background: #ffe08a;
-    }
 
-    .seat-accessible span {
-        background: #cfe2ff;
-    }
-
-    .seat input:checked + span {
-        outline: 3px solid #198754;
-        font-weight: 600;
-    }
-
-    .seat.booked span {
-        background: #ddd;
-        cursor: not-allowed;
-        opacity: 0.6;
-        text-decoration: line-through;
-    }
-
-    .legend span {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 4px;
-        margin-right: 8px;
-        border: 1px solid #999;
-        font-size: 13px;
-    }
-
-    .total-box {
-        margin-top: 20px;
-        font-size: 18px;
-        font-weight: 600;
-    }
-</style>
-
-<h2>Choose seats</h2>
-
-<div class="legend mb-3">
-    <span class="seat-standard">Standard</span>
-    <span class="seat-vip">VIP</span>
-    <span class="seat-accessible">Accessible</span>
-    <span style="background:#ddd;">Booked</span>
-</div>
-
-<div class="screen">SCREEN</div>
-
-<form method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="SessionId" value="@Model.SessionId" />
-
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    @foreach (var row in grouped)
-    {
-        <div class="row-line">
-            <div class="row-label">Row @row.Key</div>
-
-            @foreach (var s in row.OrderBy(x => x.SeatNumber))
-            {
-                var css = CategoryClass(s.Category);
-                var bookedClass = s.IsBooked ? "booked" : "";
-
-                <label class="seat @css @bookedClass">
-                    <input type="checkbox"
-                           name="SelectedSeatIds"
-                           value="@s.SeatId"
-                           data-price="@s.Price"
-                    @(s.IsBooked ? "disabled" : null) />
-                    <span>
-                        @s.SeatNumber<br />
-                        <small>@s.Price</small>
-                    </span>
-                </label>
-            }
+                    <div class="meta-card">
+                        <div class="meta-ico">🕒</div>
+                        <div class="meta-text">
+                            <div class="meta-top">Час</div>
+                            <div class="meta-main">
+                                @if (Model.StartTime.HasValue && Model.EndTime.HasValue)
+                                {
+                                    <span>@Model.StartTime.Value.ToString("HH:mm") - @Model.EndTime.Value.ToString("HH:mm")</span>
+                                }
+                                else if (Model.StartTime.HasValue)
+                                {
+                                    <span>@Model.StartTime.Value.ToString("HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    }
 
-    <div class="total-box">
-        Total: <span id="total">0</span>
+        <!-- Seats -->
+        <div class="seats-title">ОБЕРІТЬ МІСЦЯ</div>
+
+        <div class="legend">
+            <span class="lg"><i class="lg-dot dot-standard"></i>Звичайні</span>
+            <span class="lg"><i class="lg-dot dot-vip"></i>VIP</span>
+            <span class="lg"><i class="lg-dot dot-accessible"></i>Інклюзивні</span>
+            <span class="lg"><i class="lg-dot dot-booked"></i>Зайняті</span>
+        </div>
+
+        <div class="hall-wrap">
+            <div class="hall">
+                <div class="screen">ЕКРАН</div>
+            </div>
+        </div>
+
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="SessionId" value="@Model.SessionId" />
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="hall-wrap">
+                <div class="hall">
+                    @foreach (var row in grouped)
+                    {
+                        <div class="row-line">
+                            <div class="row-label">Ряд @row.Key</div>
+
+                            @foreach (var s in row.OrderBy(x => x.SeatNumber))
+                            {
+                                var css = CategoryClass(s.Category);
+                                var bookedClass = s.IsBooked ? "booked" : "";
+
+                                <label class="seat @css @bookedClass">
+                                    <input type="checkbox"
+                                           name="SelectedSeatIds"
+                                           value="@s.SeatId"
+                                           data-price="@s.Price"
+                                    @(s.IsBooked ? "disabled" : null) />
+                                    <span>
+                                        @s.SeatNumber
+                                        <small>@s.Price.ToString("0.00")</small>
+                                    </span>
+                                </label>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="total-box">
+                Разом: <span id="total">0.00</span> ₴
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-success mt-2">
+                    Забронювати вибрані місця
+                </button>
+            </div>
+        </form>
     </div>
-
-    <button type="submit" class="btn btn-success mt-3">
-        Book selected seats
-    </button>
-</form>
+</div>
 
 <script>
     const checkboxes = document.querySelectorAll('input[type="checkbox"][data-price]');

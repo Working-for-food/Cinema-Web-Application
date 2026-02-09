@@ -11,146 +11,200 @@
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Шаблони цін</h1>
+<section class="py-5 gray-bg">
+    <div class="container">
 
-    <a class="btn btn-primary"
-       asp-action="Create"
-       asp-route-cinemaId="@Model.CinemaId"
-       asp-route-hallId="@Model.HallId"
-       asp-route-returnUrl="@returnUrl">
-        <i class="bi bi-plus-lg"></i> Створити шаблон
-    </a>
-</div>
-
-@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
-{
-    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-        @ok
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
-        @err
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<form method="get" id="filtersForm" class="mb-4">
-    <div class="card shadow-sm">
-        <div class="card-body py-3">
-            <div class="row g-3 align-items-end">
-
-                <div class="col-md-5 col-lg-4">
-                    <label class="form-label fw-semibold text-uppercase small mb-1" asp-for="CinemaId">Кінотеатр</label>
-                    <select class="form-select"
-                            asp-for="CinemaId"
-                            asp-items="Model.Cinemas"
-                            id="cinemaSelect">
-                        <option value="">— Усі —</option>
-                    </select>
-                </div>
-
-                <div class="col-md-5 col-lg-4">
-                    <label class="form-label fw-semibold text-uppercase small mb-1" asp-for="HallId">Зал</label>
-                    <select class="form-select"
-                            asp-for="HallId"
-                            asp-items="Model.Halls"
-                            id="hallSelect"
-                            disabled="@isHallDisabled">
-                        <option value="">@hallPlaceholder</option>
-                    </select>
-                </div>
-
-                <div class="col-auto">
-                    <a class="btn btn-outline-secondary" asp-action="Index">Очистити</a>
-                </div>
-
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="mb-0 text-uppercase fw-bold text-dark" style="font-size: 1.05rem; letter-spacing: .06em;">
+                    Шаблони цін
+                </h1>
             </div>
 
-            @if (!Model.HallId.HasValue)
-            {
-                <div class="text-muted small mt-2">
-                    <i class="bi bi-info-circle"></i> Оберіть кінотеатр, а потім зал, щоб побачити шаблони.
-                </div>
-            }
+            <a class="btn btn-maroon shadow-sm br-8 px-3"
+               asp-action="Create"
+               asp-route-cinemaId="@Model.CinemaId"
+               asp-route-hallId="@Model.HallId"
+               asp-route-returnUrl="@returnUrl">
+                <i class="fa-solid fa-plus me-2"></i>СТВОРИТИ ШАБЛОН
+            </a>
         </div>
-    </div>
-</form>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        @if (Model.Templates == null || !Model.Templates.Any())
+        @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="text-center py-5 text-muted">
-                @if (Model.HallId.HasValue)
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
+        }
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
+        }
+
+        <div class="d-none" id="afToken">
+            @Html.AntiForgeryToken()
+        </div>
+
+        <form method="get" id="filtersForm" class="mb-4">
+            <div class="card border-0 br-12 shadow-sm overflow-hidden">
+                <div class="card-body p-4">
+
+                    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3 pb-2 border-bottom">
+                        <h5 class="fw-bold text-muted text-uppercase small mb-0 letter-spacing-1">
+                            <i class="fa-solid fa-filter me-2 text-primary"></i> Фільтри
+                        </h5>
+
+                        <a class="btn btn-outline-secondary btn-sm br-8 px-3" asp-action="Index">
+                            <i class="fa-solid fa-rotate-left me-2"></i>Очистити
+                        </a>
+                    </div>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-6 col-lg-5">
+                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1" asp-for="CinemaId">Кінотеатр</label>
+                            <select class="form-select border-2 br-8 shadow-none"
+                                    asp-for="CinemaId"
+                                    asp-items="Model.Cinemas"
+                                    id="cinemaSelect">
+                                <option value="">— Усі —</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-lg-5">
+                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1" asp-for="HallId">Зал</label>
+                            <select class="form-select border-2 br-8 shadow-none"
+                                    asp-for="HallId"
+                                    asp-items="Model.Halls"
+                                    id="hallSelect"
+                                    disabled="@isHallDisabled"
+                                    aria-disabled="@isHallDisabled">
+                                <option value="">@hallPlaceholder</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-lg-2 d-grid">
+                            <button type="submit" class="btn btn-primary br-8">
+                                <i class="fa-solid fa-magnifying-glass me-2"></i>Показати
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (!Model.HallId.HasValue)
+                    {
+                        <div class="text-muted small mt-3">
+                            <i class="fa-solid fa-circle-info me-1"></i>
+                            Оберіть кінотеатр, а потім зал, щоб побачити шаблони.
+                        </div>
+                    }
+                </div>
+            </div>
+        </form>
+
+        <div class="card border-0 br-12 shadow-sm overflow-hidden">
+            <div class="card-body p-0">
+
+                @if (Model.Templates == null || !Model.Templates.Any())
                 {
-                    <span>У цьому залі ще немає шаблонів цін.</span>
+                    <div class="p-5 text-center">
+                        <div class="d-inline-flex align-items-center justify-content-center br-12 border bg-light mb-3"
+                             style="width:54px;height:54px;">
+                            <i class="fa-solid fa-layer-group text-muted"></i>
+                        </div>
+
+                        <div class="fw-bold text-dark mb-1">
+                            @if (Model.HallId.HasValue)
+                            {
+                                <span>У цьому залі ще немає шаблонів цін.</span>
+                            }
+                            else
+                            {
+                                <span>Оберіть зал зі списку вище.</span>
+                            }
+                        </div>
+
+                        <div class="text-muted small">
+                            @if (Model.HallId.HasValue)
+                            {
+                                <span>Створіть перший шаблон і використовуйте його для швидкого заповнення цін.</span>
+                            }
+                            else
+                            {
+                                <span>Фільтри зверху допоможуть звузити список.</span>
+                            }
+                        </div>
+                    </div>
                 }
                 else
                 {
-                    <span>Оберіть зал зі списку вище.</span>
-                }
-            </div>
-        }
-        else
-        {
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Назва</th>
-                        <th class="text-center" style="width: 150px;">Статус</th>
-                        <th class="text-end pe-4">Дії</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Templates)
-                    {
-                        <tr>
-                            <td class="ps-4 fw-medium">@item.Name</td>
+                    <div class="list-group list-group-flush">
 
-                            <td class="text-center">
-                                <div class="form-check form-switch d-inline-block">
-                                    <input class="form-check-input toggle-status-btn"
-                                           type="checkbox"
-                                           role="switch"
-                                           style="cursor: pointer;"
-                                           data-id="@item.Id"
-                                           @(item.IsActive ? "checked" : "")>
+                        @foreach (var item in Model.Templates)
+                        {
+                            var isActive = item.IsActive;
+
+                            <div class="list-group-item px-4 py-3">
+                                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+
+                                    <div class="d-flex align-items-center gap-3" style="min-width: 240px;">
+                                        <div class="d-inline-flex align-items-center justify-content-center br-10 border bg-light"
+                                             style="width:38px;height:38px;">
+                                            <i class="fa-solid fa-tags text-primary"></i>
+                                        </div>
+
+                                        <div style="min-width:0;">
+                                            <div class="fw-bold text-dark text-truncate" title="@item.Name">
+                                                @item.Name
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-3 ms-auto">
+                                        <span class="badge br-8 px-3 py-2 js-status-badge @(isActive ? "bg-success-subtle text-success border border-success-subtle" : "bg-light text-muted border")">
+                                            @(isActive ? "Активний" : "Неактивний")
+                                        </span>
+
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input toggle-status-btn"
+                                                   type="checkbox"
+                                                   role="switch"
+                                                   style="cursor:pointer;"
+                                                   data-id="@item.Id"
+                                                   @(isActive ? "checked" : "")>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a asp-action="Edit"
+                                               asp-route-id="@item.Id"
+                                               asp-route-returnUrl="@returnUrl"
+                                               class="btn btn-sm btn-outline-primary br-8 px-3">
+                                                <i class="fa-solid fa-pen me-2"></i>Редагувати
+                                            </a>
+
+                                            <form asp-action="Delete"
+                                                  asp-route-id="@item.Id"
+                                                  asp-route-returnUrl="@returnUrl"
+                                                  method="post"
+                                                  class="d-inline-block m-0">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger br-8 px-3"
+                                                        onclick="return confirm('Видалити шаблон «@item.Name»?');">
+                                                    <i class="fa-solid fa-trash me-2"></i>Видалити
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
                                 </div>
-                            </td>
+                            </div>
+                        }
 
-                            <td class="text-end pe-4 text-nowrap">
-                                <a asp-action="Edit"
-                                   asp-route-id="@item.Id"
-                                   asp-route-returnUrl="@returnUrl"
-                                   class="btn btn-sm btn-outline-primary me-1">
-                                    Редагувати
-                                </a>
+                    </div>
+                }
 
-                                <form asp-action="Delete"
-                                      asp-route-id="@item.Id"
-                                      asp-route-returnUrl="@returnUrl"
-                                      method="post"
-                                      class="d-inline-block">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit"
-                                            class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Видалити шаблон «@item.Name»?');">
-                                        Видалити
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+            </div>
+        </div>
+
     </div>
-</div>
+</section>
 
 @section Scripts {
     <script>
@@ -166,14 +220,11 @@
                     form.submit();
                 });
             }
-
             if (hallSelect && form) {
-                hallSelect.addEventListener('change', () => {
-                    form.submit();
-                });
+                hallSelect.addEventListener('change', () => form.submit());
             }
 
-            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const tokenInput = document.querySelector('#afToken input[name="__RequestVerificationToken"]');
             const token = tokenInput ? tokenInput.value : '';
 
             const toggles = document.querySelectorAll('.toggle-status-btn');
@@ -184,11 +235,14 @@
                     const id = this.dataset.id;
                     const originalState = !this.checked;
 
+                    const row = this.closest('.list-group-item');
+                    const badge = row ? row.querySelector('.js-status-badge') : null;
+
                     this.disabled = true;
-                    this.style.opacity = '0.5';
+                    this.style.opacity = '0.6';
 
                     try {
-                        const response = await fetch(url + '?id=' + id, {
+                        const response = await fetch(url + '?id=' + encodeURIComponent(id), {
                             method: 'POST',
                             headers: {
                                 'RequestVerificationToken': token
@@ -196,6 +250,16 @@
                         });
 
                         if (!response.ok) throw new Error('Server error');
+
+                        if (badge) {
+                            if (this.checked) {
+                                badge.textContent = 'Активний';
+                                badge.className = 'badge br-8 px-3 py-2 js-status-badge bg-success-subtle text-success border border-success-subtle';
+                            } else {
+                                badge.textContent = 'Неактивний';
+                                badge.className = 'badge br-8 px-3 py-2 js-status-badge bg-light text-muted border';
+                            }
+                        }
                     } catch (error) {
                         console.error(error);
                         alert('Не вдалося змінити статус.');

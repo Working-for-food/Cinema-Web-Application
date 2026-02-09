@@ -1,5 +1,4 @@
 ﻿@using Infrastructure.Entities
-@using System.Globalization
 @model Web.ViewModels.Admin.Sessions.SessionEditVm
 
 @{
@@ -19,29 +18,32 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Редагування сеансу</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагувати сеанс</h1>
+            <p class="text-muted small text-uppercase fw-semibold mb-0">Налаштування часу та фільму</p>
+        </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div></div>
-            <a class="btn btn-secondary" asp-action="Index">
-                <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД
+            <a class="btn btn-secondary shadow-sm br-8 px-3" asp-action="Index">
+                <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД
             </a>
         </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="alert alert-success mb-3" role="alert">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
         {
-            <div class="alert alert-danger mb-3" role="alert">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
         @if (!ViewData.ModelState.IsValid)
         {
-            <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+            <div asp-validation-summary="All" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
         }
 
         <form asp-action="Edit"
@@ -53,67 +55,62 @@
             @Html.AntiForgeryToken()
 
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
             <input type="hidden" asp-for="CinemaId" />
             <input type="hidden" asp-for="HallId" />
 
-            <div class="row g-3 align-items-stretch">
+            <div class="row g-4 align-items-stretch">
 
                 <div class="col-12 col-lg-8 d-flex">
-                    <div class="card shadow-sm rounded-4 modern-card flex-grow-1">
-                        <div class="card-header bg-maroon text-white rounded-top-4">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-location-dot me-2"></i>Локація та час
+                    <div class="card shadow-sm border-0 br-12 overflow-hidden flex-grow-1">
+                        <div class="card-body p-4 p-lg-5">
+
+                            <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">
+                                <i class="fa-solid fa-location-dot me-2 text-primary"></i> Локація та час
                             </h5>
-                        </div>
 
-                        <div class="card-body p-4 p-md-5">
-
-                            <div class="row g-3 mb-2">
+                            <div class="row g-4 mb-4">
                                 <div class="col-md-6">
-                                    <label class="form-label text-muted">
-                                        <i class="fa-solid fa-film me-1"></i>Кінотеатр
-                                    </label>
-                                    <select class="form-select"
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Кінотеатр</label>
+                                    <select class="form-select border-2 br-8 shadow-none bg-light"
                                             asp-for="CinemaId"
                                             asp-items="Model.Cinemas"
                                             id="cinemaSelect"
                                             disabled>
+                                        <option value="0">— Оберіть кінотеатр —</option>
                                     </select>
-                                    <div class="form-text">Локацію не можна змінити під час редагування.</div>
+                                    <div class="form-text x-small text-muted">
+                                        <i class="fa-solid fa-lock me-1"></i>Локацію не можна змінити під час редагування
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label text-muted">
-                                        <i class="fa-solid fa-chair me-1"></i>Зал
-                                    </label>
-                                    <select class="form-select"
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Зал</label>
+                                    <select class="form-select border-2 br-8 shadow-none bg-light"
                                             asp-for="HallId"
                                             asp-items="Model.Halls"
                                             id="hallSelect"
                                             disabled>
+                                        <option value="0">— Оберіть зал —</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="row g-3">
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <label class="form-label text-muted">
-                                        <i class="fa-solid fa-clock me-1"></i>Початок
-                                    </label>
-                                    <input class="form-control"
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Початок</label>
+                                    <input class="form-control border-2 br-8 shadow-none"
                                            asp-for="StartTime"
                                            id="StartTime"
                                            type="datetime-local"
                                            step="60"
                                            value="@FormatDt(Model.StartTime)" />
-                                    <span class="text-danger" asp-validation-for="StartTime"></span>
+                                    <span class="text-danger small" asp-validation-for="StartTime"></span>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label text-muted">
-                                        <i class="fa-solid fa-hourglass-end me-1"></i>Кінець
-                                    </label>
-                                    <input class="form-control"
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Кінець</label>
+                                    <input class="form-control border-2 br-8 shadow-none"
                                            asp-for="EndTime"
                                            id="EndTime"
                                            type="datetime-local"
@@ -121,11 +118,11 @@
                                            value="@FormatDt(Model.EndTime)" />
 
                                     <div class="d-flex justify-content-between mt-2">
-                                        <span class="form-text" id="movieDurationText">Тривалість: —</span>
-                                        <span class="text-danger d-none fw-semibold" id="shortDurationWarn"></span>
+                                        <span class="form-text x-small fw-bold text-primary" id="movieDurationText">ТРИВАЛІСТЬ: —</span>
+                                        <span class="text-danger d-none fw-semibold x-small" id="shortDurationWarn"></span>
                                     </div>
 
-                                    <span class="text-danger" asp-validation-for="EndTime"></span>
+                                    <span class="text-danger small" asp-validation-for="EndTime"></span>
                                 </div>
                             </div>
 
@@ -134,46 +131,39 @@
                 </div>
 
                 <div class="col-12 col-lg-4 d-flex">
-                    <div class="card shadow-sm rounded-4 modern-card flex-grow-1">
-                        <div class="card-header bg-maroon text-white rounded-top-4">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-clapperboard me-2"></i>Фільм
-                            </h5>
-                        </div>
+                    <div class="card shadow-sm border-0 br-12 overflow-hidden flex-grow-1">
+                        <div class="card-body p-4 p-lg-5">
 
-                        <div class="card-body p-4 p-md-5">
+                            <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">
+                                <i class="fa-solid fa-clapperboard me-2 text-primary"></i> Вибір фільму
+                            </h5>
+
                             <div class="d-flex gap-3 align-items-start">
 
-                                <div class="flex-shrink-0">
-                                    <div class="card overflow-hidden shadow-sm" style="width:120px;">
-                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width:120px;height:180px;">
-                                            <img id="posterImg"
-                                                 class="d-none w-100 h-100"
-                                                 style="object-fit:cover;"
-                                                 src=""
-                                                 alt="Постер"
-                                                 loading="lazy" />
-                                            <div id="posterPlaceholder" class="text-muted text-center px-2">
-                                                <i class="fa-regular fa-image fs-3 d-block mb-1"></i>
-                                                Постер
-                                            </div>
+                                <div class="flex-shrink-0 d-none d-md-block">
+                                    <div class="shadow-sm border br-8 overflow-hidden bg-light" style="width:100px; height:150px;">
+                                        <img id="posterImg" class="d-none w-100 h-100 object-fit-cover" src="" alt="Постер" loading="lazy" />
+                                        <div id="posterPlaceholder" class="h-100 w-100 d-flex align-items-center justify-content-center text-muted opacity-50 small text-center px-2">
+                                            <i class="fa-solid fa-image fa-2x"></i>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex-grow-1" style="min-width:0;">
-                                    <div class="mb-3">
-                                        <label class="form-label text-muted">
-                                            <i class="fa-solid fa-magnifying-glass me-1"></i>Назва
-                                        </label>
-
-                                        <input class="form-control"
-                                               list="movieList"
-                                               id="movieTitleInput"
-                                               name="movieTitle"
-                                               placeholder="Почніть вводити..."
-                                               autocomplete="off"
-                                               value="@movieTitleValue" />
+                                    <div class="mb-4">
+                                        <label class="form-label small fw-bold text-muted text-uppercase">Назва фільму</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-2 border-end-0 br-left-8 text-muted">
+                                                <i class="fa-solid fa-magnifying-glass"></i>
+                                            </span>
+                                            <input class="form-control border-2 border-start-0 br-right-8 shadow-none"
+                                                   list="movieList"
+                                                   id="movieTitleInput"
+                                                   name="movieTitle"
+                                                   placeholder="Почніть вводити назву..."
+                                                   autocomplete="off"
+                                                   value="@movieTitleValue" />
+                                        </div>
 
                                         <datalist id="movieList">
                                             @foreach (var m in Model.Movies)
@@ -182,37 +172,31 @@
                                             }
                                         </datalist>
 
-                                        <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
-                                        <span class="text-danger" asp-validation-for="MovieId"></span>
+                                        <span class="text-danger small" asp-validation-for="MovieId"></span>
                                     </div>
 
                                     <div>
-                                        <label class="form-label text-muted">
-                                            <i class="fa-solid fa-ticket me-1"></i>Формат
-                                        </label>
-                                        <select class="form-select"
+                                        <label class="form-label small fw-bold text-muted text-uppercase">Формат показу</label>
+                                        <select class="form-select border-2 br-8 shadow-none"
                                                 asp-for="PresentationType"
-                                                asp-items="Model.PresentationTypes">
-                                        </select>
-                                        <span class="text-danger" asp-validation-for="PresentationType"></span>
+                                                asp-items="Model.PresentationTypes"></select>
+                                        <span class="text-danger small" asp-validation-for="PresentationType"></span>
                                     </div>
                                 </div>
 
                             </div>
+
                         </div>
 
-                        <div class="card-footer bg-white border-top-0 p-4 p-md-5 pt-0">
-                            <button class="btn btn-maroon w-100" type="submit">
-                                <i class="fa-solid fa-floppy-disk me-2"></i>Зберегти зміни
+                        <div class="card-footer bg-white border-top-0 p-4 p-lg-5 pt-0">
+                            <button class="btn btn-maroon w-100 py-3 fw-bold shadow-sm" type="submit">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ЗМІНИ
                             </button>
                         </div>
-
                     </div>
                 </div>
-
             </div>
         </form>
-
     </div>
 </section>
 
@@ -264,7 +248,7 @@
                 }
 
                 const dur = Number(movieDurations[id] || 0);
-                if (els.durationText) els.durationText.textContent = dur > 0 ? `Тривалість: ${dur} хв` : 'Тривалість: —';
+                if (els.durationText) els.durationText.textContent = dur > 0 ? `ТРИВАЛІСТЬ: ${dur} хв` : 'ТРИВАЛІСТЬ: —';
 
                 const startVal = els.startInput?.value;
                 const endVal = els.endInput?.value;
@@ -277,7 +261,7 @@
                         const diffMins = (end - start) / 60000;
                         if (diffMins < dur) {
                             els.warn.classList.remove('d-none');
-                            els.warn.textContent = `Увага: час сеансу (${Math.round(diffMins)} хв) менший за фільм (${dur} хв).`;
+                            els.warn.textContent = `Час (${Math.round(diffMins)} хв) менший за фільм (${dur} хв)`;
                         } else {
                             els.warn.classList.add('d-none');
                             els.warn.textContent = '';

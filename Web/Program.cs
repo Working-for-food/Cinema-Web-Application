@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Options;
 using Application.Services;
+using CloudinaryDotNet;
 using Infrastructure.Data;
 using Infrastructure.Data.Seed;
 using Infrastructure.Entities;
@@ -59,6 +60,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 // Email
 builder.Services.AddTransient<Application.Interfaces.IEmailService, Application.Services.EmailService>();
+
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("Cloudinary"));
+
+builder.Services.AddSingleton(provider =>
+{
+    var config = provider.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+    return new Cloudinary(new Account(config.CloudName, config.ApiKey, config.ApiSecret));
+});
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -153,11 +163,11 @@ app.UseAuthorization();
 // Routes
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Afisha}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Afisha}/{action=Index}/{id?}");
 
 // Seed
 using (var scope = app.Services.CreateScope())

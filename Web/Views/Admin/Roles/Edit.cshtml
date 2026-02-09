@@ -3,56 +3,83 @@
     ViewData["Title"] = "Зміна ролей";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h4 class="mb-0">
-                Зміна ролей для: <span class="text-primary">@Model.Username</span>
-            </h4>
-            <small class="text-muted">(@Model.UserEmail)</small>
+<section class="py-5 gray-bg">
+    <div class="container">
+
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Налаштування доступу</h1>
+            <p class="text-muted small text-uppercase fw-semibold">Керування правами користувача системи</p>
         </div>
-        <div class="card-body">
-            <form asp-action="Edit" method="post">
-                <input type="hidden" name="userId" value="@Model.UserId" />
 
-                <div class="form-group mb-4">
-                    <label class="form-label text-muted mb-3">Оберіть права доступу:</label>
+        <div class="card shadow-sm border-0 col-lg-7 mx-auto br-12 overflow-hidden bg-white">
+            <div class="card-body p-4 p-lg-5">
 
-                    @foreach (var role in Model.AllRoles)
-                    {
-                        <div class="form-check form-switch mb-2">
-                            <input class="form-check-input role-checkbox" type="checkbox" name="roles"
-                                   value="@role.Name"
-                                   id="role_@role.Name"
-                            @(Model.UserRoles.Contains(role.Name) ? "checked=\"checked\"" : "") />
-                            <label class="form-check-label" for="role_@role.Name">
-                                @if (role.Name == "admin")
-                                {
-                                    <strong>Адміністратор</strong>
-                                }
-                                else if (role.Name == "user")
-                                {
-                                    <span>Користувач</span>
-                                }
-                                else
-                                {
-                                    <span>@role.Name</span>
-                                }
-                            </label>
+                <div class="panel p-4 mb-5 border-0 br-12 d-flex align-items-center" style="background: var(--surface-2);">
+                    <div class="icon-badge bg-white text-primary shadow-sm me-4" style="width: 60px; height: 60px; min-width: 60px;">
+                        <i class="fa-solid fa-user-gear fa-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1">@Model.Username</h4>
+                        <div class="text-muted small fw-bold text-uppercase letter-spacing-1">
+                            <i class="fa-solid fa-envelope me-1 opacity-50"></i> @Model.UserEmail
                         </div>
-                    }
+                    </div>
                 </div>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Зберегти
-                    </button>
-                    <a asp-action="UserList" class="btn btn-outline-secondary">Скасувати</a>
-                </div>
-            </form>
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@Model.UserId" />
+
+                    <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">Оберіть права доступу</h5>
+
+                    <div class="roles-selection-list mb-5">
+                        @foreach (var role in Model.AllRoles)
+                        {
+                            <div class="role-item p-3 mb-3 br-10 border-2 border d-flex align-items-center justify-content-between transition-all">
+                                <div class="d-flex align-items-center">
+                                    <div class="role-icon me-3 text-muted">
+                                        <i class="fa-solid @(role.Name == "admin" ? "fa-user-shield" : "fa-user")"></i>
+                                    </div>
+                                    <label class="form-check-label fw-bold text-dark cursor-pointer" for="role_@role.Name">
+                                        @if (role.Name == "admin")
+                                        {
+                                            <span>АДМІНІСТРАТОР</span>
+                                        }
+                                        else if (role.Name == "user")
+                                        {
+                                            <span>КОРИСТУВАЧ</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@role.Name.ToUpper()</span>
+                                        }
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input role-switch shadow-none cursor-pointer" type="checkbox" name="roles"
+                                           value="@role.Name"
+                                           id="role_@role.Name"
+                                           @(Model.UserRoles.Contains(role.Name) ? "checked" : "") />
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-4 border-top">
+                        <a asp-action="UserList" class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
+                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
+                        </a>
+
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ПРАВА
+                        </button>
+                    </div>
+                </form>
+
+            </div>
         </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
     <script>

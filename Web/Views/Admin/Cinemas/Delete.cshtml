@@ -5,58 +5,59 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Видалити кінотеатр</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Видалити кінотеатр</h1>
+            <p class="text-muted small text-uppercase fw-semibold text-danger">Цю дію неможливо буде скасувати</p>
+        </div>
 
-        <div class="card shadow-sm col-lg-8 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                    Підтвердження видалення
-                </h5>
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>@TempData["ErrorMessage"]
             </div>
+        }
 
-            <div class="card-body p-4">
+        <div class="card shadow-sm border-0 col-lg-8 mx-auto br-12 overflow-hidden">
+            
+            <div class="card-body p-4 p-lg-5">
 
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-danger mb-3">
-                        @TempData["ErrorMessage"]
+                <div class="alert alert-warning border-0 shadow-none br-12 mb-5 p-4 d-flex align-items-center">
+                    <div class="me-4 text-warning">
+                        <i class="fa-solid fa-triangle-exclamation fa-3x"></i>
                     </div>
-                }
-
-                <div class="alert alert-warning mb-4">
-                    Ви впевнені, що хочете видалити цей кінотеатр?
-                    <strong>Цю дію неможливо скасувати.</strong>
+                    <div>
+                        <h5 class="fw-bold mb-1">Ви впевнені?</h5>
+                        <p class="mb-0 opacity-75">Ви намагаєтеся видалити кінотеатр <strong>@Model.Name</strong>. Всі пов'язані дані можуть стати недоступними.</p>
+                    </div>
                 </div>
 
-                <div class="mb-4">
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Назва кінотеатру
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Name</div>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="info-item border-0 bg-light-soft p-3 br-12">
+                            <span class="info-item-label small fw-bold text-muted text-uppercase mb-2 d-block">
+                                <i class="fa-solid fa-film me-1 text-primary"></i> Назва закладу
+                            </span>
+                            <span class="info-item-value fw-bold text-dark fs-5">@Model.Name</span>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            Місто
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.City</div>
+                    <div class="col-md-6">
+                        <div class="info-item border-0 bg-light-soft p-3 br-12">
+                            <span class="info-item-label small fw-bold text-muted text-uppercase mb-2 d-block">
+                                <i class="fa-solid fa-location-dot me-1 text-primary"></i> Місто
+                            </span>
+                            <span class="info-item-value fw-bold text-dark fs-5">@Model.City</span>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-map-location-dot me-1"></i>
-                            Адреса
-                        </label>
-                        <div class="fw-semibold fs-5">@Model.Address</div>
+                    <div class="col-12">
+                        <div class="info-item border-0 bg-light-soft p-3 br-12">
+                            <span class="info-item-label small fw-bold text-muted text-uppercase mb-2 d-block">
+                                <i class="fa-solid fa-map-location-dot me-1 text-primary"></i> Адреса
+                            </span>
+                            <span class="info-item-value fw-bold text-dark fs-5">@Model.Address</span>
+                        </div>
                     </div>
-
                 </div>
 
                 <form asp-area="Admin"
@@ -67,25 +68,20 @@
 
                     @Html.AntiForgeryToken()
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a asp-area="Admin"
-                           asp-controller="Cinemas"
-                           asp-action="Index"
-                           class="btn btn-secondary">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            Скасувати
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a asp-area="Admin" asp-controller="Cinemas" asp-action="Index" 
+                           class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
+                            <i class="fa-solid fa-arrow-left me-1"></i> СКАСУВАТИ
                         </a>
 
-                        <button type="submit" class="btn btn-maroon">
-                            <i class="fa-solid fa-trash me-1"></i>
-                            Видалити кінотеатр
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                            <i class="fa-solid fa-trash-can me-2"></i> ПІДТВЕРДИТИ ВИДАЛЕННЯ
                         </button>
                     </div>
                 </form>
 
             </div>
         </div>
-
     </div>
 </section>
 

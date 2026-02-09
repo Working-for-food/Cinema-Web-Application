@@ -26,7 +26,7 @@ namespace Web.Controllers.Admin
         {
             SeatCategory.Standard => "Стандарт",
             SeatCategory.Vip => "VIP",
-            SeatCategory.Accessible => "Доступне",
+            SeatCategory.Accessible => "Інклюзивне",
             _ => c.ToString()
         };
 
@@ -495,8 +495,13 @@ namespace Web.Controllers.Admin
                     .Select(x => new SessionPricingPageVm.RowPriceVm { RowNumber = x.Row, BasePrice = x.BasePrice })
                     .ToList(),
                 CategoryMultipliers = pricing.CategoryMultipliers
-                    .Select(x => new SessionPricingPageVm.CategoryMultiplierVm { Category = x.Category, Multiplier = x.Multiplier, Title = x.Category.ToString() })
-                    .ToList(),
+                .Select(x => new SessionPricingPageVm.CategoryMultiplierVm
+                {
+                    Category = x.Category,
+                    Multiplier = x.Multiplier,
+                    Title = CategoryTitle((SeatCategory)x.Category)
+                })
+                .ToList(),
                 Seats = seats.Select(x => new SessionPricingPageVm.SeatPriceVm
                 {
                     SeatId = x.SeatId,
@@ -506,6 +511,9 @@ namespace Web.Controllers.Admin
                     Price = x.Price
                 }).ToList()
             };
+
+            ViewBag.HallId = s.HallId;
+            ViewBag.HasBookings = await _sessions.HasBookingsAsync(id, ct);
 
             return View(PricingViewPath, vm);
         }
@@ -536,6 +544,15 @@ namespace Web.Controllers.Admin
                     Category = x.Category,
                     Price = x.Price
                 }).ToList();
+
+                if (vm.CategoryMultipliers != null)
+                {
+                    foreach (var cm in vm.CategoryMultipliers)
+                        cm.Title = CategoryTitle((SeatCategory)cm.Category);
+                }
+
+                ViewBag.HallId = s.HallId;
+                ViewBag.HasBookings = await _sessions.HasBookingsAsync(id, ct);
 
                 return View(PricingViewPath, vm);
             }
