@@ -262,8 +262,90 @@ namespace Web.Controllers.Admin
                 UpdatedAt = dto.UpdatedAt
             };
 
+            
+            var seats = await _sessions.GetSeatsForBookingAsync(id, ct);
+
+            vm.Seats = seats.Select(s => new SessionDetailsVm.SeatVm
+            {
+                SeatId = s.SeatId,
+                Row = s.RowNumber,
+                Number = s.SeatNumber,
+                Category = (SeatCategory)s.Category,
+                Price = s.Price,
+                BookingId = s.BookingId
+            }).ToList();
+
+            vm.TotalSeats = vm.Seats.Count;
+            vm.BookedSeats = vm.Seats.Count(x => x.BookingId != null);
+            vm.FreeSeats = vm.TotalSeats - vm.BookedSeats;
+            vm.BookingsCount = vm.Seats.Where(x => x.BookingId != null)
+                .Select(x => x.BookingId!.Value)
+                .Distinct()
+                .Count();
+
+            vm.TotalRevenue = vm.Seats.Where(x => x.BookingId != null).Sum(x => x.Price);
+            vm.PotentialRevenue = vm.Seats.Sum(x => x.Price);
+            vm.RemainingPotentialRevenue = vm.Seats.Where(x => x.BookingId == null).Sum(x => x.Price);
+
+            vm.OccupancyPercent = vm.TotalSeats == 0
+                ? 0m
+                : Math.Round(vm.BookedSeats * 100m / vm.TotalSeats, 2, MidpointRounding.AwayFromZero);
+
+            vm.AverageTicketPrice = vm.BookedSeats == 0
+                ? 0m
+                : Math.Round(vm.TotalRevenue / vm.BookedSeats, 2, MidpointRounding.AwayFromZero);
+
+            vm.AverageBookingAmount = vm.BookingsCount == 0
+                ? 0m
+                : Math.Round(vm.TotalRevenue / vm.BookingsCount, 2, MidpointRounding.AwayFromZero);
+
+            vm.CategoryStats = Enum.GetValues<SeatCategory>()
+                .Select(cat =>
+                {
+                    var seatsOfCat = vm.Seats.Where(x => x.Category == cat).ToList();
+                    var total = seatsOfCat.Count;
+                    var booked = seatsOfCat.Count(x => x.BookingId != null);
+
+                    return new SessionDetailsVm.CategoryStatVm
+                    {
+                        Category = cat,
+                        Total = total,
+                        Booked = booked,
+                        Free = total - booked,
+                        Revenue = seatsOfCat.Where(x => x.BookingId != null).Sum(x => x.Price),
+                        PotentialRevenue = seatsOfCat.Sum(x => x.Price)
+                    };
+                })
+                .Where(x => x.Total > 0)
+                .ToList();
+
+            vm.RowStats = vm.Seats
+                .GroupBy(x => x.Row)
+                .OrderBy(g => g.Key)
+                .Select(g =>
+                {
+                    var total = g.Count();
+                    var booked = g.Count(x => x.BookingId != null);
+                    var revenue = g.Where(x => x.BookingId != null).Sum(x => x.Price);
+                    var potential = g.Sum(x => x.Price);
+                    var occ = total == 0 ? 0m : Math.Round(booked * 100m / total, 2, MidpointRounding.AwayFromZero);
+
+                    return new SessionDetailsVm.RowStatVm
+                    {
+                        Row = g.Key,
+                        Total = total,
+                        Booked = booked,
+                        Free = total - booked,
+                        Revenue = revenue,
+                        PotentialRevenue = potential,
+                        OccupancyPercent = occ
+                    };
+                })
+                .ToList();
+
             return View(DetailsViewPath, vm);
         }
+
 
         // GET: /Admin/Sessions/Create
         [HttpGet]
