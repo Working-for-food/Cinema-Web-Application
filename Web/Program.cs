@@ -13,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Configuration;
 using Web.Helpers;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -156,6 +158,21 @@ app.UseRouting();
 app.UseSession();
 
 app.UseAntiforgery();
+
+
+var defaultDateCulture = "uk-UA";
+var ci = new CultureInfo(defaultDateCulture);
+ci.NumberFormat.NumberDecimalSeparator = ".";
+ci.NumberFormat.CurrencyDecimalSeparator = ".";
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(ci),
+    SupportedCultures = new List<CultureInfo> { ci },
+    SupportedUICultures = new List<CultureInfo> { ci }
+};
+
+app.UseRequestLocalization(localizationOptions);
 
 app.UseAuthentication();
 app.UseAuthorization();
