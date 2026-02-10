@@ -224,6 +224,12 @@
             const existingRowPrices = @Html.Raw(jsonRowPrices);
             const existingCatMultipliers = @Html.Raw(jsonCatMultipliers);
 
+            const CAT = {
+                Standard: @((int)SeatCategory.Standard),
+                Vip: @((int)SeatCategory.Vip),
+                Accessible: @((int)SeatCategory.Accessible)
+            };
+
             const cinemaSelect = document.getElementById('cinemaSelect');
             const hallSelect = document.getElementById('hallSelect');
 
@@ -254,8 +260,8 @@
             });
 
             function seatUiClass(catId) {
-                if (catId === 2) return 'seat-bg-vip';
-                if (catId === 3) return 'seat-bg-acc';
+                if (catId === CAT.Vip) return 'seat-bg-vip';
+                if (catId === CAT.Accessible) return 'seat-bg-acc';
                 return 'seat-bg-std';
             }
 
