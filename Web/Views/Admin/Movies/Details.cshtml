@@ -70,6 +70,9 @@
                                 <div class="no-poster-placeholder">Немає постера</div>
                             }
                         </div>
+
+                        @* НАШЕ: УБРАЛИ трейлер в админке (чтобы не появлялся) *@
+                        @* 
                         @if (!string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
                         {
                             <a href="@Model.Movie.TrailerUrl"
@@ -79,19 +82,11 @@
                                 ▶ ДИВИТИСЬ ТРЕЙЛЕР
                             </a>
                         }
-
+                        *@
 
                         <div class="text-white pb-2">
                             <h1 class="display-5 fw-bold mb-1">@Model.Movie.Title</h1>
                             <p class="opacity-75 fs-5 mb-2">@Model.Movie.OriginalName</p>
-
-                            <div class="opacity-75" style="font-size:14px;">
-                                IMDb: @imdb | Rotten Tomatoes: @rt | Metacritic: @mc
-                                <span title="IMDb — оцінка глядачів. Rotten Tomatoes — критики. Metacritic — експерти"
-                                      style="cursor:help;color:#ddd;font-weight:400;">
-                                    (?)
-                                </span>
-                            </div>
 
                             @if (noRatings)
                             {
@@ -150,15 +145,19 @@
                                 <span class="info-item-label"><i class="fa-solid fa-language me-2"></i>Мова:</span>
                                 <span class="info-item-value">@(string.IsNullOrWhiteSpace(Model.Movie.Language) ? "-" : Model.Movie.Language)</span>
                             </div>
-                        </div>
 
-                        @if (!string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
-                        {
-                            <a href="@Model.Movie.TrailerUrl" target="_blank" rel="noopener"
-                               class="btn btn-outline-dark w-100 mt-4 br-8">
-                                <i class="fa-brands fa-youtube me-2"></i>ДИВИТИСЬ ТРЕЙЛЕР
-                            </a>
-                        }
+                            <div class="info-item">
+                                <span class="info-item-label">
+                                    <i class="fa-solid fa-star me-2"></i>Рейтинги:
+                                </span>
+
+                                <span class="info-item-value ratings-stack">
+                                    <span class="badge-modern">IMDb: @imdb</span>
+                                    <span class="badge-modern">RT: @rt</span>
+                                    <span class="badge-modern">MC: @mc</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-lg-8 order-1 order-lg-2">

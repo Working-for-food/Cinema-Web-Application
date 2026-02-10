@@ -175,16 +175,15 @@
 }
 
 .movie-details-actions {
-    margin-top: auto; 
+    margin-top: auto;
     display: flex;
-    justify-content: flex-end; 
+    justify-content: flex-end;
 }
 
 .btn-back {
     width: auto;
     min-width: 200px;
 }
-
 
 .movie-details-actions .btn-details,
 .movie-details-actions .btn-secondary {
@@ -321,6 +320,7 @@
         min-width: 180px;
     }
 }
+
 .related-section {
     margin-top: 22px;
     padding-top: 18px;
@@ -356,14 +356,51 @@
         box-shadow: 0 6px 16px rgba(0,0,0,.12);
     }
 
+.admin-ratings {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+}
+
 .related-name {
     font-weight: 800;
     font-size: 15px;
     line-height: 1.25;
 }
 
+.ratings-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+    .ratings-stack .badge-modern {
+        display: block !important;
+        width: 190px !important; 
+        box-sizing: border-box;
+        text-align: center;
+        white-space: normal; 
+    }
 @media (max-width: 980px) {
     .related-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .ratings-stack {
+        align-items: flex-start;
+    }
+
+        .ratings-stack .badge-modern {
+            width: 100%;
+            justify-content: flex-start;
+            text-align: left;
+        }
 }
