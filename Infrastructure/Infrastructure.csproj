@@ -17,7 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-		<None Include="Data\Seed\allcountry.json" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="Data\Seed\allcountry.json" />
+	    <None Include="Data\Seed\allcountryUK.json"/>
   </ItemGroup>
 
 </Project>
