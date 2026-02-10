@@ -121,6 +121,27 @@
                         Назад до афіші
                     </a>
                 </div>
+                @if (Model.RelatedMovies is { Count: > 0 })
+                {
+                    <section class="related-section">
+                        <h3 class="related-title">Дивіться також:</h3>
+
+                        <div class="related-grid">
+                            @foreach (var m in Model.RelatedMovies)
+                            {
+                                <a class="related-card"
+                                   asp-route="MovieDetails"
+                                   asp-route-id="@m.Id">
+                                    <img src="@m.PosterUrl"
+                                         alt="@m.Title"
+                                         loading="lazy"
+                                         onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+                                    <div class="related-name">@m.Title</div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
 
             </div>
         </div>

@@ -82,7 +82,6 @@ public sealed class TmdbClient : ITmdbClient
 
     public async Task<TmdbVideosResponse> GetVideosAsync(int tmdbMovieId, CancellationToken ct = default)
     {
-        // Some movies have no uk-UA videos; consider fallback in your import logic to en-US
         var url = $"movie/{tmdbMovieId}/videos{BuildQuery(new Dictionary<string, string?>
         {
             ["api_key"] = _opt.ApiKey,

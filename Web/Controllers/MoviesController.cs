@@ -89,7 +89,18 @@ public class MoviesController : Controller
         vm.Imdb = ratings.Imdb;
         vm.RottenTomatoes = ratings.RottenTomatoes;
         vm.Metacritic = ratings.Metacritic;
+        var related = await _moviePublicService.GetRelatedMoviesAsync(
+     vm.Id,
+     vm.Genres,
+     take: 4,
+     ct);
 
+        vm.RelatedMovies = related.Select(m => new RelatedMovieVm
+        {
+            Id = m.Id,
+            Title = m.Title,
+            PosterUrl = NormalizePosterUrl(m.PosterPath)
+        }).ToList();
         return View(vm);
     }
 

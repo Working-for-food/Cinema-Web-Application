@@ -14,6 +14,23 @@ public class MoviePublicService : IMoviePublicService
     {
         _movies = movies;
     }
+    public async Task<IReadOnlyList<MovieDetailsDtoRelatedItem>> GetRelatedMoviesAsync(
+    int movieId,
+    IReadOnlyList<string> genres,
+    int take,
+    CancellationToken ct = default)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        var items = await _movies.GetRelatedMoviesAsync(movieId, genres, take, nowUtc, ct);
+
+        return items.Select(m => new MovieDetailsDtoRelatedItem
+        {
+            Id = m.Id,
+            Title = m.Title,
+            PosterPath = m.PosterPath
+        }).ToList();
+    }
 
     public async Task<MovieDetailsDto?> GetDetailsAsync(int movieId, DateOnly? date, CancellationToken ct = default)
     {
