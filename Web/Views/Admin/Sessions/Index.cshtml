@@ -17,6 +17,7 @@
     var today = DateTime.Today;
     var weekStart = today.AddDays(-((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1));
     var weekEnd = weekStart.AddDays(6);
+
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 
     string PosterUrl(string? posterPath)
@@ -36,6 +37,7 @@
             ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant(),
             ["Page"] = "1"
         };
+
         if (Model.CinemaId.HasValue) dict["CinemaId"] = Model.CinemaId.Value.ToString();
         if (Model.HallId.HasValue) dict["HallId"] = Model.HallId.Value.ToString();
         if (Model.MovieId.HasValue) dict["MovieId"] = Model.MovieId.Value.ToString();
@@ -52,6 +54,7 @@
             ["IncludeCancelled"] = Model.IncludeCancelled.ToString().ToLowerInvariant(),
             ["IncludeFinished"] = Model.IncludeFinished.ToString().ToLowerInvariant()
         };
+
         if (Model.From.HasValue) dict["From"] = Model.From.Value.ToString("yyyy-MM-dd");
         if (Model.To.HasValue) dict["To"] = Model.To.Value.ToString("yyyy-MM-dd");
         if (Model.CinemaId.HasValue) dict["CinemaId"] = Model.CinemaId.Value.ToString();
@@ -71,9 +74,15 @@
 
         <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
             <h1 class="section-title mb-0">Сеанси</h1>
-            <a asp-action="Create" class="btn btn-maroon px-4 shadow-sm">
-                <i class="fa-solid fa-plus me-2"></i>СТВОРИТИ НОВИЙ
-            </a>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index" class="btn btn-outline-secondary px-4 shadow-sm">
+                    <i class="fa-solid fa-gear me-2"></i>ШАБЛОНИ ЦІН
+                </a>
+                <a asp-action="Create" class="btn btn-maroon px-4 shadow-sm">
+                    <i class="fa-solid fa-plus me-2"></i>СТВОРИТИ НОВИЙ
+                </a>
+            </div>
         </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
@@ -99,7 +108,7 @@
 
                     <div class="col-12 col-md-6 col-lg-3">
                         <label class="form-label small fw-bold text-muted text-uppercase">Зал</label>
-                        <select class="form-select border-2 br-8 shadow-none" asp-for="HallId" asp-items="Model.Halls" id="hallSelect" disabled="@isHallDisabled">
+                        <select class="form-select border-2 br-8 shadow-none" asp-for="HallId" asp-items="Model.Halls" id="hallSelect" disabled="@isHallDisabled" aria-disabled="@isHallDisabled">
                             <option value="">@hallPlaceholder</option>
                         </select>
                     </div>
@@ -108,7 +117,10 @@
                         <label class="form-label small fw-bold text-muted text-uppercase">Фільм</label>
                         <input class="form-control border-2 br-8 shadow-none" list="movieList" id="movieTitleInput" asp-for="MovieTitle" placeholder="Пошук фільму..." />
                         <datalist id="movieList">
-                            @foreach (var m in Model.Movies) { <option value="@m.Text" data-id="@m.Value"></option> }
+                            @foreach (var m in Model.Movies)
+                            {
+                                <option value="@m.Text" data-id="@m.Value"></option>
+                            }
                         </datalist>
                         <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
                     </div>
@@ -142,7 +154,10 @@
                         <div class="btn-group shadow-sm br-8 overflow-hidden me-2">
                             <a class="btn btn-light btn-sm border fw-bold text-muted px-3" asp-action="Index" asp-all-route-data="RouteWithDates(today, today)">СЬОГОДНІ</a>
                             <a class="btn btn-light btn-sm border fw-bold text-muted px-3" asp-action="Index" asp-all-route-data="RouteWithDates(today.AddDays(1), today.AddDays(1))">ЗАВТРА</a>
+                            <a class="btn btn-light btn-sm border fw-bold text-muted px-3" asp-action="Index" asp-all-route-data="RouteWithDates(weekStart, weekEnd)">ЦЕЙ ТИЖДЕНЬ</a>
                         </div>
+
+                        <a asp-action="Index" class="btn btn-outline-secondary px-3 br-8 me-2">СКИНУТИ</a>
                         <button type="submit" class="btn btn-dark px-4 br-8">ЗАСТОСУВАТИ</button>
                     </div>
                 </form>
@@ -169,6 +184,7 @@
                     var isOver = s.EndTime <= now;
                     var isFinished = !s.IsCancelled && isOver;
                     var posterUrl = PosterUrl(s.PosterPath);
+                    var disabledBtn = s.IsCancelled || isOver;
 
                     <div class="col-12 col-xl-6">
                         <div class="card shadow-sm border-0 br-12 overflow-hidden h-100 session-card">
@@ -204,27 +220,45 @@
                                                 <div class="col">
                                                     <div class="small text-muted text-uppercase fw-bold x-small">Час</div>
                                                     <div class="fw-bold text-dark">
-                                                        <span class="text-primary">@s.StartTime.ToString("HH:mm")</span> 
-                                                        <span class="text-muted mx-1">—</span> 
+                                                        <span class="text-primary">@s.StartTime.ToString("HH:mm")</span>
+                                                        <span class="text-muted mx-1">—</span>
                                                         @s.EndTime.ToString("HH:mm")
                                                         <span class="ms-2 small fw-normal text-muted">(@s.StartTime.ToString("dd.MM"))</span>
                                                     </div>
                                                 </div>
                                                 <div class="col-auto d-flex gap-1">
-                                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn-icon-sm" title="Деталі"><i class="fa-solid fa-eye"></i></a>
-                                                    
-                                                    @{ var disabledBtn = s.IsCancelled || isOver; }
-                                                    
-                                                    <a asp-action="Pricing" asp-route-id="@s.Id" class="btn-icon-sm @(disabledBtn ? "disabled bg-light opacity-50" : "text-primary")" title="Ціни"><i class="fa-solid fa-tags"></i></a>
-                                                    
-                                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn-icon-sm @(disabledBtn ? "disabled bg-light opacity-50" : "")" title="Редагувати"><i class="fa-solid fa-pen-to-square"></i></a>
+                                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn-icon-sm" title="Деталі">
+                                                        <i class="fa-solid fa-eye"></i>
+                                                    </a>
+
+                                                    <a asp-action="Pricing"
+                                                       asp-route-id="@s.Id"
+                                                       class="btn-icon-sm @(disabledBtn ? "disabled bg-light opacity-50" : "text-primary")"
+                                                       title="Ціни">
+                                                        <i class="fa-solid fa-tags"></i>
+                                                    </a>
+
+                                                    <a asp-action="Edit"
+                                                       asp-route-id="@s.Id"
+                                                       class="btn-icon-sm @(disabledBtn ? "disabled bg-light opacity-50" : "")"
+                                                       title="Редагувати">
+                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                    </a>
 
                                                     @if (!s.IsCancelled)
                                                     {
-                                                        <form asp-action="Cancel" asp-route-id="@s.Id" method="post" class="d-inline js-cancel-form" data-session-id="@s.Id" data-movie="@s.MovieTitle" data-start="@s.StartTime.ToString("dd.MM HH:mm")">
+                                                        <form asp-action="Cancel"
+                                                              asp-route-id="@s.Id"
+                                                              method="post"
+                                                              class="d-inline js-cancel-form"
+                                                              data-session-id="@s.Id"
+                                                              data-movie="@(s.MovieTitle ?? "")"
+                                                              data-start="@s.StartTime.ToString("dd.MM HH:mm")">
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                            <button class="btn-icon-sm text-danger border @(isOver ? "disabled opacity-50" : "")" type="submit" title="Скасувати"><i class="fa-solid fa-ban"></i></button>
+                                                            <button class="btn-icon-sm text-danger border @(isOver ? "disabled opacity-50" : "")" type="submit" title="Скасувати">
+                                                                <i class="fa-solid fa-ban"></i>
+                                                            </button>
                                                         </form>
                                                     }
                                                     else
@@ -232,12 +266,15 @@
                                                         <form asp-action="Restore" asp-route-id="@s.Id" method="post" class="d-inline">
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                            <button class="btn-icon-sm text-success border @(isOver ? "disabled opacity-50" : "")" type="submit" title="Відновити"><i class="fa-solid fa-rotate-left"></i></button>
+                                                            <button class="btn-icon-sm text-success border @(isOver ? "disabled opacity-50" : "")" type="submit" title="Відновити">
+                                                                <i class="fa-solid fa-rotate-left"></i>
+                                                            </button>
                                                         </form>
                                                     }
                                                 </div>
                                             </div>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -267,48 +304,58 @@
                 </ul>
             </nav>
         }
+
     </div>
 </section>
 
 @section Scripts {
     <script>
         (function () {
-          const form = document.getElementById('filtersForm');
-          const cinema = document.getElementById('cinemaSelect');
-          const hall = document.getElementById('hallSelect');
+            const form = document.getElementById('filtersForm');
+            const cinema = document.getElementById('cinemaSelect');
+            const hall = document.getElementById('hallSelect');
 
-          if (cinema && form) {
-            cinema.addEventListener('change', () => {
-              if (hall) hall.value = '';
-              form.submit();
+            if (cinema && form) {
+                cinema.addEventListener('change', () => {
+                    if (hall) hall.value = '';
+                    form.submit();
+                });
+            }
+
+            if (hall && form) {
+                hall.addEventListener('change', () => form.submit());
+            }
+
+            const input = document.getElementById('movieTitleInput');
+            const hidden = document.getElementById('movieIdHidden');
+            const list = document.getElementById('movieList');
+
+            function syncHidden() {
+                const value = (input.value || "").trim();
+                const option = Array.from(list.options).find(o => o.value === value);
+                hidden.value = option ? (option.dataset.id || '') : '';
+            }
+
+            if (input && hidden && list) {
+                input.addEventListener('input', syncHidden);
+                syncHidden();
+            }
+
+            document.querySelectorAll('form.js-cancel-form').forEach(formEl => {
+                formEl.addEventListener('submit', (e) => {
+                    const id = formEl.dataset.sessionId || '';
+                    const movie = (formEl.dataset.movie || '').trim();
+                    const start = (formEl.dataset.start || '').trim();
+
+                    const msg =
+                        `Скасувати сеанс №${id}` +
+                        (movie ? `\nФільм: ${movie}` : '') +
+                        (start ? `\nПочаток: ${start}` : '') +
+                        `\n\nПідтвердити дію?`;
+
+                    if (!confirm(msg)) e.preventDefault();
+                });
             });
-          }
-
-          const input = document.getElementById('movieTitleInput');
-          const hidden = document.getElementById('movieIdHidden');
-          const list = document.getElementById('movieList');
-
-          function syncHidden() {
-            const value = (input.value || "").trim();
-            const option = Array.from(list.options).find(o => o.value === value);
-            hidden.value = option ? option.dataset.id : '';
-          }
-
-          if (input && hidden && list) {
-            input.addEventListener('input', syncHidden);
-            syncHidden();
-          }
-
-          document.querySelectorAll('form.js-cancel-form').forEach(formEl => {
-            formEl.addEventListener('submit', (e) => {
-              const id = formEl.dataset.sessionId || '';
-              const movie = (formEl.dataset.movie || '').trim();
-              const start = (formEl.dataset.start || '').trim();
-
-              const msg = `Скасувати сеанс №${id}${movie ? '\nФільм: ' + movie : ''}${start ? '\nПочаток: ' + start : ''}\n\nВи впевнені?`;
-              if (!confirm(msg)) e.preventDefault();
-            });
-          });
         })();
     </script>
 }

@@ -1,25 +1,19 @@
 ﻿@using Infrastructure.Entities
-@using Web.ViewModels.Admin.Sessions
+@using Web.ViewModels.Admin.PricingTemplates
 @using System.Text.Json
-@model SessionPricingPageVm
+@model PricingTemplateEditVm
 
 @{
-    ViewData["Title"] = "Ціни сеансу";
+    ViewData["Title"] = "Редагування шаблону цін";
 
-    string SeatUiClass(SeatCategory c) => c switch
-    {
-        SeatCategory.Vip => "seat-bg-vip",
-        SeatCategory.Accessible => "seat-bg-acc",
-        _ => "seat-bg-std"
-    };
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var hasLocalReturn = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
+    var backHref = hasLocalReturn
+        ? returnUrl!
+        : Url.Action("Index", new { cinemaId = Model.CinemaId, hallId = Model.HallId })!;
 
-    var groupedSeats = (Model.Seats ?? new List<SessionPricingPageVm.SeatPriceVm>())
-        .GroupBy(s => s.Row).OrderBy(g => g.Key).ToList();
-
-    var maxSeats = groupedSeats.Count == 0 ? 0 : groupedSeats.Max(g => g.Max(s => s.Number));
-
-    var jsonRowPrices = JsonSerializer.Serialize(Model.RowPrices ?? new List<SessionPricingPageVm.RowPriceVm>());
-    var jsonCategoryMultipliers = JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<SessionPricingPageVm.CategoryMultiplierVm>());
+    var jsonRowPrices = JsonSerializer.Serialize(Model.RowPrices ?? new List<Application.DTOs.Pricing.RowPriceDto>());
+    var jsonCategoryMultipliers = JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Application.DTOs.Pricing.CategoryMultiplierDto>());
 }
 
 <section class="py-5 gray-bg">
@@ -28,16 +22,11 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h1 class="mb-0 text-uppercase fw-bold text-dark" style="font-size: 1.05rem; letter-spacing: .06em;">
-                    Ціни сеансу
+                    Редагування шаблону цін
                 </h1>
-                <div class="text-muted small mt-1">
-                    <i class="fa-solid fa-film me-1"></i>@Model.MovieTitle
-                    <span class="mx-2">|</span>
-                    <i class="fa-solid fa-location-dot me-1"></i>@Model.CinemaName / @Model.HallName
-                </div>
             </div>
 
-            <a class="btn btn-secondary shadow-sm br-8 px-3" asp-action="Index" asp-route-id="@Model.SessionId">
+            <a class="btn btn-secondary shadow-sm br-8 px-3" href="@backHref">
                 <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД
             </a>
         </div>
@@ -46,25 +35,70 @@
         {
             <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
+        }
         @if (!ViewData.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
         }
 
-        <form asp-action="Pricing" asp-route-id="@Model.SessionId" method="post" id="pricingForm" novalidate>
+        <form asp-action="Edit"
+              asp-route-id="@Model.Id"
+              asp-route-returnUrl="@returnUrl"
+              method="post"
+              id="templateForm"
+              novalidate>
             @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="returnUrl" value="@returnUrl" />
+            <input type="hidden" asp-for="CinemaId" />
+            <input type="hidden" asp-for="HallId" />
 
             <div class="row g-4 align-items-stretch">
 
-                <div class="col-12 col-lg-4 d-flex align-self-start">
-                    <div class="card border-0 br-12 shadow-sm overflow-hidden flex-grow-1">
-                        <div class="card-body p-4 d-flex flex-column">
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 br-12 shadow-sm overflow-hidden h-100">
+                        <div class="card-body p-4 d-flex flex-column h-100">
 
-                            <div class="mb-3 pb-2 border-bottom">
-                                <h5 class="fw-bold text-muted text-uppercase small mb-0 letter-spacing-1 pt-1 d-flex align-items-center gap-2 flex-wrap">
-                                    <i class="fa-solid fa-coins text-primary"></i>
-                                    <span class="text-truncate" style="min-width:0;">Налаштування цін</span>
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h5 class="fw-bold text-muted text-uppercase small mb-3 letter-spacing-1 d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-sliders text-primary"></i>
+                                    Параметри шаблону
                                 </h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-1" asp-for="Name">Назва шаблону</label>
+                                    <input asp-for="Name" class="form-control form-control-sm border-2 br-8 shadow-none fw-bold" />
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Кінотеатр</label>
+                                    <select class="form-select form-select-sm border-2 br-8 shadow-none bg-light" disabled>
+                                        @foreach (var c in Model.Cinemas ?? Enumerable.Empty<SelectListItem>())
+                                        {
+                                            <option value="@c.Value" selected="@(c.Value == (Model.CinemaId?.ToString() ?? ""))">@c.Text</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Зал</label>
+                                    <select class="form-select form-select-sm border-2 br-8 shadow-none bg-light" disabled>
+                                        @foreach (var h in Model.Halls ?? Enumerable.Empty<SelectListItem>())
+                                        {
+                                            <option value="@h.Value" selected="@(h.Value == (Model.HallId?.ToString() ?? ""))">@h.Text</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActive">
+                                    <label class="form-check-label small fw-semibold text-muted" for="isActive">Активний шаблон</label>
+                                </div>
                             </div>
 
                             <div class="p-3 br-10 border bg-light mb-3">
@@ -78,36 +112,48 @@
                                             Логіка розрахунку
                                         </div>
                                         <ul class="mb-0 ps-3">
-                                            <li><strong>Ціна</strong> = База ряду × Множник категорії</li>
-                                            <li><strong>Ряди</strong>: задається базова ціна + винятки</li>
-                                            <li><strong>Категорії</strong>: коефіцієнти (напр. VIP x1.5)</li>
+                                            <li><strong>Ціна ряду</strong> × <strong>Множник категорії</strong></li>
+                                            <li><strong>Ряди</strong>: базова ціна + винятки</li>
+                                            <li><strong>Категорії</strong>: множники</li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <div class="btn-group w-100" role="tablist"
+                                <div class="btn-group w-100"
+                                     role="tablist"
+                                     aria-label="Розділи ціноутворення"
                                      style="--bs-btn-active-bg: rgba(13,110,253,.12);
                                             --bs-btn-active-border-color: rgba(13,110,253,.35);
                                             --bs-btn-active-color: var(--bs-primary);
                                             --bs-btn-hover-border-color: rgba(13,110,253,.35);">
                                     <button class="btn btn-sm fw-semibold btn-outline-secondary border-2 br-left-8 active"
-                                            id="tab-rows" data-bs-toggle="pill" data-bs-target="#pane-rows"
-                                            type="button" role="tab" aria-selected="true">
+                                            id="tab-rows"
+                                            data-bs-toggle="pill"
+                                            data-bs-target="#pane-rows"
+                                            type="button"
+                                            role="tab"
+                                            aria-controls="pane-rows"
+                                            aria-selected="true">
                                         <i class="fa-solid fa-layer-group me-2"></i>Ряди
                                     </button>
 
                                     <button class="btn btn-sm fw-semibold btn-outline-secondary border-2 br-right-8"
-                                            id="tab-cats" data-bs-toggle="pill" data-bs-target="#pane-cats"
-                                            type="button" role="tab" aria-selected="false">
+                                            id="tab-cats"
+                                            data-bs-toggle="pill"
+                                            data-bs-target="#pane-cats"
+                                            type="button"
+                                            role="tab"
+                                            aria-controls="pane-cats"
+                                            aria-selected="false">
                                         <i class="fa-solid fa-tags me-2"></i>Категорії
                                     </button>
                                 </div>
                             </div>
 
                             <div class="tab-content flex-grow-1" style="min-height:0;">
-                                <div class="tab-pane fade show active h-100" id="pane-rows" role="tabpanel" tabindex="0">
+                                <div class="tab-pane fade show active h-100" id="pane-rows" role="tabpanel" aria-labelledby="tab-rows" tabindex="0">
                                     <div id="rowPricesUi"
                                          class="bg-white border-2 br-10 overflow-auto p-3"
                                          style="max-height: 420px; min-height: 220px;">
@@ -118,7 +164,7 @@
                                     <span class="text-danger small" asp-validation-for="RowPrices"></span>
                                 </div>
 
-                                <div class="tab-pane fade h-100" id="pane-cats" role="tabpanel" tabindex="0">
+                                <div class="tab-pane fade h-100" id="pane-cats" role="tabpanel" aria-labelledby="tab-cats" tabindex="0">
                                     <div id="catMultipliersWrap"
                                          class="bg-white border-2 br-10 overflow-auto p-3"
                                          style="max-height: 420px; min-height: 220px;">
@@ -139,17 +185,18 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-lg-8 d-flex">
-                    <div class="card border-0 br-12 shadow-sm overflow-hidden flex-grow-1">
+                <!-- RIGHT -->
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 br-12 shadow-sm overflow-hidden h-100">
                         <div class="card-body p-0 d-flex flex-column h-100">
 
                             <div class="p-4 border-bottom bg-white">
-                                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                                     <div class="text-uppercase fw-bold text-dark" style="letter-spacing:.06em; font-size:.9rem;">
                                         Попередній перегляд
                                     </div>
 
-                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
                                         <span class="d-inline-flex align-items-center gap-2 px-2 py-1 br-8 border bg-light">
                                             <span class="d-inline-block br-4 seat-bg-std" style="width:12px;height:12px;"></span>
                                             <span class="small text-muted fw-semibold">Стандарт</span>
@@ -167,55 +214,10 @@
                             </div>
 
                             <div class="p-4 flex-grow-1" style="min-height:0;">
-                                <div id="seatPreviewWrap" class="bg-white border-2 br-12 p-3 h-100" style="min-height: 420px;">
-                                    @if (groupedSeats.Count == 0)
-                                    {
-                                        <div class="text-muted small text-center py-4">
-                                            <i class="fa-solid fa-calendar-xmark me-2"></i>Схема залу порожня.
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="cinema-map-wrap">
-                                            <div class="cinema-map">
-                                                <div class="cinema-screen">
-                                                    <div class="cinema-screen-arc"></div>
-                                                    <div class="cinema-screen-title">ЕКРАН</div>
-                                                </div>
-
-                                                <div class="cinema-grid" style="--cols:@maxSeats;">
-                                                    @foreach (var row in groupedSeats)
-                                                    {
-                                                        var seatsInRow = row.OrderBy(x => x.Number).ToList();
-                                                        <div class="row-label">@row.Key</div>
-
-                                                        @for (int s = 1; s <= maxSeats; s++)
-                                                        {
-                                                            var seat = seatsInRow.FirstOrDefault(x => x.Number == s);
-                                                            if (seat == null)
-                                                            {
-                                                                <div class="seat seat-empty"></div>
-                                                            }
-                                                            else
-                                                            {
-                                                                var cat = (SeatCategory)seat.Category;
-                                                                <div class="seat @SeatUiClass(cat) js-seat-item"
-                                                                     data-row="@seat.Row"
-                                                                     data-cat="@((int)seat.Category)"
-                                                                     data-seat="@s"
-                                                                     title="Ряд @seat.Row, місце @s">
-                                                                    <div class="seat-text">
-                                                                        <div class="seat-no">@s</div>
-                                                                        <div class="seat-price js-seat-price">@seat.Price.ToString("0")</div>
-                                                                    </div>
-                                                                </div>
-                                                            }
-                                                        }
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
+                                <div id="seatPreviewWrap"
+                                     class="bg-white border-2 br-12 p-3 h-100"
+                                     style="min-height: 420px;">
+                                    <div class="text-muted small text-center py-4">Завантаження...</div>
                                 </div>
                             </div>
 
@@ -225,6 +227,7 @@
 
             </div>
         </form>
+
     </div>
 </section>
 
@@ -233,47 +236,50 @@
 
     <script>
         (function () {
+            const metaUrl = '@Url.Action("PricingMeta", "Sessions", new { Area = "Admin" })';
+
             const existingRowPrices = @Html.Raw(jsonRowPrices);
             const existingCatMultipliers = @Html.Raw(jsonCategoryMultipliers);
 
-            const seatItems = document.querySelectorAll('.js-seat-item');
+            const CAT = {
+                Standard: @((int)SeatCategory.Standard),
+                Vip: @((int)SeatCategory.Vip),
+                Accessible: @((int)SeatCategory.Accessible)
+            };
+
+            const currentHallId = Number('@(Model.HallId ?? 0)');
+
             const rowUi = document.getElementById('rowPricesUi');
             const hiddenContainer = document.getElementById('hiddenRowPrices');
             const catWrap = document.getElementById('catMultipliersWrap');
+            const seatPreviewWrap = document.getElementById('seatPreviewWrap');
 
-            const allRows = Array.from(new Set(
-                Array.from(seatItems).map(el => Number(el.dataset.row))
-            )).sort((a, b) => a - b);
-
+            let allRows = [];
             const pricesMap = new Map();
             let currentBasePrice = 100;
-            const catMap = new Map();
 
+            const catMap = new Map();
             if (Array.isArray(existingCatMultipliers)) {
                 existingCatMultipliers.forEach(x => {
-                    catMap.set(Number(x.Category), Number(x.Multiplier));
+                    const cid = Number(x.Category ?? x.category);
+                    const mult = Number(x.Multiplier ?? x.multiplier);
+                    if (Number.isFinite(cid) && Number.isFinite(mult)) catMap.set(cid, mult);
                 });
             }
 
-            if (Array.isArray(existingRowPrices) && existingRowPrices.length > 0) {
-                const counts = {};
-                const normalized = existingRowPrices.map(p => ({
-                    row: Number(p.RowNumber),
-                    price: Number(p.BasePrice)
-                })).filter(x => x.row > 0);
-
-                normalized.forEach(p => { counts[p.price] = (counts[p.price] || 0) + 1; });
-                const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-                const mode = Number(sorted[0] ?? 100);
-
-                currentBasePrice = Number.isFinite(mode) ? mode : 100;
-
-                normalized.forEach(p => {
-                    if (p.price !== currentBasePrice) pricesMap.set(p.row, p.price);
-                });
+            function seatUiClass(catId) {
+                if (catId === CAT.Vip) return 'seat-bg-vip';
+                if (catId === CAT.Accessible) return 'seat-bg-acc';
+                return 'seat-bg-std';
             }
 
-            function generateHiddenInputs() {
+            function calcFinal(row, catId) {
+                const base = pricesMap.has(row) ? Number(pricesMap.get(row)) : Number(currentBasePrice);
+                const mult = catMap.has(catId) ? Number(catMap.get(catId)) : 1;
+                return Math.round(base * mult);
+            }
+
+            function updateHiddenInputsOnly() {
                 if (!hiddenContainer) return;
 
                 hiddenContainer.innerHTML = '';
@@ -282,7 +288,7 @@
 
                     const inputRow = document.createElement('input');
                     inputRow.type = 'hidden';
-                    inputRow.name = `RowPrices[${index}].RowNumber`;
+                    inputRow.name = `RowPrices[${index}].Row`;
                     inputRow.value = String(r);
 
                     const inputPrice = document.createElement('input');
@@ -293,6 +299,8 @@
                     hiddenContainer.appendChild(inputRow);
                     hiddenContainer.appendChild(inputPrice);
                 });
+
+                recalcVisualMap();
             }
 
             function renderRowUi() {
@@ -375,9 +383,8 @@
 
                 rowUi.innerHTML = html;
 
-                generateHiddenInputs();
+                updateHiddenInputsOnly();
                 attachRowEvents();
-                recalcVisualMap();
             }
 
             function attachRowEvents() {
@@ -385,8 +392,7 @@
                     const val = Number(this.value);
                     if (Number.isFinite(val) && val >= 0) {
                         currentBasePrice = val;
-                        generateHiddenInputs();
-                        recalcVisualMap();
+                        updateHiddenInputsOnly();
 
                         const msg = document.getElementById('noExMsg');
                         if (msg) msg.textContent = `Немає (всі ряди по ${currentBasePrice} грн)`;
@@ -418,18 +424,17 @@
                         const val = Number(this.value);
                         if (row > 0 && Number.isFinite(val) && val >= 0) {
                             pricesMap.set(row, val);
-                            generateHiddenInputs();
-                            recalcVisualMap();
+                            updateHiddenInputsOnly();
                         }
                     });
                 });
             }
 
-            function renderCats() {
+            function renderCats(apiCategories) {
                 if (!catWrap) return;
 
-                if (!Array.isArray(existingCatMultipliers) || existingCatMultipliers.length === 0) {
-                    catWrap.innerHTML = `<div class="text-muted small text-center py-3">Немає категорій</div>`;
+                if (!Array.isArray(apiCategories) || apiCategories.length === 0) {
+                    catWrap.innerHTML = '<div class="text-muted small text-center py-3">Дані про категорії відсутні</div>';
                     return;
                 }
 
@@ -442,16 +447,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${existingCatMultipliers.map((c, i) => {
-                                const id = Number(c.Category);
-                                const title = String(c.Title ?? `#${id}`);
+                            ${apiCategories.map((c, i) => {
+                                const id = Number(c.id);
+                                const title = String(c.title ?? id);
                                 const val = catMap.has(id) ? Number(catMap.get(id)) : 1;
 
                                 if (!catMap.has(id)) catMap.set(id, val);
 
                                 return `
                                     <tr>
-                                        <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 200px;" title="${title}">
+                                        <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 220px;" title="${title}">
                                             ${title}
                                         </td>
                                         <td class="text-end pe-2 py-1">
@@ -470,32 +475,102 @@
                         </tbody>
                     </table>
                 `;
-
-                catWrap.querySelectorAll('.js-cat-mult').forEach(input => {
-                    input.addEventListener('input', function () {
-                        const cid = Number(this.dataset.cat);
-                        const mult = Number(this.value);
-                        if (Number.isFinite(cid) && Number.isFinite(mult) && mult > 0) {
-                            catMap.set(cid, mult);
-                            recalcVisualMap();
-                        }
-                    });
-                });
             }
 
-            function calcFinal(row, catId) {
-                const base = pricesMap.has(row) ? Number(pricesMap.get(row)) : Number(currentBasePrice);
-                const mult = catMap.has(catId) ? Number(catMap.get(catId)) : 1;
-                return Math.round(base * mult);
+            catWrap?.addEventListener('input', (e) => {
+                const t = e.target;
+                if (!(t instanceof HTMLInputElement)) return;
+                if (!t.classList.contains('js-cat-mult')) return;
+
+                const cid = Number(t.dataset.cat);
+                const mult = Number(t.value);
+
+                if (Number.isFinite(cid) && Number.isFinite(mult) && mult > 0) {
+                    catMap.set(cid, mult);
+                    recalcVisualMap();
+                }
+            });
+
+            function renderSeatPreviewFromMeta(meta) {
+                if (!seatPreviewWrap) return;
+
+                const seats = Array.isArray(meta?.seats) ? meta.seats : [];
+                const maxSeats = Number(meta?.maxSeats || 0);
+
+                if (!seats.length || maxSeats <= 0) {
+                    seatPreviewWrap.innerHTML = '<div class="text-muted small text-center py-3">Немає місць у залі</div>';
+                    return;
+                }
+
+                const byRow = new Map();
+                seats.forEach(s => {
+                    const r = Number(s.row);
+                    const n = Number(s.number);
+                    const c = Number(s.category);
+                    if (!byRow.has(r)) byRow.set(r, new Map());
+                    byRow.get(r).set(n, { row: r, number: n, category: c });
+                });
+
+                const rows = Array.isArray(meta?.rows) && meta.rows.length
+                    ? meta.rows.map(Number)
+                    : Array.from(byRow.keys()).sort((a, b) => a - b);
+
+                let gridHtml = '';
+                rows.forEach(row => {
+                    const seatsInRow = byRow.get(row) || new Map();
+
+                    gridHtml += `<div class="row-label">${row}</div>`;
+
+                    for (let s = 1; s <= maxSeats; s++) {
+                        const seat = seatsInRow.get(s);
+                        if (!seat) {
+                            gridHtml += `<div class="seat seat-empty"></div>`;
+                            continue;
+                        }
+
+                        const catId = Number(seat.category);
+                        const price = calcFinal(row, catId);
+
+                        gridHtml += `
+                            <div class="seat ${seatUiClass(catId)} js-seat-item"
+                                 data-row="${row}"
+                                 data-cat="${catId}"
+                                 data-seat="${s}"
+                                 title="Ряд ${row}, місце ${s} — ${price} грн">
+                                <div class="seat-text">
+                                    <div class="seat-no">${s}</div>
+                                    <div class="seat-price js-seat-price">${price}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                seatPreviewWrap.innerHTML = `
+                    <div class="cinema-map-wrap">
+                        <div class="cinema-map">
+                            <div class="cinema-screen">
+                                <div class="cinema-screen-arc"></div>
+                                <div class="cinema-screen-title">ЕКРАН</div>
+                            </div>
+
+                            <div class="cinema-grid" style="--cols:${maxSeats};">
+                                ${gridHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
 
             function recalcVisualMap() {
-                seatItems.forEach(el => {
-                    const r = Number(el.dataset.row);
-                    const c = Number(el.dataset.cat);
-                    const s = el.dataset.seat || (el.querySelector('.seat-no')?.textContent || '');
+                if (!seatPreviewWrap) return;
 
-                    const final = calcFinal(r, c);
+                seatPreviewWrap.querySelectorAll('.js-seat-item').forEach(el => {
+                    const row = Number(el.dataset.row);
+                    const cat = Number(el.dataset.cat);
+                    const seatNo = el.dataset.seat || '';
+
+                    const final = calcFinal(row, cat);
 
                     const priceEl = el.querySelector('.js-seat-price');
                     if (priceEl && priceEl.textContent !== String(final)) {
@@ -504,14 +579,71 @@
                         setTimeout(() => priceEl.style.opacity = '1', 150);
                     }
 
-                    el.title = `Ряд ${r}, місце ${s} — ${final} грн`;
+                    el.title = `Ряд ${row}, місце ${seatNo} — ${final} грн`;
                 });
             }
 
-            renderRowUi();
-            renderCats();
-            generateHiddenInputs();
-            recalcVisualMap();
+            function initRowData(rows) {
+                allRows = Array.isArray(rows) ? rows.map(Number) : [];
+                pricesMap.clear();
+
+                const normalized = Array.isArray(existingRowPrices)
+                    ? existingRowPrices
+                        .map(p => ({
+                            row: Number(p.Row ?? p.RowNumber ?? p.row ?? 0),
+                            price: Number(p.BasePrice ?? p.basePrice ?? 0)
+                        }))
+                        .filter(x => x.row > 0 && Number.isFinite(x.price))
+                    : [];
+
+                if (normalized.length > 0 && allRows.length > 0) {
+                    const counts = {};
+                    normalized.forEach(p => { counts[p.price] = (counts[p.price] || 0) + 1; });
+                    const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                    const modePrice = Number(sorted[0] ?? 100);
+                    currentBasePrice = Number.isFinite(modePrice) ? modePrice : 100;
+
+                    normalized.forEach(p => {
+                        if (allRows.includes(p.row) && p.price !== currentBasePrice) {
+                            pricesMap.set(p.row, p.price);
+                        }
+                    });
+                } else {
+                    currentBasePrice = 100;
+                }
+
+                renderRowUi();
+            }
+
+            async function loadMeta(hallId) {
+                const hid = Number(hallId || 0);
+                if (hid < 1) {
+                    if (rowUi) rowUi.innerHTML = '<div class="text-muted small text-center py-4">Зал не задано</div>';
+                    if (catWrap) catWrap.innerHTML = '<div class="text-muted small text-center py-4">Зал не задано</div>';
+                    if (seatPreviewWrap) seatPreviewWrap.innerHTML = '<div class="text-muted small text-center py-4">Зал не задано</div>';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(metaUrl + '?hallId=' + encodeURIComponent(hid));
+                    if (!res.ok) throw new Error();
+
+                    const data = await res.json();
+
+                    initRowData(data.rows);
+                    renderCats(data.categories);
+                    renderSeatPreviewFromMeta(data);
+                    updateHiddenInputsOnly();
+                } catch (e) {
+                    console.error(e);
+                    const err = '<div class="text-danger small text-center py-4">Помилка завантаження даних</div>';
+                    if (rowUi) rowUi.innerHTML = err;
+                    if (catWrap) catWrap.innerHTML = err;
+                    if (seatPreviewWrap) seatPreviewWrap.innerHTML = err;
+                }
+            }
+
+            loadMeta(currentHallId);
         })();
     </script>
 }
