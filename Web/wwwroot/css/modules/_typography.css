@@ -18,7 +18,7 @@
         height: 3px;
         background: rgba(99, 102, 241, .35);
         position: absolute;
-        bottom: -10px;
+        bottom: -8px;
         left: 50%;
         transform: translateX(-50%);
         border-radius: 999px;

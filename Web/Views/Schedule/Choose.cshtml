@@ -1,0 +1,116 @@
+﻿@model Web.ViewModels.Schedule.ScheduleChooseVm
+
+@{
+    ViewData["Title"] = "Обрати кінотеатр";
+}
+
+<link rel="stylesheet" href="~/css/schedule.css" />
+
+<section class="py-5 gray-bg">
+    <div class="container-fluid px-lg-5">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h1 class="section-title mb-1">Оберіть кінотеатр</h1>
+                <div class="text-muted fw-bold">Спочатку місто, потім кінотеатр</div>
+            </div>
+
+            <a class="btn btn-outline-maroon shadow-sm"
+               asp-controller="Schedule"
+               asp-action="Locations">
+                Переглянути всі локації
+            </a>
+        </div>
+
+        <div class="row g-3">
+            <!-- LEFT: Cities -->
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm border-0 br-12 h-100">
+                    <div class="card-body p-4">
+                        <div class="small fw-bold text-muted text-uppercase mb-2">Місто</div>
+
+                        <div class="schedule-city-list">
+                            @foreach (var c in Model.Cities)
+                            {
+                                var active = c.Selected ? "active" : "";
+                                    <a class="schedule-city-item @active"
+                                       asp-controller="Schedule"
+                                       asp-action="Choose"
+                                       asp-route-city="@c.Value">
+                                    @c.Text
+                                    </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Cinemas -->
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm border-0 br-12">
+                    <div class="card-body p-4">
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                            <div class="small fw-bold text-muted text-uppercase">Кінотеатр</div>
+                            <div class="small text-muted">Клікніть “Розклад”, щоб перейти</div>
+                        </div>
+
+                        @if (!Model.HasCity)
+                        {
+                                <div class="empty-state mx-auto" style="max-width: 760px;">
+                                    <div class="empty-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                    <h5 class="empty-title">Оберіть місто</h5>
+                                    <p class="empty-sub">Після вибору міста справа з’явиться список кінотеатрів.</p>
+                                </div>
+                        }
+                        else if (Model.Cinemas is null || Model.Cinemas.Count == 0)
+                        {
+                                <div class="empty-state mx-auto" style="max-width: 760px;">
+                                    <div class="empty-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+                                    <h5 class="empty-title">Немає кінотеатрів</h5>
+                                    <p class="empty-sub">У вибраному місті кінотеатрів не знайдено.</p>
+                                </div>
+                        }
+                        else
+                        {
+                                <div class="schedule-cinema-list">
+                                @foreach (var c in Model.Cinemas)
+                                {
+                                            <div class="schedule-cinema-row">
+                                                <div class="schedule-cinema-main">
+                                                    @{
+                                                        var parts = (c.Text ?? "").Split(" — ", 2, StringSplitOptions.None);
+                                                        var name = parts.Length > 0 ? parts[0] : c.Text;
+                                                        var addr = parts.Length == 2 ? parts[1] : null;
+                                                    }
+
+                                                    <div class="schedule-cinema-title">@name</div>
+                                                    @if (!string.IsNullOrWhiteSpace(addr))
+                                                    {
+                                                        <div class="schedule-cinema-address">@addr</div>
+                                                    }
+                                                </div>
+
+                                                <a class="schedule-cinema-link"
+                                                   asp-controller="Schedule"
+                                                   asp-action="Index"
+                                                   asp-route-cinemaId="@c.Value">
+                                                    <i class="fa-regular fa-calendar-days"></i>
+                                                    <span>Розклад</span>
+                                                </a>
+                                            </div>
+                                }
+                                </div>
+                        }
+
+                        <div class="mt-3">
+                            <a class="btn btn-light" asp-controller="Schedule" asp-action="Choose">Скинути</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
