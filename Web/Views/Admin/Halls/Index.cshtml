@@ -28,21 +28,28 @@
             <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
-        <div class="card shadow-sm border-0 col-12 mb-4 br-12">
-            <div class="card-body p-4">
-                <form method="get" asp-action="Index" class="row g-3 align-items-end">
+        <div class="card shadow-sm border-0 br-12 mb-4 overflow-hidden h-auto">
+            <div class="card-body p-4 d-block">
+                <form method="get" asp-action="Index" class="row g-3 align-items-center">
                     <div class="col-12 col-md-6 col-lg-4">
                         <label asp-for="CinemaId" class="form-label small fw-bold text-muted text-uppercase">Кінотеатр</label>
-                        <select asp-for="CinemaId" asp-items="Model.Cinemas" class="form-select shadow-none" onchange="this.form.submit()">
+                        <select asp-for="CinemaId"
+                                asp-items="Model.Cinemas"
+                                class="form-select shadow-none"
+                                onchange="this.form.submit()">
                             <option value="">Усі кінотеатри</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-6 col-lg-8 text-md-end text-muted small opacity-75">
-                        <i class="fa-solid fa-circle-info me-1"></i> Оберіть кінотеатр для швидкої фільтрації
+
+                    <div class="col-12 col-md-6 col-lg text-lg-end">
+                        <div class="text-muted small opacity-75 pt-2 pt-md-0">
+                            <i class="fa-solid fa-circle-info me-1"></i> Оберіть кінотеатр для швидкої фільтрації
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
+
 
         @if (Model.Halls == null || !Model.Halls.Any())
         {
@@ -84,17 +91,17 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <a asp-action="Seats" asp-route-id="@h.HallId" 
+                                            <a asp-action="Seats" asp-route-id="@h.HallId"
                                                class="btn btn-sm btn-light border text-primary" title="Конфігурація місць">
                                                 <i class="fas fa-chair me-1"></i> МІСЦЯ
                                             </a>
 
-                                            <a asp-action="Edit" asp-route-id="@h.HallId" 
+                                            <a asp-action="Edit" asp-route-id="@h.HallId"
                                                class="btn btn-sm btn-light border" title="Редагувати">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
 
-                                            <form method="post" asp-action="Delete" asp-route-id="@h.HallId" 
+                                            <form method="post" asp-action="Delete" asp-route-id="@h.HallId"
                                                   asp-route-cinemaId="@Model.CinemaId" class="d-inline"
                                                   onsubmit="return confirm('Видалити цей зал?');">
                                                 @Html.AntiForgeryToken()
