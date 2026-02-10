@@ -4,7 +4,6 @@
 @{
     ViewData["Title"] = "Деталі фільму";
 
-    // helpers
     string ShowOrFallback(string? value, string fallback = "—")
         => string.IsNullOrWhiteSpace(value) || value == "N/A" ? fallback : value!;
 
@@ -58,6 +57,7 @@
                     <div class="bg-dark" style="height: 200px;"></div>
                 }
 
+
                 <div class="position-absolute bottom-0 start-0 p-4 p-md-5 w-100">
                     <div class="d-flex align-items-end gap-4 flex-wrap flex-md-nowrap">
                         <div class="detail-poster shadow-lg d-none d-md-block">
@@ -71,18 +71,7 @@
                             }
                         </div>
 
-                        @* НАШЕ: УБРАЛИ трейлер в админке (чтобы не появлялся) *@
-                        @* 
-                        @if (!string.IsNullOrWhiteSpace(Model.Movie.TrailerUrl))
-                        {
-                            <a href="@Model.Movie.TrailerUrl"
-                               target="_blank"
-                               rel="noopener"
-                               class="poster-trailer-link">
-                                ▶ ДИВИТИСЬ ТРЕЙЛЕР
-                            </a>
-                        }
-                        *@
+                       
 
                         <div class="text-white pb-2">
                             <h1 class="display-5 fw-bold mb-1">@Model.Movie.Title</h1>
