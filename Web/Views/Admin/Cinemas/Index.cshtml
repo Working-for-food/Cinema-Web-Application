@@ -7,162 +7,129 @@
 <section class="py-5 gray-bg">
     <div class="container-fluid">
 
-        <h1 class="section-title text-center mb-5">КІНОТЕАТРИ</h1>
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h1 class="section-title mb-0">Кінотеатри</h1>
+            <a asp-action="Create" class="btn btn-maroon">
+                <i class="fa-solid fa-plus me-1"></i>
+                ДОДАТИ НОВИЙ КІНОТЕАТР
+            </a>
+        </div>
 
         @if (TempData["Success"] is string ok)
         {
-            <div class="alert alert-success mb-3">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err)
         {
-            <div class="alert alert-danger mb-3">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
-        <div class="card shadow-sm col-12 mb-3">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-filter me-2"></i>
-                    Фільтри
-                </h5>
-            </div>
-
+        <div class="card shadow-sm border-0 mb-4 br-12">
             <div class="card-body p-4">
                 <form method="get" asp-action="Index" class="row g-3 align-items-end">
                     <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-magnifying-glass me-1"></i>
-                            Пошук
+                        <label class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Пошук
                         </label>
-                        <input name="search"
-                               value="@Model.Search"
-                               class="form-control"
-                               placeholder="Пошук за назвою / адресою / містом" />
+                        <input name="search" value="@Model.Search" class="form-control shadow-none" 
+                               placeholder="Назва / адреса / місто" />
                     </div>
 
                     <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            Місто
+                        <label class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-location-dot me-1"></i> Місто
                         </label>
-                        <select name="city" class="form-select" asp-items="Model.Cities">
+                        <select name="city" class="form-select shadow-none" asp-items="Model.Cities">
                             <option value="">Усі міста</option>
                         </select>
                     </div>
 
                     <div class="col-12 col-lg-3">
-                        <label class="form-label text-muted">
-                            <i class="fa-solid fa-arrow-down-a-z me-1"></i>
-                            Сортування
+                        <label class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-arrow-down-a-z me-1"></i> Сортування
                         </label>
-                        <select name="sort" class="form-select" asp-items="Model.SortOptions"></select>
+                        <select name="sort" class="form-select shadow-none" asp-items="Model.SortOptions"></select>
                     </div>
 
-                    <div class="col-12 col-lg-3">
-                        <div class="d-flex gap-2 justify-content-lg-end">
-                            <button type="submit" class="btn btn-maroon flex-grow-1 flex-lg-grow-0">
-                                ЗАСТОСУВАТИ
-                            </button>
-
-                            <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-lg-grow-0">
-                                СКИНУТИ
-                            </a>
-                        </div>
+                    <div class="col-12 col-lg-3 text-lg-end">
+                        <button type="submit" class="btn btn-maroon px-4">ЗАСТОСУВАТИ</button>
+                        <a asp-action="Index" class="btn btn-secondary px-4">СКИНУТИ</a>
                     </div>
-
                 </form>
-
-            </div>
-        </div>
-
-        <div class="col-12 mb-3">
-            <div class="d-flex justify-content-lg-end">
-                <a asp-action="Create" class="btn btn-maroon">
-                    <i class="fa-solid fa-plus me-1"></i>
-                    ДОДАТИ НОВИЙ КІНОТЕАТР
-                </a>
             </div>
         </div>
 
         @if (!Model.Cinemas.Any())
         {
-            <div class="card shadow-sm col-lg-8 mx-auto">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fa-solid fa-circle-info me-2"></i>
-                        Немає результатів
-                    </h5>
-                </div>
-                <div class="card-body p-4 text-center">
-                    <p class="mb-0">Кінотеатри не знайдено.</p>
-                </div>
+            <div class="empty-state mx-auto" style="max-width: 600px;">
+                <div class="empty-icon"><i class="fa-solid fa-film"></i></div>
+                <h5 class="empty-title">Кінотеатри не знайдено</h5>
+                <p class="empty-sub">Спробуйте змінити фільтри або додайте новий кінотеатр.</p>
             </div>
         }
         else
         {
             @foreach (var c in Model.Cinemas)
             {
-                <div class="card shadow-sm mb-3">
+                <div class="card shadow-sm border-0 mb-4 br-12 overflow-hidden session-card">
                     <div class="card-body p-4">
-
                         <div class="row align-items-center g-4">
-
+                            
                             <div class="col-12 col-md-4 col-lg-3">
-                                <div class="card" style="overflow:hidden;">
-                                    <div style="height:160px; background:#eee; display:flex; align-items:center; justify-content:center;">
-                                        <span class="text-muted">Фото</span>
-                                    </div>
+                                <div class="rounded-3 shadow-sm overflow-hidden" style="height:180px; background: var(--surface-2); display:flex; align-items:center; justify-content:center; border: 1px solid var(--border);">
+                                    @if (!string.IsNullOrEmpty(c.ImageUrl))
+                                    {
+                                        <img src="@c.ImageUrl" alt="@c.Name" style="width:100%; height:100%; object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center">
+                                            <i class="fa-solid fa-image fa-2x text-muted opacity-50 mb-2"></i>
+                                            <div class="text-muted small fw-bold uppercase">Фото відсутнє</div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
 
                             <div class="col-12 col-md-5 col-lg-6">
                                 <div class="mb-2">
-                                    <div class="text-muted small">
-                                        <i class="fa-solid fa-film me-1"></i>
-                                        Назва кінотеатру
+                                    <div class="text-muted small fw-bold text-uppercase">
+                                        <i class="fa-solid fa-clapperboard me-1 text-primary"></i> Назва кінотеатру
                                     </div>
-                                    <div class="fw-semibold fs-4">@c.Name</div>
+                                    <div class="fw-bold fs-3 text-dark">@c.Name</div>
                                 </div>
 
-                                <div class="mb-2">
-                                    <div class="text-muted small">
-                                        <i class="fa-solid fa-map-location-dot me-1"></i>
-                                        Адреса
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <div class="text-muted small fw-bold text-uppercase">
+                                            <i class="fa-solid fa-map-location-dot me-1"></i> Адреса
+                                        </div>
+                                        <div class="fw-semibold text-dark">@c.Address</div>
                                     </div>
-                                    <div class="fw-semibold">@c.Address</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <div class="text-muted small">
-                                        <i class="fa-solid fa-location-dot me-1"></i>
-                                        Місто
+                                    <div class="col-sm-6">
+                                        <div class="text-muted small fw-bold text-uppercase">
+                                            <i class="fa-solid fa-location-dot me-1"></i> Місто
+                                        </div>
+                                        <div class="fw-semibold text-dark">@c.City</div>
                                     </div>
-                                    <div class="fw-semibold">@c.City</div>
                                 </div>
+                            </div>
 
-                                <a asp-action="Details"
-                                   asp-route-id="@c.Id"
-                                   class="btn btn-maroon">
-                                    <i class="fa-solid fa-circle-info me-1"></i>
-                                    ДЕТАЛІ
-                                </a>
-
-                                <a asp-action="Edit"
-                                   asp-route-id="@c.Id"
-                                   class="btn btn-secondary">
-                                    <i class="fa-solid fa-pen-to-square me-1"></i>
-                                    РЕДАГУВАТИ
-                                </a>
-
-                                <a asp-action="Delete"
-                                   asp-route-id="@c.Id"
-                                   class="btn btn-maroon">
-                                    <i class="fa-solid fa-trash me-1"></i>
-                                    ВИДАЛИТИ
-                                </a>
+                            <div class="col-12 col-md-3 col-lg-3 text-md-end border-start-md">
+                                <div class="d-flex flex-column gap-2">
+                                    <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-maroon w-100">
+                                        <i class="fa-solid fa-circle-info me-1"></i> ДЕТАЛІ
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-outline-maroon w-100">
+                                        <i class="fa-solid fa-pen-to-square me-1"></i> РЕДАГУВАТИ
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-danger w-100">
+                                        <i class="fa-solid fa-trash me-1"></i> ВИДАЛИТИ
+                                    </a>
+                                </div>
                             </div>
 
                         </div>
-
                     </div>
                 </div>
             }

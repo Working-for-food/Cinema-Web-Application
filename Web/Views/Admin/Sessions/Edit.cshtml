@@ -4,416 +4,283 @@
 @{
     ViewData["Title"] = "Редагувати сеанс";
 
-    string FormatDt(DateTime? dt) => dt.HasValue
-        ? dt.Value.ToString("yyyy-MM-ddTHH:mm")
-        : "";
-
-    var selectedMovieText = Model.Movies
-        .FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text ?? "";
-
-    var movieTitleFromPost = Context.Request.HasFormContentType
+    var movieTitleFromPost = Context.Request.HasFormContentType && Context.Request.Form.ContainsKey("movieTitle")
         ? Context.Request.Form["movieTitle"].ToString()
         : "";
 
-    var movieTitleFromQuery = Context.Request.Query["movieTitle"].ToString();
+    var selectedMovieText = Model.Movies.FirstOrDefault(x => x.Value == Model.MovieId.ToString())?.Text ?? "";
 
     var movieTitleValue = !string.IsNullOrWhiteSpace(movieTitleFromPost)
         ? movieTitleFromPost
-        : (!string.IsNullOrWhiteSpace(movieTitleFromQuery)
-            ? movieTitleFromQuery
-            : selectedMovieText);
+        : selectedMovieText;
 
-    var lockHall = true;
+    string FormatDt(DateTime? dt) => dt.HasValue ? dt.Value.ToString("yyyy-MM-ddTHH:mm") : "";
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Редагувати сеанс</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагувати сеанс</h1>
+            <p class="text-muted small text-uppercase fw-semibold mb-0">Налаштування часу та фільму</p>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div></div>
+            <a class="btn btn-secondary shadow-sm br-8 px-3" asp-action="Index">
+                <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД
+            </a>
+        </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="alert alert-success mb-3" role="alert">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
         @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
         {
-            <div class="alert alert-danger mb-3" role="alert">@err</div>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
         }
 
-        <div class="card shadow-sm rounded">
-            <div class="card-body p-4">
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
+        }
 
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
-                }
+        <form asp-action="Edit"
+              asp-route-id="@Model.Id"
+              method="post"
+              novalidate
+              id="editForm"
+              asp-antiforgery="true">
+            @Html.AntiForgeryToken()
 
-                <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate id="editForm">
-                    @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+            <input type="hidden" asp-for="CinemaId" />
+            <input type="hidden" asp-for="HallId" />
 
-                    <input type="hidden" asp-for="Id" />
-                    <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+            <div class="row g-4 align-items-stretch">
 
-                    <input type="hidden" asp-for="CinemaId" />
-                    <input type="hidden" asp-for="HallId" />
+                <div class="col-12 col-lg-8 d-flex">
+                    <div class="card shadow-sm border-0 br-12 overflow-hidden flex-grow-1">
+                        <div class="card-body p-4 p-lg-5">
 
-                    <div class="row g-3">
+                            <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">
+                                <i class="fa-solid fa-location-dot me-2 text-primary"></i> Локація та час
+                            </h5>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-film me-1"></i>
-                                Кінотеатр
-                            </label>
-                            <select class="form-select"
-                                    asp-items="Model.Cinemas"
-                                    id="cinemaSelect"
-                                    disabled>
-                                <option value="0">— Оберіть кінотеатр —</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-chair me-1"></i>
-                                Зал
-                            </label>
-                            <select class="form-select"
-                                    asp-items="Model.Halls"
-                                    id="hallSelect"
-                                    disabled>
-                                <option value="0">— Оберіть зал —</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-clapperboard me-1"></i>
-                                Фільм
-                            </label>
-
-                            <div class="d-flex gap-2 align-items-start">
-                                <div class="flex-grow-1">
-                                    <input class="form-control"
-                                           list="movieList"
-                                           id="movieTitleInput"
-                                           name="movieTitle"
-                                           placeholder="Почніть вводити назву..."
-                                           autocomplete="off"
-                                           value="@movieTitleValue" />
-
-                                    <datalist id="movieList">
-                                        @foreach (var m in Model.Movies)
-                                        {
-                                            <option value="@m.Text" data-id="@m.Value"></option>
-                                        }
-                                    </datalist>
-
-                                    <div class="form-text">Пошук фільму по базі.</div>
-                                    <span class="text-danger" asp-validation-for="MovieId"></span>
-                                </div>
-
-                                <div style="width:86px;">
-                                    <img id="posterImg"
-                                         class="d-none"
-                                         src=""
-                                         alt="Постер"
-                                         style="width:86px;height:auto;border-radius:8px;object-fit:cover;"
-                                         loading="lazy" />
-                                    <div id="posterPlaceholder"
-                                         class="text-muted small border rounded d-flex align-items-center justify-content-center"
-                                         style="width:86px; height:120px;">
-                                        —
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Кінотеатр</label>
+                                    <select class="form-select border-2 br-8 shadow-none bg-light"
+                                            asp-for="CinemaId"
+                                            asp-items="Model.Cinemas"
+                                            id="cinemaSelect"
+                                            disabled>
+                                        <option value="0">— Оберіть кінотеатр —</option>
+                                    </select>
+                                    <div class="form-text x-small text-muted">
+                                        <i class="fa-solid fa-lock me-1"></i>Локацію не можна змінити під час редагування
                                     </div>
                                 </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Зал</label>
+                                    <select class="form-select border-2 br-8 shadow-none bg-light"
+                                            asp-for="HallId"
+                                            asp-items="Model.Halls"
+                                            id="hallSelect"
+                                            disabled>
+                                        <option value="0">— Оберіть зал —</option>
+                                    </select>
+                                </div>
                             </div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Початок</label>
+                                    <input class="form-control border-2 br-8 shadow-none"
+                                           asp-for="StartTime"
+                                           id="StartTime"
+                                           type="datetime-local"
+                                           step="60"
+                                           value="@FormatDt(Model.StartTime)" />
+                                    <span class="text-danger small" asp-validation-for="StartTime"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Кінець</label>
+                                    <input class="form-control border-2 br-8 shadow-none"
+                                           asp-for="EndTime"
+                                           id="EndTime"
+                                           type="datetime-local"
+                                           step="60"
+                                           value="@FormatDt(Model.EndTime)" />
+
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span class="form-text x-small fw-bold text-primary" id="movieDurationText">ТРИВАЛІСТЬ: —</span>
+                                        <span class="text-danger d-none fw-semibold x-small" id="shortDurationWarn"></span>
+                                    </div>
+
+                                    <span class="text-danger small" asp-validation-for="EndTime"></span>
+                                </div>
+                            </div>
+
                         </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-ticket me-1"></i>
-                                Тип показу
-                            </label>
-                            <select class="form-select" asp-for="PresentationType" asp-items="Model.PresentationTypes"></select>
-                            <span class="text-danger" asp-validation-for="PresentationType"></span>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-clock me-1"></i>
-                                Початок
-                            </label>
-                            <input class="form-control"
-                                   asp-for="StartTime"
-                                   id="StartTime"
-                                   type="datetime-local"
-                                   step="60"
-                                   value="@FormatDt(Model.StartTime)" />
-                            <span class="text-danger" asp-validation-for="StartTime"></span>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-hourglass-end me-1"></i>
-                                Кінець
-                            </label>
-                            <input class="form-control"
-                                   asp-for="EndTime"
-                                   id="EndTime"
-                                   type="datetime-local"
-                                   step="60"
-                                   value="@FormatDt(Model.EndTime)" />
-
-                            <div class="form-text" id="movieDurationText">Тривалість: —</div>
-                            <div class="alert alert-warning mt-2 py-2 d-none" id="shortDurationWarn" role="alert"></div>
-
-                            <span class="text-danger" asp-validation-for="EndTime"></span>
-                        </div>
-
                     </div>
+                </div>
 
-                    <hr class="my-4" />
+                <div class="col-12 col-lg-4 d-flex">
+                    <div class="card shadow-sm border-0 br-12 overflow-hidden flex-grow-1">
+                        <div class="card-body p-4 p-lg-5">
 
-                    <div class="card border-0 bg-light mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">Ціноутворення</h5>
-                                <span class="text-muted small">Формула: ціна ряду × множник категорії</span>
-                            </div>
+                            <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">
+                                <i class="fa-solid fa-clapperboard me-2 text-primary"></i> Вибір фільму
+                            </h5>
 
-                            <div class="row g-3">
-                                <div class="col-12 col-lg-6">
-                                    <label class="form-label fw-semibold">Базові ціни по рядах (грн)</label>
-                                    <div id="rowPricesWrap" class="border rounded p-2 bg-white">
-                                        <div class="text-center py-3">
-                                            <div class="spinner-border text-primary spinner-border-sm" role="status"></div> Завантаження...
+                            <div class="d-flex gap-3 align-items-start">
+
+                                <div class="flex-shrink-0 d-none d-md-block">
+                                    <div class="shadow-sm border br-8 overflow-hidden bg-light" style="width:100px; height:150px;">
+                                        <img id="posterImg" class="d-none w-100 h-100 object-fit-cover" src="" alt="Постер" loading="lazy" />
+                                        <div id="posterPlaceholder" class="h-100 w-100 d-flex align-items-center justify-content-center text-muted opacity-50 small text-center px-2">
+                                            <i class="fa-solid fa-image fa-2x"></i>
                                         </div>
                                     </div>
-                                    <span class="text-danger" asp-validation-for="RowPrices"></span>
                                 </div>
 
-                                <div class="col-12 col-lg-6">
-                                    <label class="form-label fw-semibold">Множники категорій</label>
-                                    <div id="catMultipliersWrap" class="border rounded p-2 bg-white">
-                                        <div class="text-center py-3">
-                                            <div class="spinner-border text-primary spinner-border-sm" role="status"></div> Завантаження...
+                                <div class="flex-grow-1" style="min-width:0;">
+                                    <div class="mb-4">
+                                        <label class="form-label small fw-bold text-muted text-uppercase">Назва фільму</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-2 border-end-0 br-left-8 text-muted">
+                                                <i class="fa-solid fa-magnifying-glass"></i>
+                                            </span>
+                                            <input class="form-control border-2 border-start-0 br-right-8 shadow-none"
+                                                   list="movieList"
+                                                   id="movieTitleInput"
+                                                   name="movieTitle"
+                                                   placeholder="Почніть вводити назву..."
+                                                   autocomplete="off"
+                                                   value="@movieTitleValue" />
                                         </div>
+
+                                        <datalist id="movieList">
+                                            @foreach (var m in Model.Movies)
+                                            {
+                                                <option value="@m.Text" data-id="@m.Value"></option>
+                                            }
+                                        </datalist>
+
+                                        <span class="text-danger small" asp-validation-for="MovieId"></span>
                                     </div>
-                                    <span class="text-danger" asp-validation-for="CategoryMultipliers"></span>
+
+                                    <div>
+                                        <label class="form-label small fw-bold text-muted text-uppercase">Формат показу</label>
+                                        <select class="form-select border-2 br-8 shadow-none"
+                                                asp-for="PresentationType"
+                                                asp-items="Model.PresentationTypes"></select>
+                                        <span class="text-danger small" asp-validation-for="PresentationType"></span>
+                                    </div>
                                 </div>
+
                             </div>
+
+                        </div>
+
+                        <div class="card-footer bg-white border-top-0 p-4 p-lg-5 pt-0">
+                            <button class="btn btn-maroon w-100 py-3 fw-bold shadow-sm" type="submit">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ЗМІНИ
+                            </button>
                         </div>
                     </div>
-
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-
-                        <a class="btn btn-secondary"
-                           asp-action="Index">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            НАЗАД
-                        </a>
-
-                        <button class="btn btn-maroon" type="submit">
-                            <i class="fa-solid fa-check me-1"></i>
-                            ЗБЕРЕГТИ
-                        </button>
-
-                    </div>
-
-                </form>
+                </div>
             </div>
-        </div>
-
+        </form>
     </div>
 </section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script>
         (function () {
             const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
             const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
 
-            const initialRowPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RowPrices ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.RowPriceVm>()));
-            const initialCategoryMultipliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<Web.ViewModels.Admin.Sessions.SessionEditVm.CategoryMultiplierVm>()));
-
-            const pricingMetaUrl = '@Url.Action("PricingMeta", "Sessions")';
-
-            const rowWrap = document.getElementById('rowPricesWrap');
-            const catWrap = document.getElementById('catMultipliersWrap');
-            const hallSelect = document.getElementById('hallSelect');
-            const hiddenHallIdInput = document.querySelector('input[name="HallId"]');
-
-            const currentHallId = hiddenHallIdInput ? hiddenHallIdInput.value : (hallSelect ? hallSelect.value : 0);
-
-            const titleInput = document.getElementById('movieTitleInput');
-            const movieIdHidden = document.getElementById('movieIdHidden');
-            const list = document.getElementById('movieList');
-            const startInput = document.getElementById('StartTime');
-            const endInput = document.getElementById('EndTime');
-            const durationText = document.getElementById('movieDurationText');
-            const warn = document.getElementById('shortDurationWarn');
-            const posterImg = document.getElementById('posterImg');
-            const posterPlaceholder = document.getElementById('posterPlaceholder');
-
-            function buildMap(arr, keyProp, valProp) {
-                const map = new Map();
-                if (Array.isArray(arr)) {
-                    for (const x of arr) {
-                        const key = Number(x[keyProp] ?? x[keyProp.charAt(0).toUpperCase() + keyProp.slice(1)] ?? 0);
-                        const val = x[valProp] ?? x[valProp.charAt(0).toUpperCase() + valProp.slice(1)];
-                        if (key > 0 && val != null) map.set(key, val);
-                    }
-                }
-                return map;
-            }
-
-            const initRowMap = buildMap(initialRowPrices, 'rowNumber', 'basePrice');
-            const initCatMap = buildMap(initialCategoryMultipliers, 'category', 'multiplier');
-
-            function renderRowPrices(rows) {
-                if (!rowWrap) return;
-                if (!Array.isArray(rows) || rows.length === 0) {
-                    rowWrap.innerHTML = `<div class="text-muted small">Немає рядів.</div>`;
-                    return;
-                }
-
-                rowWrap.innerHTML = `
-                <table class="table table-sm align-middle mb-0">
-                  <thead><tr><th style="width:40%;">Ряд</th><th>Базова ціна</th></tr></thead>
-                  <tbody>
-                    ${rows.map((rowNumber, i) => {
-                        const rn = Number(rowNumber);
-                        const val = initRowMap.get(rn) ?? '100';
-                        return `
-                        <tr>
-                          <td class="text-muted">Ряд ${rn}</td>
-                          <td>
-                            <input type="hidden" name="RowPrices[${i}].RowNumber" value="${rn}" />
-                            <input class="form-control form-control-sm"
-                                   type="number" step="1" min="0"
-                                   name="RowPrices[${i}].BasePrice"
-                                   value="${val}" required />
-                          </td>
-                        </tr>`;
-                    }).join('')}
-                  </tbody>
-                </table>`;
-            }
-
-            function renderCategoryMultipliers(categories) {
-                if (!catWrap) return;
-                if (!Array.isArray(categories) || categories.length === 0) {
-                    catWrap.innerHTML = `<div class="text-muted small">Немає категорій.</div>`;
-                    return;
-                }
-
-                catWrap.innerHTML = `
-                <table class="table table-sm align-middle mb-0">
-                  <thead><tr><th style="width:55%;">Категорія</th><th>Множник</th></tr></thead>
-                  <tbody>
-                    ${categories.map((c, i) => {
-                        const id = Number(c.id);
-                        const title = String(c.title ?? id);
-                        const val = initCatMap.get(id) ?? '1';
-                        return `
-                        <tr>
-                          <td class="text-muted">${title}</td>
-                          <td>
-                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
-                            <input class="form-control form-control-sm"
-                                   type="number" step="0.1" min="0.1"
-                                   name="CategoryMultipliers[${i}].Multiplier"
-                                   value="${val}" required />
-                          </td>
-                        </tr>`;
-                    }).join('')}
-                  </tbody>
-                </table>`;
-            }
-
-            async function loadPricingMetaAndRender(hallId) {
-                const hid = Number(hallId || 0);
-                if (hid < 1) {
-                    rowWrap.innerHTML = `<div class="text-muted small">—</div>`;
-                    catWrap.innerHTML = `<div class="text-muted small">—</div>`;
-                    return;
-                }
-
-                try {
-                    const res = await fetch(pricingMetaUrl + '?hallId=' + encodeURIComponent(hid));
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    const meta = await res.json();
-
-                    renderRowPrices(meta.rows);
-                    renderCategoryMultipliers(meta.categories);
-                } catch (e) {
-                    console.error(e);
-                    rowWrap.innerHTML = `<div class="text-danger small">Помилка.</div>`;
-                    catWrap.innerHTML = `<div class="text-danger small">Помилка.</div>`;
-                }
-            }
+            const els = {
+                titleInput: document.getElementById('movieTitleInput'),
+                movieIdHidden: document.getElementById('movieIdHidden'),
+                movieList: document.getElementById('movieList'),
+                startInput: document.getElementById('StartTime'),
+                endInput: document.getElementById('EndTime'),
+                durationText: document.getElementById('movieDurationText'),
+                warn: document.getElementById('shortDurationWarn'),
+                posterImg: document.getElementById('posterImg'),
+                posterPlaceholder: document.getElementById('posterPlaceholder')
+            };
 
             function posterUrl(path) {
                 if (!path) return '';
-                if (path.startsWith('http')) return path;
-                return `https://image.tmdb.org/t/p/w154${path.startsWith('/') ? path : '/' + path}`;
+                const p = String(path);
+                if (p.startsWith('http')) return p;
+                return `https://image.tmdb.org/t/p/w154${p.startsWith('/') ? p : '/' + p}`;
             }
 
-            function setPoster(movieId) {
-                const path = moviePosters[Number(movieId || 0)];
-                const url = posterUrl(path);
-                if (!url) {
-                    posterImg.classList.add('d-none');
-                    posterPlaceholder.classList.remove('d-none');
-                } else {
-                    posterImg.src = url;
-                    posterImg.classList.remove('d-none');
-                    posterPlaceholder.classList.add('d-none');
+            function updateUIForMovie() {
+                const val = (els.titleInput?.value || '').trim();
+                let id = 0;
+
+                if (els.movieList) {
+                    const opt = Array.from(els.movieList.options).find(o => o.value === val);
+                    id = Number(opt ? opt.dataset.id : 0);
                 }
-            }
 
-            function findSelectedMovieIdByTitle() {
-                const val = (titleInput.value || '').trim();
-                const opt = Array.from(list.options).find(o => o.value === val);
-                return opt ? (opt.dataset.id || "0") : "0";
-            }
+                if (els.movieIdHidden) els.movieIdHidden.value = String(id);
 
-            function updateUIForMovie(movieId) {
-                const id = Number(movieId || 0);
-                const dur = movieDurations[id];
-                durationText.textContent = (dur > 0) ? `Тривалість: ${dur} хв` : "Тривалість: —";
-                setPoster(id);
+                const path = moviePosters[id];
+                if (path && els.posterImg && els.posterPlaceholder) {
+                    els.posterImg.src = posterUrl(path);
+                    els.posterImg.classList.remove('d-none');
+                    els.posterPlaceholder.classList.add('d-none');
+                } else if (els.posterImg && els.posterPlaceholder) {
+                    els.posterImg.classList.add('d-none');
+                    els.posterPlaceholder.classList.remove('d-none');
+                }
 
-                const start = new Date(startInput.value);
-                const end = new Date(endInput.value);
-                if (dur > 0 && !isNaN(start) && !isNaN(end)) {
-                    const diffMins = (end - start) / 60000;
-                    if (diffMins < dur) {
-                        warn.classList.remove('d-none');
-                        warn.textContent = `Увага: час сеансу (${Math.round(diffMins)} хв) менший за фільм (${dur} хв).`;
+                const dur = Number(movieDurations[id] || 0);
+                if (els.durationText) els.durationText.textContent = dur > 0 ? `ТРИВАЛІСТЬ: ${dur} хв` : 'ТРИВАЛІСТЬ: —';
+
+                const startVal = els.startInput?.value;
+                const endVal = els.endInput?.value;
+
+                if (dur > 0 && startVal && endVal && els.warn) {
+                    const start = new Date(startVal);
+                    const end = new Date(endVal);
+
+                    if (!isNaN(start) && !isNaN(end)) {
+                        const diffMins = (end - start) / 60000;
+                        if (diffMins < dur) {
+                            els.warn.classList.remove('d-none');
+                            els.warn.textContent = `Час (${Math.round(diffMins)} хв) менший за фільм (${dur} хв)`;
+                        } else {
+                            els.warn.classList.add('d-none');
+                            els.warn.textContent = '';
+                        }
                     } else {
-                        warn.classList.add('d-none');
+                        els.warn.classList.add('d-none');
+                        els.warn.textContent = '';
                     }
-                } else {
-                    warn.classList.add('d-none');
+                } else if (els.warn) {
+                    els.warn.classList.add('d-none');
+                    els.warn.textContent = '';
                 }
             }
 
-            titleInput.addEventListener('input', () => {
-                const newId = findSelectedMovieIdByTitle();
-                movieIdHidden.value = newId;
-                updateUIForMovie(newId);
-            });
+            els.titleInput?.addEventListener('input', updateUIForMovie);
+            els.startInput?.addEventListener('change', updateUIForMovie);
+            els.endInput?.addEventListener('change', updateUIForMovie);
 
-            startInput.addEventListener('change', () => updateUIForMovie(movieIdHidden.value));
-            endInput.addEventListener('change', () => updateUIForMovie(movieIdHidden.value));
-
-            // Init
-            updateUIForMovie(movieIdHidden.value);
-            loadPricingMetaAndRender(currentHallId);
-
+            updateUIForMovie();
         })();
     </script>
 }
-

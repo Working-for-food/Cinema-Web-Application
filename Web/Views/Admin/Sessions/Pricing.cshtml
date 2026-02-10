@@ -1,26 +1,10 @@
 ﻿@using Infrastructure.Entities
 @using Web.ViewModels.Admin.Sessions
-@using System.Globalization
+@using System.Text.Json
 @model SessionPricingPageVm
 
 @{
     ViewData["Title"] = "Ціни сеансу";
-
-    string CatLabel(SeatCategory c) => c switch
-    {
-        SeatCategory.Standard => "Звичайні",
-        SeatCategory.Vip => "VIP",
-        SeatCategory.Accessible => "Інклюзивні",
-        _ => c.ToString()
-    };
-
-    string BadgeClass(SeatCategory c) => c switch
-    {
-        SeatCategory.Standard => "badge text-bg-light border text-dark",
-        SeatCategory.Vip => "badge text-bg-warning text-dark",
-        SeatCategory.Accessible => "badge text-bg-info text-dark",
-        _ => "badge text-bg-secondary"
-    };
 
     string SeatUiClass(SeatCategory c) => c switch
     {
@@ -30,275 +14,217 @@
     };
 
     var groupedSeats = (Model.Seats ?? new List<SessionPricingPageVm.SeatPriceVm>())
-        .GroupBy(s => s.Row)
-        .OrderBy(g => g.Key)
-        .ToList();
+        .GroupBy(s => s.Row).OrderBy(g => g.Key).ToList();
 
     var maxSeats = groupedSeats.Count == 0 ? 0 : groupedSeats.Max(g => g.Max(s => s.Number));
+
+    var jsonRowPrices = JsonSerializer.Serialize(Model.RowPrices ?? new List<SessionPricingPageVm.RowPriceVm>());
+    var jsonCategoryMultipliers = JsonSerializer.Serialize(Model.CategoryMultipliers ?? new List<SessionPricingPageVm.CategoryMultiplierVm>());
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">Ціни сеансу</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="mb-0 text-uppercase fw-bold text-dark" style="font-size: 1.05rem; letter-spacing: .06em;">
+                    Ціни сеансу
+                </h1>
+                <div class="text-muted small mt-1">
+                    <i class="fa-solid fa-film me-1"></i>@Model.MovieTitle
+                    <span class="mx-2">|</span>
+                    <i class="fa-solid fa-location-dot me-1"></i>@Model.CinemaName / @Model.HallName
+                </div>
+            </div>
+
+            <a class="btn btn-secondary shadow-sm br-8 px-3" asp-action="Index" asp-route-id="@Model.SessionId">
+                <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД
+            </a>
+        </div>
 
         @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
         {
-            <div class="alert alert-success mb-3">@ok</div>
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
         }
-
         @if (!ViewData.ModelState.IsValid)
         {
-            <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+            <div asp-validation-summary="All" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
         }
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-maroon text-white">
-                <h5 class="mb-0">
-                    <i class="fa-solid fa-coins me-2"></i>
-                    Управління цінами
-                </h5>
-            </div>
-
-            <div class="card-body p-3 p-md-4" style="background-color:#fff9e6;">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
-
-                    <div>
-                        <div class="small text-muted mb-1">
-                            <i class="fa-solid fa-location-dot me-1"></i>
-                            @Model.CinemaName / @Model.HallName
-                            <span class="mx-2">|</span>
-                            <i class="fa-solid fa-film me-1"></i>
-                            <strong>@Model.MovieTitle</strong>
-                        </div>
-
-                        <div class="text-muted">
-                            Тут можна змінити базові тарифи та перевірити фінальні ціни на схемі залу нижче.
-                        </div>
-                    </div>
-
-                    <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
-
-                        <a asp-controller="Sessions"
-                           asp-action="Index"
-                           class="btn btn-secondary">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            НАЗАД
-                        </a>
-
-                        <a asp-action="Edit"
-                           asp-route-id="@Model.SessionId"
-                           class="btn btn-maroon">
-                            <i class="fa-solid fa-pen-to-square me-1"></i>
-                            РЕДАГУВАТИ
-                        </a>
-
-                        <a asp-action="Details"
-                           asp-route-id="@Model.SessionId"
-                           class="btn btn-maroon">
-                            <i class="fa-solid fa-circle-info me-1"></i>
-                            ДЕТАЛІ
-                        </a>
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <form asp-action="Pricing" asp-route-id="@Model.SessionId" method="post" id="pricingForm">
+        <form asp-action="Pricing" asp-route-id="@Model.SessionId" method="post" id="pricingForm" novalidate>
             @Html.AntiForgeryToken()
 
-            <div class="card shadow-sm mb-4" style="background-color:#fff9e6;">
-                <div class="card-header bg-maroon text-white">
-                    <h5 class="mb-0">
-                        <i class="fa-solid fa-receipt me-2"></i>
-                        1) Базові тарифи
-                    </h5>
-                </div>
+            <div class="row g-4 align-items-stretch">
 
-                <div class="card-body p-4">
-                    <div class="row g-4">
+                <div class="col-12 col-lg-4 d-flex align-self-start">
+                    <div class="card border-0 br-12 shadow-sm overflow-hidden flex-grow-1">
+                        <div class="card-body p-4 d-flex flex-column">
 
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-layer-group me-1"></i>
-                                Базова ціна за ряд
-                            </label>
-
-                            <div class="table-responsive border rounded bg-white">
-                                <table class="table table-sm table-hover mb-0 align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="ps-3">Ряд</th>
-                                            <th style="width:140px;">Ціна (грн)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @for (int i = 0; i < Model.RowPrices.Count; i++)
-                                        {
-                                            <tr>
-                                                <td class="ps-3 fw-semibold">Ряд @Model.RowPrices[i].RowNumber</td>
-                                                <td class="p-2">
-                                                    <input type="hidden"
-                                                           name="RowPrices[@i].RowNumber"
-                                                           value="@Model.RowPrices[i].RowNumber" />
-
-                                                    <input class="form-control form-control-sm price-input"
-                                                           name="RowPrices[@i].BasePrice"
-                                                           value="@Model.RowPrices[i].BasePrice.ToString("0.##", CultureInfo.InvariantCulture)"
-                                                           type="number" step="1" min="0"
-                                                           data-type="row-base"
-                                                           data-row-id="@Model.RowPrices[i].RowNumber"
-                                                           required />
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-muted">
-                                <i class="fa-solid fa-tags me-1"></i>
-                                Коефіцієнти категорій
-                            </label>
-
-                            <div class="table-responsive border rounded bg-white">
-                                <table class="table table-sm table-hover mb-0 align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="ps-3">Категорія</th>
-                                            <th style="width:120px;">X</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @for (int i = 0; i < Model.CategoryMultipliers.Count; i++)
-                                        {
-                                            var catEnum = (SeatCategory)Model.CategoryMultipliers[i].Category;
-                                            <tr>
-                                                <td class="ps-3">
-                                                    <span class="@BadgeClass(catEnum) me-2">●</span>
-                                                    <span class="fw-semibold">@CatLabel(catEnum)</span>
-                                                </td>
-                                                <td class="p-2">
-                                                    <input type="hidden"
-                                                           name="CategoryMultipliers[@i].Category"
-                                                           value="@Model.CategoryMultipliers[i].Category" />
-                                                    <input type="hidden"
-                                                           name="CategoryMultipliers[@i].Title"
-                                                           value="@Model.CategoryMultipliers[i].Title" />
-
-                                                    <input class="form-control form-control-sm multiplier-input"
-                                                           name="CategoryMultipliers[@i].Multiplier"
-                                                           value="@Model.CategoryMultipliers[i].Multiplier.ToString("0.##", CultureInfo.InvariantCulture)"
-                                                           type="number" step="0.1" min="0.1"
-                                                           data-type="cat-mult"
-                                                           data-cat-id="@Model.CategoryMultipliers[i].Category"
-                                                           required />
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
+                            <div class="mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-muted text-uppercase small mb-0 letter-spacing-1 pt-1 d-flex align-items-center gap-2 flex-wrap">
+                                    <i class="fa-solid fa-coins text-primary"></i>
+                                    <span class="text-truncate" style="min-width:0;">Налаштування цін</span>
+                                </h5>
                             </div>
 
-                            <div class="form-text small mt-2">
-                                <i class="fa-solid fa-circle-info me-1"></i>
-                                Фінальна ціна = Ціна ряду × Коефіцієнт
+                            <div class="p-3 br-10 border bg-light mb-3">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="d-inline-flex align-items-center justify-content-center br-10 bg-white border shadow-sm"
+                                         style="width:38px;height:38px;">
+                                        <i class="fa-solid fa-calculator text-primary"></i>
+                                    </div>
+                                    <div class="small text-dark lh-sm">
+                                        <div class="text-muted text-uppercase fw-bold mb-2" style="font-size:.72rem; letter-spacing:.06em;">
+                                            Логіка розрахунку
+                                        </div>
+                                        <ul class="mb-0 ps-3">
+                                            <li><strong>Ціна</strong> = База ряду × Множник категорії</li>
+                                            <li><strong>Ряди</strong>: задається базова ціна + винятки</li>
+                                            <li><strong>Категорії</strong>: коефіцієнти (напр. VIP x1.5)</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                    </div>
-                </div>
+                            <div class="mb-3">
+                                <div class="btn-group w-100" role="tablist"
+                                     style="--bs-btn-active-bg: rgba(13,110,253,.12);
+                                            --bs-btn-active-border-color: rgba(13,110,253,.35);
+                                            --bs-btn-active-color: var(--bs-primary);
+                                            --bs-btn-hover-border-color: rgba(13,110,253,.35);">
+                                    <button class="btn btn-sm fw-semibold btn-outline-secondary border-2 br-left-8 active"
+                                            id="tab-rows" data-bs-toggle="pill" data-bs-target="#pane-rows"
+                                            type="button" role="tab" aria-selected="true">
+                                        <i class="fa-solid fa-layer-group me-2"></i>Ряди
+                                    </button>
 
-                <div class="card-footer bg-transparent border-top-0">
-                    <button class="btn btn-maroon w-100" type="submit">
-                        <i class="fa-solid fa-floppy-disk me-1"></i>
-                        ЗБЕРЕГТИ ЦІНИ
-                    </button>
-                </div>
-            </div>
+                                    <button class="btn btn-sm fw-semibold btn-outline-secondary border-2 br-right-8"
+                                            id="tab-cats" data-bs-toggle="pill" data-bs-target="#pane-cats"
+                                            type="button" role="tab" aria-selected="false">
+                                        <i class="fa-solid fa-tags me-2"></i>Категорії
+                                    </button>
+                                </div>
+                            </div>
 
-            <div class="card shadow-sm" style="background-color:#fff9e6;">
-                <div class="card-header bg-maroon text-white">
-                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
-                        <h5 class="mb-0">
-                            <i class="fa-solid fa-chair me-2"></i>
-                            2) Попередній перегляд залу
-                        </h5>
+                            <div class="tab-content flex-grow-1" style="min-height:0;">
+                                <div class="tab-pane fade show active h-100" id="pane-rows" role="tabpanel" tabindex="0">
+                                    <div id="rowPricesUi"
+                                         class="bg-white border-2 br-10 overflow-auto p-3"
+                                         style="max-height: 420px; min-height: 220px;">
+                                        <div class="text-muted small text-center py-4">Завантаження...</div>
+                                    </div>
 
-                        <div class="d-flex flex-wrap gap-3 small align-items-center">
-                            @foreach (var cat in Enum.GetValues<SeatCategory>())
-                            {
-                                <span class="d-flex align-items-center">
-                                    <span class="@BadgeClass(cat) me-2"
-                                          style="width:12px; height:12px; display:inline-block; padding:0; border-radius:50%;"></span>
-                                    <span class="text-white-50">@CatLabel(cat)</span>
-                                </span>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body p-4">
-                    @if (groupedSeats.Count == 0)
-                    {
-                        <div class="alert alert-warning mb-0">
-                            Схема залу порожня. Спочатку налаштуйте місця в залі.
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="cinema-map-wrap">
-                            <div class="cinema-map">
-
-                                <div class="cinema-screen">
-                                    <div class="cinema-screen-arc"></div>
-                                    <div class="cinema-screen-title">ЕКРАН</div>
+                                    <div id="hiddenRowPrices"></div>
+                                    <span class="text-danger small" asp-validation-for="RowPrices"></span>
                                 </div>
 
-                                <div class="cinema-grid" style="--cols:@maxSeats;">
-                                    @foreach (var row in groupedSeats)
+                                <div class="tab-pane fade h-100" id="pane-cats" role="tabpanel" tabindex="0">
+                                    <div id="catMultipliersWrap"
+                                         class="bg-white border-2 br-10 overflow-auto p-3"
+                                         style="max-height: 420px; min-height: 220px;">
+                                        <div class="text-muted small text-center py-4">Завантаження...</div>
+                                    </div>
+
+                                    <span class="text-danger small" asp-validation-for="CategoryMultipliers"></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto pt-3 border-top">
+                                <button class="btn btn-maroon w-100 py-3 fw-bold shadow-sm" type="submit">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ЗМІНИ
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-8 d-flex">
+                    <div class="card border-0 br-12 shadow-sm overflow-hidden flex-grow-1">
+                        <div class="card-body p-0 d-flex flex-column h-100">
+
+                            <div class="p-4 border-bottom bg-white">
+                                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                    <div class="text-uppercase fw-bold text-dark" style="letter-spacing:.06em; font-size:.9rem;">
+                                        Попередній перегляд
+                                    </div>
+
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="d-inline-flex align-items-center gap-2 px-2 py-1 br-8 border bg-light">
+                                            <span class="d-inline-block br-4 seat-bg-std" style="width:12px;height:12px;"></span>
+                                            <span class="small text-muted fw-semibold">Стандарт</span>
+                                        </span>
+                                        <span class="d-inline-flex align-items-center gap-2 px-2 py-1 br-8 border bg-light">
+                                            <span class="d-inline-block br-4 seat-bg-vip" style="width:12px;height:12px;"></span>
+                                            <span class="small text-muted fw-semibold">VIP</span>
+                                        </span>
+                                        <span class="d-inline-flex align-items-center gap-2 px-2 py-1 br-8 border bg-light">
+                                            <span class="d-inline-block br-4 seat-bg-acc" style="width:12px;height:12px;"></span>
+                                            <span class="small text-muted fw-semibold">Інклюзивні</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 flex-grow-1" style="min-height:0;">
+                                <div id="seatPreviewWrap" class="bg-white border-2 br-12 p-3 h-100" style="min-height: 420px;">
+                                    @if (groupedSeats.Count == 0)
                                     {
-                                        var seatsInRow = row.OrderBy(x => x.Number).ToList();
-
-                                        <div class="row-label">@row.Key</div>
-
-                                        @for (int s = 1; s <= maxSeats; s++)
-                                        {
-                                            var seat = seatsInRow.FirstOrDefault(x => x.Number == s);
-
-                                            if (seat == null)
-                                            {
-                                                <div class="seat seat-empty"></div>
-                                            }
-                                            else
-                                            {
-                                                var cat = (SeatCategory)seat.Category;
-                                                var price = seat.Price;
-
-                                                <div class="seat @SeatUiClass(cat)"
-                                                     title="Ряд @seat.Row, місце @s — @price.ToString("0") грн">
-                                                    <div class="seat-text">
-                                                        <div class="seat-no">@s</div>
-                                                        <div class="seat-price">@price.ToString("0")</div>
-                                                    </div>
+                                        <div class="text-muted small text-center py-4">
+                                            <i class="fa-solid fa-calendar-xmark me-2"></i>Схема залу порожня.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="cinema-map-wrap">
+                                            <div class="cinema-map">
+                                                <div class="cinema-screen">
+                                                    <div class="cinema-screen-arc"></div>
+                                                    <div class="cinema-screen-title">ЕКРАН</div>
                                                 </div>
-                                            }
-                                        }
+
+                                                <div class="cinema-grid" style="--cols:@maxSeats;">
+                                                    @foreach (var row in groupedSeats)
+                                                    {
+                                                        var seatsInRow = row.OrderBy(x => x.Number).ToList();
+                                                        <div class="row-label">@row.Key</div>
+
+                                                        @for (int s = 1; s <= maxSeats; s++)
+                                                        {
+                                                            var seat = seatsInRow.FirstOrDefault(x => x.Number == s);
+                                                            if (seat == null)
+                                                            {
+                                                                <div class="seat seat-empty"></div>
+                                                            }
+                                                            else
+                                                            {
+                                                                var cat = (SeatCategory)seat.Category;
+                                                                <div class="seat @SeatUiClass(cat) js-seat-item"
+                                                                     data-row="@seat.Row"
+                                                                     data-cat="@((int)seat.Category)"
+                                                                     data-seat="@s"
+                                                                     title="Ряд @seat.Row, місце @s">
+                                                                    <div class="seat-text">
+                                                                        <div class="seat-no">@s</div>
+                                                                        <div class="seat-price js-seat-price">@seat.Price.ToString("0")</div>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
                                     }
                                 </div>
-
                             </div>
+
                         </div>
-                    }
+                    </div>
                 </div>
+
             </div>
-
         </form>
-
     </div>
 </section>
 
@@ -306,53 +232,286 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const rowInputs = document.querySelectorAll('input[data-type="row-base"]');
-            const multInputs = document.querySelectorAll('input[data-type="cat-mult"]');
-            const priceDisplays = document.querySelectorAll('.seat-price-display');
+        (function () {
+            const existingRowPrices = @Html.Raw(jsonRowPrices);
+            const existingCatMultipliers = @Html.Raw(jsonCategoryMultipliers);
 
-            const rowPrices = new Map();
-            const catMults = new Map();
+            const seatItems = document.querySelectorAll('.js-seat-item');
+            const rowUi = document.getElementById('rowPricesUi');
+            const hiddenContainer = document.getElementById('hiddenRowPrices');
+            const catWrap = document.getElementById('catMultipliersWrap');
 
-            function updateData() {
-                rowInputs.forEach(input => {
-                    const rowId = parseInt(input.dataset.rowId);
-                    const val = parseFloat(input.value);
-                    rowPrices.set(rowId, isNaN(val) ? 0 : val);
+            const allRows = Array.from(new Set(
+                Array.from(seatItems).map(el => Number(el.dataset.row))
+            )).sort((a, b) => a - b);
+
+            const pricesMap = new Map();
+            let currentBasePrice = 100;
+            const catMap = new Map();
+
+            if (Array.isArray(existingCatMultipliers)) {
+                existingCatMultipliers.forEach(x => {
+                    catMap.set(Number(x.Category), Number(x.Multiplier));
                 });
-
-                multInputs.forEach(input => {
-                    const catId = parseInt(input.dataset.catId);
-                    const val = parseFloat(input.value);
-                    catMults.set(catId, isNaN(val) ? 1 : val);
-                });
-
-                recalcAll();
             }
 
-            function recalcAll() {
-                priceDisplays.forEach(display => {
-                    const r = parseInt(display.dataset.row);
-                    const c = parseInt(display.dataset.cat);
+            if (Array.isArray(existingRowPrices) && existingRowPrices.length > 0) {
+                const counts = {};
+                const normalized = existingRowPrices.map(p => ({
+                    row: Number(p.RowNumber),
+                    price: Number(p.BasePrice)
+                })).filter(x => x.row > 0);
 
-                    const base = rowPrices.get(r) || 0;
-                    const mult = catMults.get(c) || 1;
+                normalized.forEach(p => { counts[p.price] = (counts[p.price] || 0) + 1; });
+                const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                const mode = Number(sorted[0] ?? 100);
 
-                    const finalPrice = base * mult;
+                currentBasePrice = Number.isFinite(mode) ? mode : 100;
 
-                    const newText = finalPrice.toFixed(0);
-                    if (display.innerText !== newText) {
-                        display.style.opacity = '0.5';
-                        display.innerText = newText;
-                        setTimeout(() => display.style.opacity = '1', 150);
+                normalized.forEach(p => {
+                    if (p.price !== currentBasePrice) pricesMap.set(p.row, p.price);
+                });
+            }
+
+            function generateHiddenInputs() {
+                if (!hiddenContainer) return;
+
+                hiddenContainer.innerHTML = '';
+                allRows.forEach((r, index) => {
+                    const price = pricesMap.has(r) ? Number(pricesMap.get(r)) : Number(currentBasePrice);
+
+                    const inputRow = document.createElement('input');
+                    inputRow.type = 'hidden';
+                    inputRow.name = `RowPrices[${index}].RowNumber`;
+                    inputRow.value = String(r);
+
+                    const inputPrice = document.createElement('input');
+                    inputPrice.type = 'hidden';
+                    inputPrice.name = `RowPrices[${index}].BasePrice`;
+                    inputPrice.value = String(price);
+
+                    hiddenContainer.appendChild(inputRow);
+                    hiddenContainer.appendChild(inputPrice);
+                });
+            }
+
+            function renderRowUi() {
+                if (!rowUi) return;
+
+                let html = `
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted text-uppercase" for="basePriceInput">Базова ціна (грн)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-2 border-end-0 br-left-8">₴</span>
+                            <input type="number"
+                                   id="basePriceInput"
+                                   class="form-control border-2 border-start-0 br-right-8 shadow-none fw-bold"
+                                   value="${currentBasePrice}"
+                                   min="0" />
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Винятки</label>
+                        <div id="exceptionsContainer" class="d-flex flex-column gap-2 mb-2">
+                `;
+
+                if (pricesMap.size === 0) {
+                    html += `<div class="text-muted small fst-italic ms-1" id="noExMsg">Немає (всі ряди по ${currentBasePrice} грн)</div>`;
+                } else {
+                    const sortedRows = Array.from(pricesMap.keys()).sort((a, b) => a - b);
+                    sortedRows.forEach(row => {
+                        const price = Number(pricesMap.get(row));
+                        html += `
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="input-group input-group-sm flex-grow-1">
+                                    <span class="input-group-text bg-white border-2 border-end-0 br-left-8">₴</span>
+                                    <input type="number"
+                                           class="form-control border-2 border-start-0 shadow-none js-ex-price"
+                                           data-row="${row}"
+                                           value="${price}"
+                                           min="0" />
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger border-2 br-right-8 js-remove-ex"
+                                            data-row="${row}"
+                                            title="Видалити">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <span class="badge bg-light text-dark border fw-semibold"
+                                      style="min-width:72px; text-align:center;">
+                                    Ряд ${row}
+                                </span>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-2 br-10 border">
+                        <div class="d-flex gap-2">
+                            <select id="exceptionRowSelect" class="form-select form-select-sm border-2 br-8 shadow-none">
+                                <option value="">+ Ряд</option>
+                `;
+
+                allRows.forEach(r => {
+                    if (!pricesMap.has(r)) html += `<option value="${r}">Ряд ${r}</option>`;
+                });
+
+                html += `
+                            </select>
+                            <button type="button"
+                                    id="addExceptionBtn"
+                                    class="btn btn-sm btn-secondary text-nowrap br-8 px-3 shadow-sm">
+                                Додати
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                rowUi.innerHTML = html;
+
+                generateHiddenInputs();
+                attachRowEvents();
+                recalcVisualMap();
+            }
+
+            function attachRowEvents() {
+                document.getElementById('basePriceInput')?.addEventListener('input', function () {
+                    const val = Number(this.value);
+                    if (Number.isFinite(val) && val >= 0) {
+                        currentBasePrice = val;
+                        generateHiddenInputs();
+                        recalcVisualMap();
+
+                        const msg = document.getElementById('noExMsg');
+                        if (msg) msg.textContent = `Немає (всі ряди по ${currentBasePrice} грн)`;
                     }
                 });
+
+                document.getElementById('addExceptionBtn')?.addEventListener('click', function () {
+                    const select = document.getElementById('exceptionRowSelect');
+                    const row = Number(select?.value || 0);
+                    if (row > 0) {
+                        pricesMap.set(row, currentBasePrice);
+                        renderRowUi();
+                    }
+                });
+
+                document.querySelectorAll('.js-remove-ex').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const row = Number(this.dataset.row || 0);
+                        if (row > 0) {
+                            pricesMap.delete(row);
+                            renderRowUi();
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.js-ex-price').forEach(input => {
+                    input.addEventListener('input', function () {
+                        const row = Number(this.dataset.row || 0);
+                        const val = Number(this.value);
+                        if (row > 0 && Number.isFinite(val) && val >= 0) {
+                            pricesMap.set(row, val);
+                            generateHiddenInputs();
+                            recalcVisualMap();
+                        }
+                    });
+                });
             }
 
-            rowInputs.forEach(i => i.addEventListener('input', updateData));
-            multInputs.forEach(i => i.addEventListener('input', updateData));
+            function renderCats() {
+                if (!catWrap) return;
 
-            updateData();
-        });
+                if (!Array.isArray(existingCatMultipliers) || existingCatMultipliers.length === 0) {
+                    catWrap.innerHTML = `<div class="text-muted small text-center py-3">Немає категорій</div>`;
+                    return;
+                }
+
+                catWrap.innerHTML = `
+                    <table class="table table-sm table-borderless align-middle mb-0">
+                        <thead class="table-light border-bottom">
+                            <tr>
+                                <th class="ps-3 small text-secondary">Категорія</th>
+                                <th class="text-end pe-3 small text-secondary">x</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${existingCatMultipliers.map((c, i) => {
+                                const id = Number(c.Category);
+                                const title = String(c.Title ?? `#${id}`);
+                                const val = catMap.has(id) ? Number(catMap.get(id)) : 1;
+
+                                if (!catMap.has(id)) catMap.set(id, val);
+
+                                return `
+                                    <tr>
+                                        <td class="ps-3 small fw-bold text-muted text-truncate" style="max-width: 200px;" title="${title}">
+                                            ${title}
+                                        </td>
+                                        <td class="text-end pe-2 py-1">
+                                            <input type="hidden" name="CategoryMultipliers[${i}].Category" value="${id}" />
+                                            <input type="hidden" name="CategoryMultipliers[${i}].Title" value="${title}" />
+                                            <input class="form-control form-control-sm text-end js-cat-mult border-2 br-8 shadow-none"
+                                                   style="width:90px; display:inline;"
+                                                   type="number" step="0.1" min="0.1"
+                                                   data-cat="${id}"
+                                                   name="CategoryMultipliers[${i}].Multiplier"
+                                                   value="${val}" />
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                catWrap.querySelectorAll('.js-cat-mult').forEach(input => {
+                    input.addEventListener('input', function () {
+                        const cid = Number(this.dataset.cat);
+                        const mult = Number(this.value);
+                        if (Number.isFinite(cid) && Number.isFinite(mult) && mult > 0) {
+                            catMap.set(cid, mult);
+                            recalcVisualMap();
+                        }
+                    });
+                });
+            }
+
+            function calcFinal(row, catId) {
+                const base = pricesMap.has(row) ? Number(pricesMap.get(row)) : Number(currentBasePrice);
+                const mult = catMap.has(catId) ? Number(catMap.get(catId)) : 1;
+                return Math.round(base * mult);
+            }
+
+            function recalcVisualMap() {
+                seatItems.forEach(el => {
+                    const r = Number(el.dataset.row);
+                    const c = Number(el.dataset.cat);
+                    const s = el.dataset.seat || (el.querySelector('.seat-no')?.textContent || '');
+
+                    const final = calcFinal(r, c);
+
+                    const priceEl = el.querySelector('.js-seat-price');
+                    if (priceEl && priceEl.textContent !== String(final)) {
+                        priceEl.style.opacity = '0.5';
+                        priceEl.textContent = String(final);
+                        setTimeout(() => priceEl.style.opacity = '1', 150);
+                    }
+
+                    el.title = `Ряд ${r}, місце ${s} — ${final} грн`;
+                });
+            }
+
+            renderRowUi();
+            renderCats();
+            generateHiddenInputs();
+            recalcVisualMap();
+        })();
     </script>
 }

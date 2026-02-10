@@ -6,19 +6,20 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container-fluid">
+    <div class="container">
 
-        <h1 class="section-title text-center mb-5">@(isCreate ? "Створити зал" : "Редагувати зал")</h1>
+        <div class="text-center mb-5">
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">
+                @(isCreate ? "Створення залу" : "Редагування залу")
+            </h1>
+            <p class="text-muted small text-uppercase fw-semibold">
+                @(isCreate ? "Вкажіть параметри для нового залу" : "Змініть назву або приналежність залу")
+            </p>
+        </div>
 
-        <div class="card shadow-sm col-lg-8 mx-auto">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fa-solid @(isCreate ? "fa-plus" : "fa-pen-to-square") me-2"></i>
-                    @(isCreate ? "Реєстрація залу" : "Редагування залу")
-                </h5>
-            </div>
-
-            <div class="card-body p-4">
+        <div class="card shadow-sm border-0 col-lg-8 mx-auto br-12 overflow-hidden">
+            
+            <div class="card-body p-4 p-lg-5">
                 <form asp-area="Admin"
                       asp-controller="Halls"
                       asp-action="@(isCreate ? "Create" : "Edit")"
@@ -31,50 +32,47 @@
                         <input type="hidden" asp-for="Id" />
                     }
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="CinemaId" class="form-label text-muted">
-                            <i class="fa-solid fa-film me-1"></i>
-                            Кінотеатр
+                    <div class="mb-4">
+                        <label asp-for="CinemaId" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-film me-1"></i> Кінотеатр
                         </label>
 
                         <select asp-for="CinemaId"
                                 asp-items="Model.Cinemas"
-                                class="form-select">
+                                class="form-select border-2 br-8 shadow-none">
                             <option value="">Оберіть кінотеатр</option>
                         </select>
 
-                        <span asp-validation-for="CinemaId" class="text-danger"></span>
+                        <span asp-validation-for="CinemaId" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Name" class="form-label text-muted">
-                            <i class="fa-solid fa-chair me-1"></i>
-                            Назва залу
+                    <div class="mb-4">
+                        <label asp-for="Name" class="form-label small fw-bold text-muted text-uppercase">
+                            <i class="fa-solid fa-chair me-1"></i> Назва залу
                         </label>
 
                         <input asp-for="Name"
-                               class="form-control"
+                               class="form-control form-control-lg border-2 br-8 shadow-none"
                                placeholder="Наприклад: Зал №1 / IMAX / VIP"
                                autocomplete="off" />
 
-                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
                         <a asp-area="Admin"
                            asp-controller="Halls"
                            asp-action="Index"
                            asp-route-cinemaId="@Model.CinemaId"
-                           class="btn btn-secondary">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            Назад
+                           class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
+                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
                         </a>
 
-                        <button type="submit" class="btn btn-maroon">
-                            <i class="fa-solid fa-floppy-disk me-1"></i>
-                            @(isCreate ? "Створити зал" : "Зберегти зміни")
+                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> 
+                            @(isCreate ? "СТВОРИТИ ЗАЛ" : "ЗБЕРЕГТИ ЗМІНИ")
                         </button>
                     </div>
 
