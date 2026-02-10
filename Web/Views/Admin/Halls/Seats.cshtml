@@ -45,8 +45,8 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="hallId" value="@Model.HallId" />
                         <input type="hidden" name="allowRegenerate" value="true" />
-                        <button type="submit" class="btn btn-danger-second px-4">
-                            <i class="fa-solid fa-trash-can me-2"></i>СТВОРЯТИ ЗАНОВО
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="fa-solid fa-trash-can me-2"></i>ВИДАЛИТИ ТА СТВОРИТИ ЗАНОВО
                         </button>
                     </form>
                 }
@@ -254,77 +254,70 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        function confirmRegenerate() {
-            return confirm("Створення заново видалить існуючі місця. Продовжити?");
-        }
-
-        (function initSeatCategoryToggles() {
+        document.addEventListener('DOMContentLoaded', () => {
             const buttons = document.querySelectorAll('.seat-toggle');
-            if (!buttons || buttons.length === 0) return;
-
+            if (!buttons.length) return;
+            
             const cycle = [0, 1, 2];
-
+            
             function nextCat(v) {
-                const idx = cycle.indexOf(parseInt(v, 10));
+                const num = parseInt(v ?? '0', 10);
+                const idx = cycle.indexOf(num);
                 return cycle[(idx + 1) % cycle.length];
             }
-
+            
             function applyVisual(btn, cat) {
                 btn.classList.remove('seat-bg-std', 'seat-bg-vip', 'seat-bg-acc');
+                
+                if (cat === 0) { btn.classList.add('seat-bg-std'); }
+                else if (cat === 1) { btn.classList.add('seat-bg-vip'); }
+                else { btn.classList.add('seat-bg-acc'); }
 
-                if (cat === 0) {
-                    btn.classList.add('seat-bg-std');
-                    btn.title = 'Звичайні';
-                } else if (cat === 1) {
-                    btn.classList.add('seat-bg-vip');
-                    btn.title = 'VIP';
-                } else if (cat === 2) {
-                    btn.classList.add('seat-bg-acc');
-                    btn.title = 'Інклюзивні';
-                }
-
-                btn.dataset.cat = cat.toString();
+                btn.dataset.cat = String(cat);
             }
 
             buttons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const next = nextCat(btn.dataset.cat);
-                    applyVisual(btn, next);
-                });
-            });
-        })();
+                btn.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();    
+                    e.stopPropagation();
 
-        function buildSeatCategoryChanges() {
+                    const current = btn.dataset.cat ?? btn.dataset.origCat ?? '0';
+                    const next = nextCat(current);
+                    applyVisual(btn, next);
+            
+                    btn.blur();            
+                }, { passive: false });
+              });
+            });
+            
+            function buildSeatCategoryChanges() {
             const container = document.getElementById('seatChanges');
             if (!container) return true;
             container.innerHTML = '';
 
             const changed = Array.from(document.querySelectorAll('.seat-toggle'))
-                .filter(b => b.dataset.cat !== b.dataset.origCat)
-                .map(b => ({ id: b.dataset.seatId, cat: b.dataset.cat }));
+            .filter(b => (b.dataset.cat ?? b.dataset.origCat) !== b.dataset.origCat)
+            .map(b => ({ id: b.dataset.seatId, cat: b.dataset.cat }));
 
             if (changed.length === 0) {
                 alert('Змін не знайдено. Спочатку змініть категорію хоча б одного місця.');
                 return false;
             }
-
+            
             for (let i = 0; i < changed.length; i++) {
-                const seatId = changed[i].id;
-                const cat = changed[i].cat;
-
                 const inp1 = document.createElement('input');
                 inp1.type = 'hidden';
                 inp1.name = `changes[${i}].SeatId`;
-                inp1.value = seatId;
+                inp1.value = changed[i].id;
                 container.appendChild(inp1);
-
+                
                 const inp2 = document.createElement('input');
                 inp2.type = 'hidden';
                 inp2.name = `changes[${i}].Category`;
-                inp2.value = cat;
+                inp2.value = changed[i].cat;
                 container.appendChild(inp2);
             }
-
+            
             return true;
         }
     </script>

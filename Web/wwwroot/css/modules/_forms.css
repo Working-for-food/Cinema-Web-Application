@@ -134,3 +134,24 @@ textarea.form-control {
     background: rgba(99,102,241,.10) !important;
     color: var(--text) !important;
 }
+
+.form-switch .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    cursor: pointer;
+}
+
+.input-group-text {
+    font-size: 1rem;
+    padding-left: 1.25rem;
+    padding-right: 1rem;
+}
+
+.form-control-lg {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #6366f1;
+}
