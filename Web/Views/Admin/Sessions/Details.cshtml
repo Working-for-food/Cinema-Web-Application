@@ -97,7 +97,7 @@
 
                         <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Скасувати цей сеанс?');">
                             @Html.AntiForgeryToken()
-                            <button class="btn btn-danger-second px-4 py-2 fw-bold" type="submit">
+                            <button class="btn btn-danger px-4 py-2 fw-bold" type="submit">
                                 <i class="fa-solid fa-ban me-2"></i> СКАСУВАТИ
                             </button>
                         </form>

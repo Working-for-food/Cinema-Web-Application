@@ -1,6 +1,4 @@
-﻿/* _base.css (Soft UI / Modern Enterprise 2026) */
-
-:root {
+﻿:root {
     /* Typography */
     --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     /* Palette */
@@ -51,31 +49,4 @@ html, body {
 main {
     flex: 1 0 auto;
     min-height: 0;
-}
-
-.container {
-    max-width: 1400px;
-    padding: 0 20px;
-    margin: 0 auto;
-}
-
-.container-fluid {
-    max-width: 1280px;
-    padding: 0 20px;
-    margin: 0 auto;
-}
-
-/* Seats page background: subtle, “airy”, minimal */
-.seats-page {
-    background: radial-gradient(1200px 600px at 10% 10%, rgba(99, 102, 241, .10), transparent 60%), radial-gradient(900px 500px at 90% 0%, rgba(15, 23, 42, .05), transparent 55%), linear-gradient(180deg, #FAFBFF 0%, #F6F8FD 100%);
-    min-height: 100%;
-}
-
-/* Backward compatibility: keep name, new accent color */
-.text-maroon {
-    color: var(--accent);
-}
-
-.text-accent {
-    color: var(--accent);
 }
