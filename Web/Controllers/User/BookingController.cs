@@ -6,6 +6,7 @@ using Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using QRCoder;
 using Microsoft.EntityFrameworkCore;
 using Web.ViewModels;
 
@@ -41,9 +42,6 @@ public class BookingController : Controller
         _ => "2D"
     };
 
-    /// <summary>
-    /// Формує повний URL постера (TMDB або вже готовий URL)
-    /// </summary>
     private static string? BuildPosterUrl(string? posterPath)
     {
         if (string.IsNullOrWhiteSpace(posterPath))
@@ -211,5 +209,19 @@ public class BookingController : Controller
         }
 
         return RedirectToAction(nameof(My));
+    }
+
+    [HttpGet]
+    public IActionResult GenerateQr(string text)
+    {
+        using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+        {
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+            using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
+            {
+                byte[] qrCodeImage = qrCode.GetGraphic(20);
+                return File(qrCodeImage, "image/png");
+            }
+        }
     }
 }
