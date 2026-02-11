@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="/css/qr-code.css">
 </head>
 <body>
 
@@ -43,101 +44,6 @@
         </div>
     </div>
 
-    <style>
-        .ticket-card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 24px;
-            width: 280px;
-            position: relative;
-            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.15), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
-            border: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin: 30px auto;
-        }
-
-        .ticket-divider {
-            width: 100%;
-            height: 1px;
-            border-bottom: 2px dashed #e2e8f0;
-            margin: 16px 0;
-            position: relative;
-        }
-
-            .ticket-divider::before, .ticket-divider::after {
-                content: '';
-                position: absolute;
-                width: 20px;
-                height: 20px;
-                background-color: #f8fafc;
-                border-radius: 50%;
-                top: -10px;
-                border: 1px solid #e2e8f0;
-            }
-
-            .ticket-divider::before {
-                left: -35px;
-                border-right-color: transparent;
-            }
-
-            .ticket-divider::after {
-                right: -35px;
-                border-left-color: transparent;
-            }
-
-        .seat-info {
-            font-size: 22px;
-            font-weight: 800;
-            color: #6366f1;
-            margin-bottom: 4px;
-        }
-
-        .row-info {
-            font-size: 14px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-        }
-
-        .qr-placeholder {
-            padding: 5px;
-            background: white;
-            border-radius: 8px;
-        }
-
-            .qr-placeholder img {
-                display: block;
-                margin: 0 auto;
-            }
-
-        .carousel-control-prev-icon,
-        .carousel-control-next-icon {
-            filter: invert(0.3) sepia(1) saturate(3) hue-rotate(210deg);
-            width: 2rem;
-            height: 2rem;
-        }
-
-        .carousel-control-prev, .carousel-control-next {
-            width: 15%;
-            opacity: 0.5;
-            transition: opacity 0.3s;
-        }
-
-            .carousel-control-prev:hover, .carousel-control-next:hover {
-                opacity: 1;
-            }
-
-            /* ЦЕЙ КОД ПРИХОВУЄ СТРІЛКУ, ЯКЩО ГОРТАТИ НІКУДИ */
-            .carousel-control-prev.disabled,
-            .carousel-control-next.disabled {
-                opacity: 0;
-                pointer-events: none;
-            }
-    </style>
 
     <script>
         var qrModalInstance = null;
