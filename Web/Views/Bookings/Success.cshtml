@@ -5,148 +5,58 @@
     var dateText = Model.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
 }
 
-<style>
-    .wrap {
-        max-width: 700px;
-        margin: 40px auto;
-        text-align: center;
-    }
+<section class="py-5 gray-bg">
+    <div class="container">
+        <div class="text-center mb-4">
+            <div class="icon-badge bg-success text-white shadow-sm mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-check fa-2xl"></i>
+            </div>
 
-    .check {
-        width: 72px;
-        height: 72px;
-        margin: 0 auto 16px;
-        border-radius: 50%;
-        background: #e8f5e9;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
-        color: #2e7d32;
-        border: 2px solid #c8e6c9;
-    }
-
-    .card {
-        border: 1px solid #e5e5e5;
-        border-radius: 14px;
-        padding: 20px 22px;
-        background: #fff;
-        margin-top: 16px;
-        text-align: left;
-    }
-
-    .title {
-        text-align: center;
-        font-size: 22px;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    .sub {
-        text-align: center;
-        color: #666;
-        margin-bottom: 18px;
-    }
-
-    .row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 8px 0;
-        border-bottom: 1px dashed #eee;
-    }
-
-        .row:last-child {
-            border-bottom: none;
-        }
-
-    .label {
-        color: #555;
-    }
-
-    .value {
-        font-weight: 600;
-    }
-
-    .seats {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 10px;
-    }
-
-    .seat {
-        padding: 6px 10px;
-        border-radius: 10px;
-        background: #f8f9fa;
-        border: 1px solid #d6d6d6;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .actions {
-        margin-top: 18px;
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-    }
-
-    .btn {
-        padding: 10px 18px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-    .btn-primary {
-        background: #198754;
-        color: #fff;
-    }
-
-    .btn-secondary {
-        background: #f1f1f1;
-        color: #333;
-        border: 1px solid #ddd;
-    }
-</style>
-
-<div class="wrap">
-    <div class="check">✓</div>
-
-    <div class="title">Booking confirmed</div>
-    <div class="sub">Your seats have been successfully reserved</div>
-
-    <div class="card">
-        <div class="row">
-            <div class="label">Booking</div>
-            <div class="value">#@Model.BookingId</div>
+            <h1 class="section-title display-5 fw-bold text-dark text-uppercase">Бронювання підтверджено</h1>
+            <p class="text-muted small text-uppercase fw-bold opacity-75 letter-spacing-1">Ваші місця було успішно зарезервовано</p>
         </div>
 
-        <div class="row">
-            <div class="label">Date</div>
-            <div class="value">@dateText</div>
-        </div>
+        <div class="card shadow-sm border-0 col-lg-6 mx-auto br-12 overflow-hidden bg-white">
+            <div class="card-body p-4 p-lg-5">
 
-        <div class="row">
-            <div class="label">Total</div>
-            <div class="value">@Model.TotalAmount</div>
-        </div>
+                <div class="info-list">
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="fa-solid fa-hashtag me-2 opacity-50"></i>Бронювання</span>
+                        <span class="fw-bold text-dark fs-5">#@Model.BookingId</span>
+                    </div>
 
-        <div class="row" style="align-items:flex-start;">
-            <div class="label">Seats</div>
-            <div class="value">
-                <div class="seats">
-                    @foreach (var s in Model.Seats)
-                    {
-                        <span class="seat">@s</span>
-                    }
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="fa-solid fa-calendar-day me-2 opacity-50"></i>Дата та час</span>
+                        <span class="fw-bold text-dark">@dateText</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="fa-solid fa-coins me-2 opacity-50"></i>Сума до сплати</span>
+                        <span class="fw-bold text-primary fs-5">@Model.TotalAmount.ToString("F2") грн</span>
+                    </div>
+
+                    <div class="py-3">
+                        <span class="text-muted small text-uppercase fw-bold d-block mb-3"><i class="fa-solid fa-chair me-2 opacity-50"></i>Обрані місця</span>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var s in Model.Seats)
+                            {
+                                <span class="badge bg-light text-dark border px-3 py-2 br-8 fw-bold">
+                                    @s
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-3 mt-4 pt-4 border-top">
+                    <a asp-action="My" class="btn btn-maroon flex-grow-1 py-3 fw-bold text-uppercase shadow-sm">
+                        <i class="fa-solid fa-ticket me-2"></i> Мої квитки
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary flex-grow-1 py-3 fw-bold text-uppercase">
+                        <i class="fa-solid fa-house me-2"></i> На головну
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="actions">
-        <a asp-action="My" class="btn btn-primary">My bookings</a>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Home</a>
-    </div>
-</div>
+</section>
