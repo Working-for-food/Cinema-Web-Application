@@ -82,7 +82,8 @@
                 @foreach (var m in Model.Movies)
                 {
                     <div class="col-12 col-md-6">
-                        <div class="card shadow-sm border-0 br-12 overflow-hidden schedule-movie-card h-100">
+                        <div class="card shadow-sm border-0 br-12 overflow-hidden schedule-movie-card h-100 js-movie-card"
+                             data-details-url="@($"/movies/{m.MovieId}")">
                             <div class="row g-0 h-100">
                                 <div class="col-auto">
                                     <div class="session-poster-wrap schedule-poster">
@@ -147,10 +148,40 @@
           function sync() {
             const has = !!(select.value && String(select.value).trim());
             if (btn) btn.disabled = !has;
-            if (has) form.submit(); // автооновлення після вибору
+            if (has) form.submit();
           }
 
           select.addEventListener('change', sync);
         })();
     </script>
+    <script>
+        (function () {
+          document.addEventListener('click', function (e) {
+            // якщо клік по тайм-слоту — нічого не робимо (він сам веде на Booking/Create)
+            if (e.target.closest('.schedule-time')) return;
+            // якщо клік по іншому лінку всередині карточки теж
+            if (e.target.closest('a')) return;
+
+            const card = e.target.closest('.js-movie-card');
+            if (!card) return;
+
+            const url = card.getAttribute('data-details-url');
+            if (url) window.location.href = url;
+          });
+
+          // (опційно) курсор/доступність
+          document.querySelectorAll('.js-movie-card').forEach(card => {
+            card.setAttribute('role', 'link');
+            card.setAttribute('tabindex', '0');
+            card.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const url = card.getAttribute('data-details-url');
+                if (url) window.location.href = url;
+              }
+            });
+          });
+        })();
+    </script>
+
 }
