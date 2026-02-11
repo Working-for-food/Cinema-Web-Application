@@ -198,6 +198,7 @@ using (var scope = app.Services.CreateScope())
 
         await CountrySeeder.SeedAsync(db);
         await MovieSessionSeeder.SeedAsync(db);
+        await CountryUkNameSeeder.SeedAsync(db);
 
         logger.LogInformation("Countries seeded/updated.");
 

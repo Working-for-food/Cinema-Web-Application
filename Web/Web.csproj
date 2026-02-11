@@ -27,5 +27,13 @@
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
+	<ItemGroup>
+		<None Include="..\Infrastructure\Data\Seed\allcountry.json"
+			  Link="Data\Seed\allcountry.json"
+			  CopyToOutputDirectory="PreserveNewest" />
 
+		<None Include="..\Infrastructure\Data\Seed\allcountryUK.json"
+			  Link="Data\Seed\allcountryUK.json"
+			  CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 </Project>
