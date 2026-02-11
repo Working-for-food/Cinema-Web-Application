@@ -108,7 +108,12 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fa-solid fa-address-card me-2"></i> Мій Профіль</a></li>
-                                    
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="SavedMovies" asp-action="My">
+                                            <i class="fa-solid fa-bookmark me-2"></i> Мої збережені
+                                        </a>
+                                    </li>
+
                                     @if (isActualAdmin)
                                     {
                                         <li><hr class="dropdown-divider"></li>

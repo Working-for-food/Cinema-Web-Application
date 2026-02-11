@@ -16,6 +16,8 @@ public sealed class MovieDetailsVm
     public string? RottenTomatoes { get; set; }
     public string? Imdb { get; set; }
     public int? TmdbId { get; set; }
+    public bool IsSaved { get; set; }
+
     public IReadOnlyList<RelatedMovieVm> RelatedMovies { get; set; } = Array.Empty<RelatedMovieVm>();
 
 

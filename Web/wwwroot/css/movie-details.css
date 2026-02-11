@@ -1,4 +1,12 @@
-﻿.btn-details {
+﻿
+
+    .btn-details:hover {
+        filter: brightness(0.95);
+        color: #fff;
+        background: linear-gradient(135deg, #3949ab, #303f9f);
+        text-decoration: none;
+    }
+.btn-details {
     display: block;
     width: 100%;
     background: linear-gradient(135deg, #3f51b5, #3949ab);
@@ -9,13 +17,6 @@
     font-weight: 800;
     text-decoration: none;
 }
-
-    .btn-details:hover {
-        filter: brightness(0.95);
-        color: #fff;
-        background: linear-gradient(135deg, #3949ab, #303f9f);
-        text-decoration: none;
-    }
 
 .btn-secondary {
     display: inline-flex;
@@ -29,6 +30,8 @@
     color: #111;
     background: #fff;
 }
+
+
 
     .btn-secondary:hover {
         filter: brightness(0.98);
@@ -179,17 +182,8 @@
     display: flex;
     justify-content: flex-end;
 }
+    
 
-.btn-back {
-    width: auto;
-    min-width: 200px;
-}
-
-.movie-details-actions .btn-details,
-.movie-details-actions .btn-secondary {
-    width: auto;
-    min-width: 180px;
-}
 
 .schedule-card {
     height: 100%;
@@ -313,19 +307,42 @@
     }
 
     .movie-details-actions {
-        justify-content: flex-start;
+        display: flex;
+        flex-direction: column; 
+        align-items: flex-end;
+        gap: 12px;
     }
 
     .btn-back {
         min-width: 180px;
     }
 }
+.btn-save-remove {
+    background: linear-gradient(135deg, #ef4444, #dc2626); 
+    color: #fff;
+}
+
+    .btn-save-remove:hover {
+        filter: brightness(0.95);
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: #fff;
+    }
 
 .related-section {
     margin-top: 22px;
     padding-top: 18px;
     border-top: 1px solid rgba(0,0,0,0.08);
 }
+.btn-saved {
+    background: linear-gradient(135deg, #16a34a, #22c55e); 
+    color: #fff;
+}
+
+    .btn-saved:hover {
+        filter: brightness(0.95);
+        background: linear-gradient(135deg, #15803d, #16a34a);
+        color: #fff;
+    }
 
 .related-title {
     font-weight: 900;
@@ -404,3 +421,73 @@
             text-align: left;
         }
 }
+.movie-save-wrap {
+    margin-top: 12px;
+    margin-bottom: 6px; 
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    min-width: 200px;
+    background: linear-gradient(135deg, #ffb300, #fb8c00);
+    color: #111;
+}
+
+    .btn-save:hover {
+        filter: brightness(0.95);
+        background: linear-gradient(135deg, #ffa000, #f57c00);
+        color: #111;
+    }
+.btn-save,
+.btn-back-blue {
+    min-width: 220px; 
+    height: 52px;
+    border-radius: 12px;
+    font-weight: 800;
+    padding: 12px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-back-blue {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb); 
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+    .btn-back-blue:hover {
+        filter: brightness(0.95);
+        color: #fff;
+        background: linear-gradient(135deg, #1e40af, #1d4ed8);
+    }
+.schedule-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+    background: #1e88e5;
+    color: #fff;
+    border: none;
+}
+
+    .schedule-cta-btn:hover {
+        filter: brightness(0.95);
+        color: #fff;
+        background: #1976d2;
+    }

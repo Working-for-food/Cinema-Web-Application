@@ -1,0 +1,40 @@
+﻿@model List<Infrastructure.Entities.Movie>
+
+<h2 class="mb-3">Мої збережені</h2>
+
+@if (Model.Count == 0)
+{
+    <div class="text-muted">Поки що немає збережених фільмів.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var m in Model)
+        {
+            <div class="col-6 col-md-3">
+                <div class="card h-100">
+                    <a asp-route="MovieDetails" asp-route-id="@m.Id" class="text-decoration-none">
+                        <img class="card-img-top"
+                             src="@(string.IsNullOrWhiteSpace(m.PosterPath) ? "/images/no-poster.png" : (m.PosterPath.StartsWith("/") ? "https://image.tmdb.org/t/p/w500" + m.PosterPath : m.PosterPath))"
+                             onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+                        <div class="card-body">
+                            <div class="fw-bold">@m.Title</div>
+                        </div>
+                    </a>
+
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <form asp-controller="SavedMovies" asp-action="Toggle" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="movieId" value="@m.Id" />
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+                            <button type="submit" class="btn-save btn-save-remove w-100">
+                                Видалити
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

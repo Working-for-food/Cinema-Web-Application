@@ -1,6 +1,9 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels.Movies.Details;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Web.Controllers;
 
@@ -10,15 +13,19 @@ public class MoviesController : Controller
     private readonly IMoviePublicService _moviePublicService;
     private readonly IExternalRatingsService _externalRatingsService;
     private readonly ITmdbClient _tmdb;
+    private readonly CinemaDbContext _db;
 
     public MoviesController(
         IMoviePublicService moviePublicService,
         IExternalRatingsService externalRatingsService,
-        ITmdbClient tmdb)
+        ITmdbClient tmdb, CinemaDbContext db)
     {
         _moviePublicService = moviePublicService;
         _externalRatingsService = externalRatingsService;
         _tmdb = tmdb;
+        _db = db;
+
+
     }
 
     [HttpGet("{id:int}", Name = "MovieDetails")]
@@ -74,6 +81,18 @@ public class MoviesController : Controller
                 }).ToList()
             }).ToList()
         };
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+           var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+           if (!string.IsNullOrWhiteSpace(userId))
+           {
+               vm.IsSaved = await _db.SavedMovies
+                 .AnyAsync(x => x.UserId == userId && x.MovieId == vm.Id, ct);
+          }
+       }
+
 
         string? imdbId = null;
         if (vm.TmdbId.HasValue)

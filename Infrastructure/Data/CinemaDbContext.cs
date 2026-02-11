@@ -12,6 +12,7 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Person> People => Set<Person>();
     public DbSet<Country> Countries => Set<Country>();
     public DbSet<Genre> Genres => Set<Genre>();
+    public DbSet<SavedMovie> SavedMovies => Set<SavedMovie>();
 
     public DbSet<MovieActor> MovieActors => Set<MovieActor>();
     public DbSet<MovieDirector> MovieDirectors => Set<MovieDirector>();
@@ -277,6 +278,28 @@ public class CinemaDbContext : IdentityDbContext<ApplicationUser>
 
             e.HasIndex(x => new { x.MovieId, x.CountryCode }).IsUnique();
         });
+        modelBuilder.Entity<SavedMovie>(e =>
+        {
+            e.ToTable("SavedMovies");
+
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.CreatedAtUtc)
+                .HasDefaultValueSql("SYSUTCDATETIME()");
+
+            e.HasIndex(x => new { x.UserId, x.MovieId }).IsUnique();
+
+            e.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.Movie)
+                .WithMany()
+                .HasForeignKey(x => x.MovieId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         // MovieGenres
         modelBuilder.Entity<MovieGenre>(e =>
