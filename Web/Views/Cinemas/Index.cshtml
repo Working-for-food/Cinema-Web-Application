@@ -5,6 +5,7 @@
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/cinemas-list.css" asp-append-version="true" />
 
 <div class="container py-5">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
@@ -152,80 +153,6 @@
 
 </div>
 
-<style>
-    /* Filter Bar Styles */
-    .custom-input-group {
-        border: 1px solid #dee2e6;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.2s ease-in-out;
-        background: #fff;
-        height: 48px; /* Matching button height */
-    }
-
-        .custom-input-group .form-control,
-        .custom-input-group .form-select,
-        .custom-input-group .input-group-text {
-            border: none !important;
-            box-shadow: none !important;
-            height: 100%;
-        }
-
-        .custom-input-group:focus-within {
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.15) !important;
-        }
-
-        .custom-input-group .input-group-text {
-            padding-left: 1.1rem;
-            padding-right: 0.6rem;
-            background-color: transparent !important;
-        }
-
-    /* Card & Button Styles */
-    .btn-maroon {
-        background-color: var(--accent);
-        color: white;
-        transition: opacity 0.2s;
-    }
-
-        .btn-maroon:hover {
-            opacity: 0.9;
-            color: white;
-        }
-
-    .btn-outline-danger {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        z-index: 5;
-    }
-
-    .btn-soft {
-        background-color: var(--accent-soft);
-        color: var(--accent);
-        border: none;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .btn-soft:hover {
-            background-color: var(--accent);
-            color: white;
-        }
-
-    .card-modern {
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        background: #fff;
-    }
-</style>
-
 @section Scripts {
     <script>
         function openMapModal(event, name, address, city) {
@@ -236,14 +163,13 @@
 
             const fullAddress = `${address}, ${city}`;
             const searchQuery = encodeURIComponent(`${name} ${fullAddress}`);
-            const mapUrl = `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY_HERE&q=${searchQuery}&language=uk`;
 
-            // Note: For a free embed without an API key, use this format:
-            const fallbackUrl = `https://maps.google.com/maps?q=${searchQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            const mapUrl = `https://maps.google.com/maps?q=${searchQuery}&hl=uk&z=15&output=embed`;
 
             document.getElementById('mapTitle').innerText = name;
             document.getElementById('mapAddressFooter').innerText = fullAddress;
-            document.getElementById('mapIframe').src = fallbackUrl;
+
+            document.getElementById('mapIframe').src = mapUrl;
 
             var myModal = new bootstrap.Modal(document.getElementById('mapModal'));
             myModal.show();
