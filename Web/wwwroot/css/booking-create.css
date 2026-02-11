@@ -3,19 +3,31 @@
     position: relative;
     min-height: 300px;
     border-radius: 20px;
-    overflow: hidden;
+    overflow: hidden; /* щоб блюр не “вилазив” */
 }
 
+/* === BLUR BACKDROP (постер розмитий) === */
+/* === BLUR BACKDROP (менший блюр) === */
 .header-backdrop {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: brightness(0.4);
-    transform: scale(1.2);
+    filter: blur(8px) brightness(0.55); /* було 18px */
+    opacity: 0.65;
+    transform: scale(1.06); /* менше збільшення */
     z-index: 0;
 }
 
+    .header-backdrop::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient( 90deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.15) 100% );
+    }
+
+
+/* контент завжди над фоном */
 .header-content {
     position: relative;
     z-index: 1;
@@ -154,30 +166,16 @@
     pointer-events: none;
 }
 
-.seat-booked {
-    opacity: .4;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.seat:has(.seat-input:checked) {
-    border-color: var(--brand);
-    box-shadow: 0 10px 20px rgba(29, 140, 248, 0.25);
-    transform: translateY(-3px) scale(1.05);
-}
-
-    .seat:has(.seat-input:checked) .seat-no {
-        color: var(--brand);
-    }
-
-/* ===== Booked seats: pale + cross ===== */
+/* ===== Booked seats: pale + cross (єдиний блок, без дубляжу) ===== */
 .seat.seat-booked {
-    opacity: .22; /* сильно бліді */
+    opacity: .25;
     filter: grayscale(1);
     background: rgba(241,245,249,.65);
     border-color: rgba(148,163,184,.45);
     box-shadow: none !important;
     transform: none !important;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
     /* прибрати акцентний номер/ціну */
@@ -209,27 +207,10 @@
         transform-origin: center;
     }
 
-/* ===== ЗАЙНЯТІ МІСЦЯ — дуже бліді ===== */
-.seat.seat-booked {
-    opacity: .25;
-    filter: grayscale(1);
-    background: #f1f5f9;
-    border-color: #e2e8f0;
-    box-shadow: none !important;
-    transform: none !important;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-    .seat.seat-booked .seat-no,
-    .seat.seat-booked .seat-price {
-        color: #94a3b8 !important;
-    }
-
 /* ===== ВИБРАНЕ ВІЛЬНЕ МІСЦЕ — яскраве виділення ===== */
 .seat:has(.seat-input:checked) {
     border: 2px solid var(--brand);
-    background: linear-gradient( 135deg, rgba(99,102,241,.15), rgba(99,102,241,.05) );
+    background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(99,102,241,.05));
     box-shadow: 0 12px 30px rgba(99,102,241,.35);
     transform: translateY(-4px) scale(1.08);
 }

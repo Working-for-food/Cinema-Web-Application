@@ -3,6 +3,27 @@
 @{
     ViewData["Title"] = "Booking successful";
     var dateText = Model.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+
+    // Форматує значення місця у вигляді: "Ряд X, місце Y"
+    // Працює як для "2-8" / "2:8" / "2 8" / "Ряд 2 Місце 8", так і для інших рядків (fallback).
+    string FormatSeat(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return raw;
+
+        var t = raw.Trim();
+
+        // Спроба витягнути перші 2 числа з будь-якого формату рядка
+        var nums = System.Text.RegularExpressions.Regex.Matches(t, @"\d+")
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(m => m.Value)
+            .ToList();
+
+        if (nums.Count >= 2)
+            return $"Ряд {nums[0]}, місце {nums[1]}";
+
+        // Якщо не вдалося — повертаємо як є
+        return t;
+    }
 }
 
 <section class="py-5 gray-bg">
@@ -20,10 +41,8 @@
             <div class="card-body p-4 p-lg-5">
 
                 <div class="info-list">
-                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                        <span class="text-muted small text-uppercase fw-bold"><i class="fa-solid fa-hashtag me-2 opacity-50"></i>Бронювання</span>
-                        <span class="fw-bold text-dark fs-5">#@Model.BookingId</span>
-                    </div>
+
+                    <!-- Прибрано вивід номера бронювання -->
 
                     <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
                         <span class="text-muted small text-uppercase fw-bold"><i class="fa-solid fa-calendar-day me-2 opacity-50"></i>Дата та час</span>
@@ -41,7 +60,7 @@
                             @foreach (var s in Model.Seats)
                             {
                                 <span class="badge bg-light text-dark border px-3 py-2 br-8 fw-bold">
-                                    @s
+                                    @FormatSeat(s)
                                 </span>
                             }
                         </div>
@@ -52,8 +71,8 @@
                     <a asp-action="My" class="btn btn-maroon flex-grow-1 py-3 fw-bold text-uppercase shadow-sm">
                         <i class="fa-solid fa-ticket me-2"></i> Мої квитки
                     </a>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary flex-grow-1 py-3 fw-bold text-uppercase">
-                        <i class="fa-solid fa-house me-2"></i> На головну
+                    <a asp-controller="Afisha" asp-action="Index" class="btn btn-secondary flex-grow-1 py-3 fw-bold text-uppercase">
+                        <i class="fa-solid fa-house me-2"></i> Назад до афіші
                     </a>
                 </div>
             </div>
