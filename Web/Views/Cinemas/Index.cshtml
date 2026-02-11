@@ -1,0 +1,182 @@
+﻿@model Web.ViewModels.Cinemas.UserCinemasIndexVm
+
+@{
+    ViewData["Title"] = "Наші кінотеатри";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/cinemas-list.css" asp-append-version="true" />
+
+<div class="container py-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="section-title mb-2">Наші кінотеатри</h1>
+            <p class="text-muted mb-0">Оберіть найкращу локацію для перегляду кіно</p>
+        </div>
+        <div class="d-none d-md-block">
+            <div class="icon-badge bg-white shadow-sm d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 15px;">
+                <i class="fa-solid fa-location-dot fa-2x" style="color: var(--danger);"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-modern mb-5">
+        <div class="card-body p-4">
+            <form asp-action="Index" method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold small text-uppercase text-muted letter-spacing-1 mb-2">Пошук</label>
+                    <div class="input-group custom-input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="fa-solid fa-magnifying-glass fa-fw"></i>
+                        </span>
+                        <input type="text" name="search" value="@Model.SearchQuery"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Назва кінотеатру...">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small text-uppercase text-muted letter-spacing-1 mb-2">Місто</label>
+                    <div class="input-group custom-input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="fa-solid fa-city fa-fw"></i>
+                        </span>
+                        <select name="city" asp-items="Model.Cities" class="form-select border-start-0 ps-0">
+                            <option value="">Усі міста</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-maroon w-100 fw-bold shadow-sm" style="height: 48px; border-radius: 12px;">
+                        <i class="fa-solid fa-filter me-2"></i> Знайти
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @if (!Model.Cinemas.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <div class="empty-state">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-map-location-dot fa-4x text-muted opacity-25"></i>
+                    </div>
+                    <h4 class="fw-bold">Локацій не знайдено</h4>
+                    <p class="text-muted">Ми не знайшли кінотеатрів за вашим запитом.</p>
+                    <a asp-action="Index" class="btn btn-soft mt-3">
+                        <i class="fa-solid fa-rotate-left me-2"></i> Скинути всі фільтри
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var cinema in Model.Cinemas)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-modern h-100 transition-all position-relative d-flex flex-column shadow-sm">
+                        <div class="position-relative overflow-hidden border-bottom" style="border-radius: 12px 12px 0 0;">
+                            <img src="@(string.IsNullOrEmpty(cinema.ImageUrl) ? "/images/default-cinema.jpg" : cinema.ImageUrl)"
+                                 class="w-100" alt="@cinema.Name"
+                                 style="height: 240px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-white text-dark shadow-sm border-0 py-2 px-3 fw-bold" style="border-radius: 10px;">
+                                    <i class="fa-solid fa-location-dot text-danger me-1"></i> @cinema.City
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                            <h4 class="fw-bold mb-3">@cinema.Name</h4>
+
+                            <p class="text-muted small mb-4 flex-grow-1">
+                                <i class="fa-solid fa-map-pin text-muted me-2"></i> @cinema.Address
+                            </p>
+
+                            <div class="d-flex gap-2 mt-auto">
+                                <a asp-action="Details" asp-route-id="@cinema.Id"
+                                   class="btn btn-soft flex-grow-1 fw-bold stretched-link">
+                                    <i class="fa-solid fa-calendar-days me-2"></i> Розклад сеансів
+                                </a>
+                                <button type="button"
+                                        class="btn btn-outline-danger"
+                                        style="z-index: 5; border-radius: 10px;"
+                                        onclick="openMapModal(event, '@cinema.Name', '@cinema.Address', '@cinema.City')"
+                                        title="Переглянути на карті">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<div class="modal fade shadow-none" id="mapModal" tabindex="-1" aria-labelledby="mapTitle" aria-hidden="true" style="box-shadow: none !important;">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered" style="box-shadow: none !important;">
+
+        <div class="modal-content border-0 shadow-none br-16 overflow-hidden" style="box-shadow: none !important;">
+
+            <div class="modal-header border-0 bg-white p-4 pb-0">
+
+                <div>
+
+                    <h5 class="modal-title fw-bold" id="mapTitle">Локація</h5>
+
+                    <p class="text-muted small mb-0" id="mapAddressFooter"></p>
+
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+
+            <div class="modal-body p-4">
+
+                <div class="ratio ratio-21x9 br-12 overflow-hidden border shadow-none" style="box-shadow: none !important;">
+
+                    <iframe id="mapIframe" src="" allowfullscreen="" loading="lazy" style="box-shadow: none;"></iframe>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        function openMapModal(event, name, address, city) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const fullAddress = `${address}, ${city}`;
+            const searchQuery = encodeURIComponent(`${name} ${fullAddress}`);
+
+            const mapUrl = `https://maps.google.com/maps?q=${searchQuery}&hl=uk&z=15&output=embed`;
+
+            document.getElementById('mapTitle').innerText = name;
+            document.getElementById('mapAddressFooter').innerText = fullAddress;
+
+            document.getElementById('mapIframe').src = mapUrl;
+
+            var myModal = new bootstrap.Modal(document.getElementById('mapModal'));
+            myModal.show();
+        }
+
+        document.getElementById('mapModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('mapIframe').src = "";
+        });
+    </script>
+}
