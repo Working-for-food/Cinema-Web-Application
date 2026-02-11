@@ -1,7 +1,7 @@
 ﻿@model IReadOnlyList<Infrastructure.Entities.Person>
 
 @{
-    ViewData["Title"] = "Користувачі";
+    ViewData["Title"] = "Актори та режисери";
 
     var currentPage = (int)(ViewBag.Page ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
@@ -12,9 +12,9 @@
     <div class="container-fluid">
 
         <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
-            <h1 class="section-title mb-0">Користувачі</h1>
+            <h1 class="section-title mb-0">Актори та режисери</h1>
             <a class="btn btn-maroon shadow-sm" asp-action="Create">
-                <i class="fas fa-plus me-2"></i>ДОДАТИ КОРИСТУВАЧА
+                <i class="fas fa-plus me-2"></i>ДОДАТИ
             </a>
         </div>
 
@@ -31,7 +31,7 @@
             <div class="card-body p-4">
                 <form method="get" class="row g-3 align-items-end">
                     <div class="col-12 col-md-8 col-lg-6">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Пошук користувача</label>
+                        <label class="form-label small fw-bold text-muted text-uppercase">Пошук актора чи режисера</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-2 border-end-0 br-left-8 text-muted">
                                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -42,15 +42,12 @@
                     </div>
 
                     <div class="col-12 col-md-4 col-lg-2">
-                        <button type="submit" class="btn btn-secondary w-100 fw-bold">ЗНАЙТИ</button>
+                        <button type="submit" class="btn btn-maroon w-100 fw-bold">ЗНАЙТИ</button>
                     </div>
-                    
-                    @if (!string.IsNullOrEmpty(search))
-                    {
-                        <div class="col-12 col-lg-auto">
-                            <a asp-action="Index" class="btn btn-soft w-100">СКИНУТИ</a>
-                        </div>
-                    }
+
+                    <div class="col-12 col-lg-auto">
+                        <a asp-action="Index" class="btn btn-secondary w-100 px-4">СКИНУТИ</a>
+                    </div>
                 </form>
             </div>
         </div>
@@ -59,7 +56,7 @@
         {
             <div class="empty-state mx-auto" style="max-width: 600px;">
                 <div class="empty-icon"><i class="fa-solid fa-users-slash"></i></div>
-                <h5 class="empty-title">Користувачів не знайдено</h5>
+                <h5 class="empty-title">Нікого не знайдено</h5>
                 <p class="empty-sub">Список порожній або нічого не знайдено за запитом "@search".</p>
             </div>
         }
@@ -71,7 +68,7 @@
                         <thead>
                             <tr>
                                 <th class="ps-4" style="width:100px;">Фото</th>
-                                <th>ПІБ Користувача</th>
+                                <th>ПІБ</th>
                                 <th style="width:220px;">Країна</th>
                                 <th style="width:180px;">Дата народження</th>
                                 <th class="text-end pe-4" style="width:200px;">Дії</th>

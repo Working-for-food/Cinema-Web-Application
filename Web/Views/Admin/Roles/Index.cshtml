@@ -57,7 +57,7 @@
                                         <form asp-action="Delete" asp-route-id="@role.Id" method="post"
                                               onsubmit="return confirm('Ви впевнені, що хочете видалити цю роль?');" class="d-inline">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-danger-second btn-sm px-3 br-8 fw-bold">
+                                            <button type="submit" class="btn btn-danger btn-sm px-3 br-8 fw-bold">
                                                 <i class="fa-solid fa-trash-can me-1"></i> ВИДАЛИТИ
                                             </button>
                                         </form>

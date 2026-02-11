@@ -120,10 +120,10 @@
     color: #222;
 }
 
-    .movie-details-meta > div:first-child {
-        font-weight: 700;
-        opacity: .85;
-    }
+.movie-details-meta > div:first-child {
+    font-weight: 700;
+    opacity: .85;
+}
 
 .meta-label {
     font-weight: 800;
@@ -149,7 +149,13 @@
     background: transparent;
 }
 
-.rating-badge {
+.movie-details-actions .btn-details,
+.movie-details-actions .btn-secondary {
+    width: auto;
+    min-width: 180px;
+}
+
+.btn-secondary {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -164,31 +170,8 @@
     white-space: nowrap;
 }
 
-    .rating-badge::before {
-        content: "";
-        display: none;
-    }
-
-.movie-age-rating {
-    font-size: 16px;
-    color: #222;
-}
-
-.movie-details-actions {
-    margin-top: auto;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.btn-back {
-    width: auto;
-    min-width: 200px;
-}
-
-.movie-details-actions .btn-details,
-.movie-details-actions .btn-secondary {
-    width: auto;
-    min-width: 180px;
+.btn-secondary:hover {
+    filter: brightness(0.98);
 }
 
 .schedule-card {
@@ -226,9 +209,9 @@
     flex: 0 0 auto;
 }
 
-    .schedule-day.active {
-        border-color: rgba(0,0,0,.35);
-    }
+.schedule-day.active {
+    border-color: rgba(0,0,0,.35);
+}
 
 .schedule-scroll {
     flex: 1 1 auto;
