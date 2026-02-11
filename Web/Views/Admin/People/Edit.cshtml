@@ -1,14 +1,14 @@
 ﻿@model Web.ViewModels.Admin.People.PersonEditVm
 
 @{
-    ViewData["Title"] = "Редагування користувача";
+    ViewData["Title"] = "Редагування актора чи режисера";
 }
 
 <section class="py-5 gray-bg">
     <div class="container">
 
         <div class="text-center mb-5">
-            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагувати користувача</h1>
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагувати актора чи режисера</h1>
             <p class="text-muted small text-uppercase fw-semibold">Оновіть персональні дані актора чи режисера</p>
         </div>
 
@@ -47,8 +47,6 @@
                             <span asp-validation-for="LastName" class="text-danger small"></span>
                         </div>
                     </div>
-
-                    <hr class="my-5 opacity-10">
 
                     <div class="row g-4 mb-4">
                         <div class="col-md-4">

@@ -21,9 +21,15 @@
     };
 
     Func<SeatCategory, IEnumerable<SelectListItem>> categoryItemsFor = selected =>
-        Enum.GetValues<SeatCategory>().Select(c => new SelectListItem(CatLabel(c), ((int)c).ToString(), c == selected)).ToList();
+        Enum.GetValues<SeatCategory>()
+            .Select(c => new SelectListItem(CatLabel(c), ((int)c).ToString(), c == selected))
+            .ToList();
 
-    var grouped = (Model.Seats ?? new List<SeatDto>()).GroupBy(s => s.RowNumber).OrderBy(g => g.Key).ToList();
+    var grouped = (Model.Seats ?? new List<SeatDto>())
+        .GroupBy(s => s.RowNumber)
+        .OrderBy(g => g.Key)
+        .ToList();
+
     var maxSeats = grouped.Count == 0 ? 0 : grouped.Max(g => g.Max(x => x.SeatNumber));
     var canEditCategories = string.IsNullOrWhiteSpace(Model.LockReason);
 }
@@ -39,14 +45,18 @@
                 <a asp-area="Admin" asp-controller="Halls" asp-action="Index" class="btn btn-secondary px-4">
                     <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД ДО ЗАЛІВ
                 </a>
+
                 @if (Model.AlreadyGenerated && string.IsNullOrWhiteSpace(Model.LockReason))
                 {
-                    <form method="post" asp-action="GenerateSeats" class="d-inline" onsubmit="return confirm('Увага! Всі існуючі місця та квитки будуть видалені. Продовжити?');">
+                    <form method="post"
+                          asp-action="GenerateSeats"
+                          class="d-inline"
+                          onsubmit="return confirm('Увага! Всі існуючі місця та квитки будуть видалені. Продовжити?');">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="hallId" value="@Model.HallId" />
                         <input type="hidden" name="allowRegenerate" value="true" />
-                        <button type="submit" class="btn btn-danger-second px-4">
-                            <i class="fa-solid fa-trash-can me-2"></i>СТВОРЯТИ ЗАНОВО
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="fa-solid fa-trash-can me-2"></i>ВИДАЛИТИ ТА СТВОРИТИ ЗАНОВО
                         </button>
                     </form>
                 }
@@ -84,14 +94,18 @@
                             <form method="post" asp-action="ConfigureSeats">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="hallId" value="@Model.HallId" />
-                                
+
                                 <div class="mb-4">
                                     <label class="form-label small fw-bold text-muted text-uppercase">Кількість рядів</label>
-                                    <input type="number" name="rows" min="1" value="@Model.Rows" class="form-control border-2 br-8 shadow-none" @(Model.CanEditSeats ? "" : "disabled") />
+                                    <input type="number" name="rows" min="1" value="@Model.Rows"
+                                           class="form-control border-2 br-8 shadow-none"
+                                           @(Model.CanEditSeats ? "" : "disabled") />
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label small fw-bold text-muted text-uppercase">Місць у ряду (за замовчуванням)</label>
-                                    <input type="number" name="seatsPerRow" min="1" value="@Model.SeatsPerRow" class="form-control border-2 br-8 shadow-none" @(Model.CanEditSeats ? "" : "disabled") />
+                                    <input type="number" name="seatsPerRow" min="1" value="@Model.SeatsPerRow"
+                                           class="form-control border-2 br-8 shadow-none"
+                                           @(Model.CanEditSeats ? "" : "disabled") />
                                 </div>
                                 <button type="submit" class="btn btn-dark w-100 py-2 fw-bold" @(Model.CanEditSeats ? "" : "disabled")>
                                     <i class="fa-solid fa-table me-2"></i>ПОБУДУВАТИ ТАБЛИЦЮ
@@ -110,6 +124,7 @@
                             <form method="post" asp-action="GenerateSeats">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="hallId" value="@Model.HallId" />
+
                                 <div class="admin-table-card border-0 mb-4 shadow-none">
                                     <div class="table-responsive">
                                         <table class="table admin-table mb-0 align-middle">
@@ -121,14 +136,23 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @for (int i = 0; i < Model.RowConfigs.Count; i++) {
+                                                @for (int i = 0; i < Model.RowConfigs.Count; i++)
+                                                {
                                                     <tr>
-                                                        <td class="fw-bold text-primary">#@Model.RowConfigs[i].RowNumber
+                                                        <td class="fw-bold text-primary">
+                                                            #@Model.RowConfigs[i].RowNumber
                                                             <input type="hidden" name="rowConfigs[@i].RowNumber" value="@Model.RowConfigs[i].RowNumber" />
                                                         </td>
-                                                        <td><input type="number" name="rowConfigs[@i].SeatsCount" min="1" value="@Model.RowConfigs[i].SeatsCount" class="form-control form-control-sm border-2 br-4 w-75" /></td>
                                                         <td>
-                                                            <select class="form-select form-select-sm border-2 br-4" name="rowConfigs[@i].Category" asp-items="categoryItemsFor(Model.RowConfigs[i].Category)"></select>
+                                                            <input type="number" name="rowConfigs[@i].SeatsCount" min="1"
+                                                                   value="@Model.RowConfigs[i].SeatsCount"
+                                                                   class="form-control form-control-sm border-2 br-4 w-75" />
+                                                        </td>
+                                                        <td>
+                                                            <select class="form-select form-select-sm border-2 br-4"
+                                                                    name="rowConfigs[@i].Category"
+                                                                    asp-items="categoryItemsFor(Model.RowConfigs[i].Category)">
+                                                            </select>
                                                         </td>
                                                     </tr>
                                                 }
@@ -136,6 +160,7 @@
                                         </table>
                                     </div>
                                 </div>
+
                                 <div class="text-end">
                                     <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
                                         <i class="fa-solid fa-bolt me-2"></i>ЗГЕНЕРУВАТИ ПЛАН ЗАЛУ
@@ -155,24 +180,38 @@
                     {
                         <div class="card shadow-sm border-0 br-12 mb-4">
                             <div class="card-body p-4">
-                                <h5 class="fw-bold text-dark text-uppercase small mb-4"><i class="fa-solid fa-tags me-2 text-primary"></i>Категорії рядів</h5>
+                                <h5 class="fw-bold text-dark text-uppercase small mb-4">
+                                    <i class="fa-solid fa-tags me-2 text-primary"></i>Категорії рядів
+                                </h5>
+
                                 <form method="post" asp-action="UpdateRowCategories">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="hallId" value="@Model.HallId" />
+
                                     <div class="row-list-scroll pe-2" style="max-height: 400px; overflow-y: auto;">
-                                        @for (int i = 0; i < grouped.Count; i++) {
+                                        @for (int i = 0; i < grouped.Count; i++)
+                                        {
                                             var rowNum = grouped[i].Key;
                                             var isMixed = grouped[i].Select(x => x.Category).Distinct().Count() > 1;
+
                                             <div class="mb-3 p-2 bg-light-soft br-8 border">
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <span class="small fw-bold">Ряд #@rowNum</span>
-                                                    @if(isMixed) { <i class="fa-solid fa-circle-nodes text-warning" title="Змішані категорії"></i> }
+                                                    @if (isMixed)
+                                                    {
+                                                        <i class="fa-solid fa-circle-nodes text-warning" title="Змішані категорії"></i>
+                                                    }
                                                 </div>
+
                                                 <input type="hidden" name="rows[@i].RowNumber" value="@rowNum" />
-                                                <select class="form-select form-select-sm border-0 shadow-none" name="rows[@i].Category" asp-items="categoryItemsFor(grouped[i].First().Category)"></select>
+                                                <select class="form-select form-select-sm border-0 shadow-none"
+                                                        name="rows[@i].Category"
+                                                        asp-items="categoryItemsFor(grouped[i].First().Category)">
+                                                </select>
                                             </div>
                                         }
                                     </div>
+
                                     <button type="submit" class="btn btn-dark w-100 mt-3 py-2 fw-bold small">
                                         <i class="fa-solid fa-floppy-disk me-2"></i>ОБНОВИТИ РЯДИ
                                     </button>
@@ -204,27 +243,56 @@
                                 <input type="hidden" name="hallId" value="@Model.HallId" />
                                 <div id="seatChanges"></div>
 
-                                <div class="cinema-map-wrap p-4 br-16" style="background: var(--surface-2);">
+                                <!-- ✅ Вигляд як у Pricing (без цін) -->
+                                <div class="cinema-map-wrap p-4 br-16 shadow-inner" style="background: #f8fafc;">
                                     <div class="cinema-map mx-auto">
                                         <div class="cinema-screen mb-5">
                                             <div class="cinema-screen-arc"></div>
                                             <div class="cinema-screen-title opacity-50 fw-bold">ЕКРАН</div>
                                         </div>
 
-                                        <div class="cinema-grid" style="--cols:@maxSeats;">
-                                            @foreach (var row in grouped) {
-                                                <div class="row-label">@row.Key</div>
-                                                @for (int s = 1; s <= maxSeats; s++) {
+                                        <div class="cinema-grid mx-auto" style="--cols:@maxSeats;">
+                                            @foreach (var row in grouped)
+                                            {
+                                                <div class="row-label opacity-50 fw-bold">@row.Key</div>
+
+                                                @for (int s = 1; s <= maxSeats; s++)
+                                                {
                                                     var seat = row.FirstOrDefault(x => x.SeatNumber == s);
-                                                    if (seat != null) {
-                                                        var cls = SeatBgClass(seat.Category);
-                                                        if (canEditCategories) {
-                                                            <button type="button" class="seat seat-toggle @cls" data-seat-id="@seat.Id" data-orig-cat="@((int)seat.Category)" data-cat="@((int)seat.Category)" title="Ряд @row.Key, Місце @s (@CatLabel(seat.Category))"></button>
-                                                        } else {
-                                                            <div class="seat @cls opacity-75" title="@CatLabel(seat.Category)"></div>
-                                                        }
-                                                    } else {
+
+                                                    if (seat == null)
+                                                    {
                                                         <div class="seat seat-empty"></div>
+                                                    }
+                                                    else
+                                                    {
+                                                        var cls = SeatBgClass(seat.Category);
+
+                                                        if (canEditCategories)
+                                                        {
+                                                            <button type="button"
+                                                                    class="seat seat-toggle @cls d-flex flex-column align-items-center justify-content-center"
+                                                                    style="border:0; background:transparent; padding:0;"
+                                                                    data-seat-id="@seat.Id"
+                                                                    data-orig-cat="@((int)seat.Category)"
+                                                                    data-cat="@((int)seat.Category)"
+                                                                    title="Ряд @row.Key, місце @s (@CatLabel(seat.Category))">
+                                                                <span class="x-small fw-bold"
+                                                                      style="font-size:0.6rem; line-height:1; opacity:0.7;">
+                                                                    @s
+                                                                </span>
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="seat @cls opacity-75 d-flex flex-column align-items-center justify-content-center"
+                                                                 title="Ряд @row.Key, місце @s (@CatLabel(seat.Category))">
+                                                                <span class="x-small fw-bold"
+                                                                      style="font-size:0.6rem; line-height:1; opacity:0.7;">
+                                                                    @s
+                                                                </span>
+                                                            </div>
+                                                        }
                                                     }
                                                 }
                                             }
@@ -235,7 +303,9 @@
                                 @if (canEditCategories)
                                 {
                                     <div class="d-flex justify-content-between align-items-center mt-4">
-                                        <div class="text-muted small"><i class="fa-solid fa-circle-info me-1"></i>Натискайте на місця для зміни категорій</div>
+                                        <div class="text-muted small">
+                                            <i class="fa-solid fa-circle-info me-1"></i>Натискайте на місця для зміни категорій
+                                        </div>
                                         <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
                                             <i class="fa-solid fa-floppy-disk me-2"></i>ЗБЕРЕГТИ ЗМІНИ СХЕМИ
                                         </button>
@@ -250,81 +320,75 @@
     </div>
 </section>
 
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        function confirmRegenerate() {
-            return confirm("Створення заново видалить існуючі місця. Продовжити?");
-        }
-
-        (function initSeatCategoryToggles() {
+        document.addEventListener('DOMContentLoaded', () => {
             const buttons = document.querySelectorAll('.seat-toggle');
-            if (!buttons || buttons.length === 0) return;
-
+            if (!buttons.length) return;
+            
             const cycle = [0, 1, 2];
-
+            
             function nextCat(v) {
-                const idx = cycle.indexOf(parseInt(v, 10));
+                const num = parseInt(v ?? '0', 10);
+                const idx = cycle.indexOf(num);
                 return cycle[(idx + 1) % cycle.length];
             }
-
+            
             function applyVisual(btn, cat) {
                 btn.classList.remove('seat-bg-std', 'seat-bg-vip', 'seat-bg-acc');
+                
+                if (cat === 0) { btn.classList.add('seat-bg-std'); }
+                else if (cat === 1) { btn.classList.add('seat-bg-vip'); }
+                else { btn.classList.add('seat-bg-acc'); }
 
-                if (cat === 0) {
-                    btn.classList.add('seat-bg-std');
-                    btn.title = 'Звичайні';
-                } else if (cat === 1) {
-                    btn.classList.add('seat-bg-vip');
-                    btn.title = 'VIP';
-                } else if (cat === 2) {
-                    btn.classList.add('seat-bg-acc');
-                    btn.title = 'Інклюзивні';
-                }
-
-                btn.dataset.cat = cat.toString();
+                btn.dataset.cat = String(cat);
             }
 
             buttons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const next = nextCat(btn.dataset.cat);
-                    applyVisual(btn, next);
-                });
-            });
-        })();
+                btn.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();    
+                    e.stopPropagation();
 
-        function buildSeatCategoryChanges() {
+                    const current = btn.dataset.cat ?? btn.dataset.origCat ?? '0';
+                    const next = nextCat(current);
+                    applyVisual(btn, next);
+            
+                    btn.blur();            
+                }, { passive: false });
+              });
+            });
+            
+            function buildSeatCategoryChanges() {
             const container = document.getElementById('seatChanges');
             if (!container) return true;
             container.innerHTML = '';
 
             const changed = Array.from(document.querySelectorAll('.seat-toggle'))
-                .filter(b => b.dataset.cat !== b.dataset.origCat)
-                .map(b => ({ id: b.dataset.seatId, cat: b.dataset.cat }));
+            .filter(b => (b.dataset.cat ?? b.dataset.origCat) !== b.dataset.origCat)
+            .map(b => ({ id: b.dataset.seatId, cat: b.dataset.cat }));
 
             if (changed.length === 0) {
                 alert('Змін не знайдено. Спочатку змініть категорію хоча б одного місця.');
                 return false;
             }
-
+            
             for (let i = 0; i < changed.length; i++) {
-                const seatId = changed[i].id;
-                const cat = changed[i].cat;
-
                 const inp1 = document.createElement('input');
                 inp1.type = 'hidden';
                 inp1.name = `changes[${i}].SeatId`;
-                inp1.value = seatId;
+                inp1.value = changed[i].id;
                 container.appendChild(inp1);
-
+                
                 const inp2 = document.createElement('input');
                 inp2.type = 'hidden';
                 inp2.name = `changes[${i}].Category`;
-                inp2.value = cat;
+                inp2.value = changed[i].cat;
                 container.appendChild(inp2);
             }
-
+            
             return true;
         }
     </script>

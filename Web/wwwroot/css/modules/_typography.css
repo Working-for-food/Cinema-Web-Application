@@ -30,3 +30,34 @@
     letter-spacing: .01em;
     color: var(--text);
 }
+
+.text-maroon {
+    color: var(--accent);
+}
+
+.text-accent {
+    color: var(--accent);
+}
+
+.header-title {
+    font-weight: 900;
+    line-height: 1.2;
+    color: var(--text);
+}
+
+.header-subtitle {
+    font-size: .9rem;
+    color: var(--muted);
+}
+
+.info-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: rgba(255,255,255,.70);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.display-6 {
+    letter-spacing: -1px;
+}
