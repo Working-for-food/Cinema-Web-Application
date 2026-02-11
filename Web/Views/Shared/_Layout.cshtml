@@ -169,6 +169,7 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const cinemaToggle = document.getElementById("cinemaSelectionToggle");
@@ -203,7 +204,7 @@
             }
         });
     </script>
-
+    <partial name="_GlobalConfirmationModal" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

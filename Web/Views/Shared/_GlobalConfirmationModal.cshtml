@@ -1,0 +1,97 @@
+﻿<div class="modal fade" id="globalModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0" style="border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+
+            <div class="modal-body p-4 text-center bg-white">
+                <div id="globalModalIconBg" class="mx-auto mb-3 d-flex align-items-center justify-content-center transition-all"
+                     style="width: 64px; height: 64px; border-radius: 50%; background-color: #FEF2F2;">
+                    <i id="globalModalIcon" class="fa-solid fa-triangle-exclamation" style="font-size: 24px; color: #DC2626;"></i>
+                </div>
+
+                <h5 class="fw-bold mb-2" id="globalModalTitle" style="color: var(--text, #1e293b);">
+                    Підтвердження
+                </h5>
+
+                <p class="text-muted small mb-4 lh-sm" id="globalModalMessage">
+                    Ви впевнені, що хочете виконати цю дію?
+                </p>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light rounded-pill px-3 fw-bold flex-grow-1" data-bs-dismiss="modal"
+                            style="background-color: #f1f5f9; color: #64748b; border: none;">
+                        Ні
+                    </button>
+                    <button type="button" id="globalModalConfirmBtn" class="btn rounded-pill px-3 fw-bold flex-grow-1 shadow-sm text-white"
+                            style="background-color: #DC2626;">
+                        Так
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Глобальний об'єкт для керування модалкою
+    const GlobalModal = {
+        instance: null,
+        confirmCallback: null,
+
+        // Функція ініціалізації
+        init: function() {
+            const el = document.getElementById('globalModal');
+            if(el) {
+                this.instance = new bootstrap.Modal(el);
+
+                // Прив'язка кліку тільки один раз
+                document.getElementById('globalModalConfirmBtn').addEventListener('click', () => {
+                    if (typeof this.confirmCallback === 'function') {
+                        this.confirmCallback();
+                    }
+                    this.instance.hide();
+                });
+            }
+        },
+
+
+        show: function(title, message, onConfirm, type = 'danger') {
+            if (!this.instance) this.init();
+
+            document.getElementById('globalModalTitle').textContent = title;
+            document.getElementById('globalModalMessage').textContent = message;
+            this.confirmCallback = onConfirm;
+
+            // Стилізація залежно від типу
+            const iconBg = document.getElementById('globalModalIconBg');
+            const icon = document.getElementById('globalModalIcon');
+            const btn = document.getElementById('globalModalConfirmBtn');
+
+            if (type === 'danger') {
+                // Стиль для видалення/скасування (Червоний)
+                iconBg.style.backgroundColor = '#FEF2F2';
+                icon.className = 'fa-solid fa-triangle-exclamation';
+                icon.style.color = '#DC2626';
+                btn.style.backgroundColor = '#DC2626';
+                btn.textContent = "Скасувати";
+            } else {
+                // Стиль для звичайних дій (Акцентний/Синій)
+                // Використовуємо CSS змінні сторінки, якщо доступні
+                const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6366f1';
+
+                iconBg.style.backgroundColor = '#EEF2FF'; // Світлий акцент
+                icon.className = 'fa-solid fa-circle-info';
+                icon.style.color = accentColor;
+                btn.style.backgroundColor = accentColor;
+                btn.textContent = "Так, продовжити";
+            }
+
+            this.instance.show();
+        }
+    };
+
+    // Ініціалізація після завантаження DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        GlobalModal.init();
+    });
+</script>

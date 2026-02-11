@@ -42,9 +42,6 @@ public class BookingController : Controller
         _ => "2D"
     };
 
-    /// <summary>
-    /// Формує повний URL постера (TMDB або вже готовий URL)
-    /// </summary>
     private static string? BuildPosterUrl(string? posterPath)
     {
         if (string.IsNullOrWhiteSpace(posterPath))

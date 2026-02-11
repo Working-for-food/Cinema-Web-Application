@@ -3,26 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tickets Modal Flat</title>
+    <title>Квиток</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+
     <div class="modal fade" id="qrTicketModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="box-shadow: none">
             <div class="modal-content border-0 p-0" style="border-radius: 20px; overflow: hidden;">
-                <div class="modal-header text-white" style="background: linear-gradient(135deg, #222, #444); border:none;">
+
+                <div class="modal-header" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-bottom: 1px solid rgba(99, 102, 241, 0.1);">
                     <div style="width: 100%;">
-                        <h5 class="modal-title fw-bold" id="qrModalTitle">Квитки</h5>
-                        <small id="qrModalMovieName" class="d-block text-white-50" style="font-size: 13px;">Назва фільму</small>
+                        <h5 class="modal-title fw-bold text-dark" id="qrModalTitle" style="letter-spacing: 0.02em;">Квиток</h5>
+                        <small id="qrModalMovieName" class="d-block text-muted fw-bold" style="font-size: 13px; text-transform: uppercase;">Назва фільму</small>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body p-0" style="background-color: #f4f6f9;">
+                <div class="modal-body p-0" style="background-color: #f8fafc;">
 
-                    <div id="carouselTickets" class="carousel slide" data-bs-interval="false">
+                    <div id="carouselTickets" class="carousel slide" data-bs-interval="false" data-bs-wrap="false">
                         <div class="carousel-inner" id="qrTicketsContainer">
                         </div>
 
@@ -37,10 +39,6 @@
                     </div>
 
                 </div>
-
-                <div class="modal-footer justify-content-center" style="border-top: 1px solid #e0e0e0; background:#fff;">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Закрити</button>
-                </div>
             </div>
         </div>
     </div>
@@ -52,19 +50,19 @@
             padding: 24px;
             width: 280px;
             position: relative;
-            box-shadow: none;
-            border: none;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.15), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
+            border: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            margin: 20px auto;
+            margin: 30px auto;
         }
 
         .ticket-divider {
             width: 100%;
             height: 1px;
-            border-bottom: 2px dashed #eee;
+            border-bottom: 2px dashed #e2e8f0;
             margin: 16px 0;
             position: relative;
         }
@@ -74,31 +72,35 @@
                 position: absolute;
                 width: 20px;
                 height: 20px;
-                background-color: #f4f6f9;
+                background-color: #f8fafc;
                 border-radius: 50%;
                 top: -10px;
+                border: 1px solid #e2e8f0;
             }
 
             .ticket-divider::before {
-                left: -34px;
+                left: -35px;
+                border-right-color: transparent;
             }
 
             .ticket-divider::after {
-                right: -34px;
+                right: -35px;
+                border-left-color: transparent;
             }
 
         .seat-info {
             font-size: 22px;
             font-weight: 800;
-            color: #800000;
+            color: #6366f1;
             margin-bottom: 4px;
         }
 
         .row-info {
             font-size: 14px;
-            color: #666;
+            color: #64748b;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: 700;
         }
 
         .qr-placeholder {
@@ -114,7 +116,7 @@
 
         .carousel-control-prev-icon,
         .carousel-control-next-icon {
-            filter: invert(1) grayscale(100);
+            filter: invert(0.3) sepia(1) saturate(3) hue-rotate(210deg);
             width: 2rem;
             height: 2rem;
         }
@@ -122,13 +124,20 @@
         .carousel-control-prev, .carousel-control-next {
             width: 15%;
             opacity: 0.5;
+            transition: opacity 0.3s;
         }
 
             .carousel-control-prev:hover, .carousel-control-next:hover {
                 opacity: 1;
             }
-    </style>
 
+            /* ЦЕЙ КОД ПРИХОВУЄ СТРІЛКУ, ЯКЩО ГОРТАТИ НІКУДИ */
+            .carousel-control-prev.disabled,
+            .carousel-control-next.disabled {
+                opacity: 0;
+                pointer-events: none;
+            }
+    </style>
 
     <script>
         var qrModalInstance = null;
@@ -149,7 +158,7 @@
                 }
 
                 slide.innerHTML = `
-                    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+                    <div class="d-flex justify-content-center align-items-center" style="min-height: 420px;">
                         <div class="ticket-card">
                             <div class="row-info">Ряд ${ticket.Row}</div>
                             <div class="seat-info">Місце ${ticket.Seat}</div>
@@ -158,8 +167,8 @@
 
                             <div class="qr-placeholder" id="qrcode-${index}"></div>
 
-                            <div style="margin-top: 12px; font-size: 10px; color: #999; font-family: monospace;">
-                                SCAN TO ENTER
+                            <div style="margin-top: 12px; font-size: 10px; color: #94a3b8; font-family: monospace; font-weight: bold; letter-spacing: 0.05em;">
+                                СКАНУЙ ТУТ
                             </div>
                         </div>
                     </div>
@@ -175,7 +184,7 @@
                             text: ticket.QrContent,
                             width: 160,
                             height: 160,
-                            colorDark : "#000000",
+                            colorDark : "#1e293b",
                             colorLight : "#ffffff",
                             correctLevel : QRCode.CorrectLevel.H
                         });
