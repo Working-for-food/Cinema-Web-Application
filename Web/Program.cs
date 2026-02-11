@@ -71,6 +71,7 @@ builder.Services.AddScoped<IMoviePublicService, MoviePublicService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionPricingRepository, SessionPricingRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingStatisticsRepository, BookingStatisticsRepository>();
 
 // Services (реєструємо concrete + interface на той самий scoped-інстанс)
 builder.Services.AddScoped<MovieService>();
@@ -99,6 +100,10 @@ builder.Services.AddScoped<ISessionLookupService>(sp => sp.GetRequiredService<Se
 
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<IBookingService>(sp => sp.GetRequiredService<BookingService>());
+
+builder.Services.AddScoped<BookingStatisticsService>();
+builder.Services.AddScoped<IBookingStatisticsService>(sp => sp.GetRequiredService<BookingStatisticsService>());
+
 
 // TMDB
 builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));

@@ -1,0 +1,659 @@
+﻿@using Infrastructure.Entities
+@using System.Globalization
+@model Web.ViewModels.Admin.Statistics.BookingStatisticsIndexVm
+
+@{
+    ViewData["Title"] = "Статистика";
+    var ua = new CultureInfo("uk-UA");
+
+    string Money(decimal v) => v.ToString("N2", ua);
+    string Pct(decimal v) => v.ToString("N2", ua) + "%";
+
+    string Pt(PresentationType p) => p switch
+    {
+        PresentationType.TwoD => "2D",
+        PresentationType.ThreeD => "3D",
+        PresentationType.Imax => "IMAX",
+        _ => p.ToString()
+    };
+
+    string Cat(SeatCategory c) => c switch
+    {
+        SeatCategory.Standard => "Standard",
+        SeatCategory.Vip => "VIP",
+        SeatCategory.Accessible => "Accessible",
+        _ => c.ToString()
+    };
+}
+
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
+
+        <h1 class="section-title text-center mb-4">Статистика бронювань</h1>
+
+        <div class="card shadow-sm rounded-4 modern-card mb-4">
+            <div class="card-header bg-maroon text-white rounded-top-4">
+                <h5 class="mb-0"><i class="fa-solid fa-filter me-2"></i>Фільтри</h5>
+            </div>
+            <div class="card-body p-4 p-md-5">
+
+                <form method="get" asp-action="Index" class="row g-3">
+
+                    <div class="col-12">
+                        <div class="alert alert-info py-2 px-3 small mb-0">
+                            <i class="fa-solid fa-circle-info me-1"></i>
+                            <strong>BookedAt</strong> зберігається як UTC. Якщо фільтр по бронюваннях виглядає “зміщеним” — це нормально 🙂
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <div class="fw-semibold mb-2"><i class="fa-solid fa-calendar-days me-1"></i>Діапазон по даті <strong>сеансу</strong> (StartTime)</div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Від</label>
+                                    <input class="form-control" asp-for="SessionFrom" type="datetime-local" step="60" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">До</label>
+                                    <input class="form-control" asp-for="SessionTo" type="datetime-local" step="60" />
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" asp-for="IncludeFinishedSessions" />
+                                <label class="form-check-label" asp-for="IncludeFinishedSessions">Включати завершені сеанси</label>
+                            </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" asp-for="IncludeCancelledSessions" />
+                                <label class="form-check-label" asp-for="IncludeCancelledSessions">Включати скасовані сеанси</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <div class="fw-semibold mb-2"><i class="fa-solid fa-receipt me-1"></i>Діапазон по даті <strong>бронювання</strong> (BookedAt)</div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Від</label>
+                                    <input class="form-control" asp-for="BookingFrom" type="datetime-local" step="60" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">До</label>
+                                    <input class="form-control" asp-for="BookingTo" type="datetime-local" step="60" />
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" asp-for="IncludeDeletedBookingsInPeriod" />
+                                <label class="form-check-label" asp-for="IncludeDeletedBookingsInPeriod">Додавати скасовані бронювання до “дохід за період”</label>
+                            </div>
+                            <div class="form-text">Скасовані бронювання в будь-якому випадку показуються окремо.</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label text-muted"><i class="fa-solid fa-building me-1"></i>Кінотеатр</label>
+                        <select class="form-select" asp-for="CinemaId" asp-items="Model.Cinemas" id="cinemaSelect">
+                            <option value="0">— Усі кінотеатри —</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label text-muted"><i class="fa-solid fa-chair me-1"></i>Зал</label>
+                        <select class="form-select" asp-for="HallId" asp-items="Model.Halls" id="hallSelect" disabled="@(Model.CinemaId <= 0)">
+                            <option value="0">@(Model.CinemaId > 0 ? "— Усі зали —" : "— Спершу оберіть кінотеатр —")</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label text-muted"><i class="fa-solid fa-hashtag me-1"></i>ID сеансу</label>
+                        <input class="form-control" asp-for="SessionId" type="number" min="1" placeholder="Напр. 12" />
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-muted"><i class="fa-solid fa-film me-1"></i>Фільм</label>
+                        <input class="form-control"
+                               list="movieList"
+                               id="movieTitleInput"
+                               asp-for="MovieTitle"
+                               placeholder="Почніть вводити назву..."
+                               autocomplete="off" />
+
+                        <datalist id="movieList">
+                            @foreach (var m in Model.Movies)
+                            {
+                                <option value="@m.Text" data-id="@m.Value"></option>
+                            }
+                        </datalist>
+
+                        <input type="hidden" asp-for="MovieId" id="movieIdHidden" />
+                        <div class="form-text">Підказки з бази (datalist).</div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-muted"><i class="fa-solid fa-ticket me-1"></i>Тип показу</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var p in Enum.GetValues<PresentationType>())
+                            {
+                                var checkedNow = Model.PresentationTypes.Contains(p);
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="PresentationTypes" value="@p" id="pt_@p" @(checkedNow ? "checked" : null) />
+                                    <label class="form-check-label" for="pt_@p">@Pt(p)</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label text-muted"><i class="fa-solid fa-layer-group me-1"></i>Категорії місць</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var c in Enum.GetValues<SeatCategory>())
+                            {
+                                var checkedNow = Model.SeatCategories.Contains(c);
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="SeatCategories" value="@c" id="sc_@c" @(checkedNow ? "checked" : null) />
+                                    <label class="form-check-label" for="sc_@c">@Cat(c)</label>
+                                </div>
+                            }
+                        </div>
+                        <div class="form-text">Якщо нічого не обрано — беремо всі категорії.</div>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa-solid fa-chart-line me-1"></i>Показати статистику
+                        </button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">
+                            <i class="fa-solid fa-rotate-left me-1"></i>Скинути
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        @if (Model.Result is not null)
+        {
+            var s = Model.Result.Summary;
+
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-lg-3">
+                    <div class="card shadow-sm rounded-4 modern-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">Сеансів у вибірці</div>
+                            <div class="fs-4 fw-bold">@s.SessionsCount</div>
+                            <div class="small text-muted">Активні: @s.ActiveSessionsCount • Завершені: @s.FinishedSessionsCount • Скасовані: @s.CancelledSessionsCount</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-3">
+                    <div class="card shadow-sm rounded-4 modern-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">Заповненість (зараз)</div>
+                            <div class="fs-4 fw-bold">@Pct(s.OccupancyNowPercent)</div>
+                            <div class="small text-muted">Місць: @s.TotalSeats • Заброньовано: @s.BookedSeatsNow • Вільно: @s.FreeSeatsNow</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-3">
+                    <div class="card shadow-sm rounded-4 modern-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">Дохід (зараз)</div>
+                            <div class="fs-4 fw-bold">@Money(s.RevenueNow) грн</div>
+                            <div class="small text-muted">Потенціал: @Money(s.PotentialRevenue) • Ще можна: @Money(s.RemainingPotentialRevenue)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-3">
+                    <div class="card shadow-sm rounded-4 modern-card h-100">
+                        <div class="card-body">
+                            <div class="text-muted small">Продажі за період (BookedAt)</div>
+                            <div class="fs-4 fw-bold">@Money(s.RevenuePeriod) грн</div>
+                            <div class="small text-muted">Бронювань: @s.BookingsCountPeriod • Місць: @s.SeatsSoldPeriod</div>
+                            <div class="small text-muted">Скасовано: @s.CancelledBookingsCountPeriod • @Money(s.CancelledRevenuePeriod) грн</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm rounded-4 modern-card mb-4">
+                <div class="card-header bg-maroon text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="fa-solid fa-table me-2"></i>Зрізи</h5>
+                </div>
+                <div class="card-body p-4 p-md-5">
+
+                    <ul class="nav nav-pills mb-3" id="statsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="cinemas-tab" data-bs-toggle="pill" data-bs-target="#cinemas" type="button" role="tab">Кінотеатри</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="halls-tab" data-bs-toggle="pill" data-bs-target="#halls" type="button" role="tab">Зали</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="movies-tab" data-bs-toggle="pill" data-bs-target="#movies" type="button" role="tab">Фільми (top)</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="sessions-tab" data-bs-toggle="pill" data-bs-target="#sessions" type="button" role="tab">Сеанси (top)</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="types-tab" data-bs-toggle="pill" data-bs-target="#types" type="button" role="tab">Типи показу</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="cats-tab" data-bs-toggle="pill" data-bs-target="#cats" type="button" role="tab">Категорії місць</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="days1-tab" data-bs-toggle="pill" data-bs-target="#days1" type="button" role="tab">По днях (StartTime)</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="days2-tab" data-bs-toggle="pill" data-bs-target="#days2" type="button" role="tab">По днях (BookedAt)</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="statsTabsContent">
+
+                        <!-- CINEMAS -->
+                        <div class="tab-pane fade show active" id="cinemas" role="tabpanel" aria-labelledby="cinemas-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Кінотеатр</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр. зараз</th>
+                                            <th class="text-end">Заповненість</th>
+                                            <th class="text-end">Дохід зараз</th>
+                                            <th class="text-end">Потенціал</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.ByCinemas)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@r.CinemaName</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)%</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end">@Money(r.PotentialRevenue) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.ByCinemas.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="8">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- HALLS -->
+                        <div class="tab-pane fade" id="halls" role="tabpanel" aria-labelledby="halls-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Кінотеатр</th>
+                                            <th>Зал</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр. зараз</th>
+                                            <th class="text-end">Заповненість</th>
+                                            <th class="text-end">Дохід зараз</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.ByHalls)
+                                        {
+                                            <tr>
+                                                <td class="ps-3">@r.CinemaName</td>
+                                                <td class="fw-semibold">@r.HallName</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)%</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.ByHalls.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="8">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- MOVIES -->
+                        <div class="tab-pane fade" id="movies" role="tabpanel" aria-labelledby="movies-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Фільм</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр. зараз</th>
+                                            <th class="text-end">Заповненість</th>
+                                            <th class="text-end">Дохід зараз</th>
+                                            <th class="text-end">Потенціал</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.ByMovies)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@r.MovieTitle</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)%</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end">@Money(r.PotentialRevenue) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.ByMovies.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="8">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SESSIONS -->
+                        <div class="tab-pane fade" id="sessions" role="tabpanel" aria-labelledby="sessions-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">ID</th>
+                                            <th>Старт</th>
+                                            <th>Фільм</th>
+                                            <th>Кінотеатр</th>
+                                            <th>Зал</th>
+                                            <th>Тип</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр.</th>
+                                            <th class="text-end">%</th>
+                                            <th class="text-end">Дохід</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.BySessions)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@r.SessionId</td>
+                                                <td>@r.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                                <td class="fw-semibold">@r.MovieTitle</td>
+                                                <td>@r.CinemaName</td>
+                                                <td>@r.HallName</td>
+                                                <td>@Pt(r.PresentationType)</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.BySessions.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="11">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- PRESENTATION TYPES -->
+                        <div class="tab-pane fade" id="types" role="tabpanel" aria-labelledby="types-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Тип показу</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр. зараз</th>
+                                            <th class="text-end">Заповненість</th>
+                                            <th class="text-end">Дохід зараз</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.ByPresentationTypes)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@Pt(r.PresentationType)</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)%</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.ByPresentationTypes.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="7">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SEAT CATEGORIES -->
+                        <div class="tab-pane fade" id="cats" role="tabpanel" aria-labelledby="cats-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Категорія</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр. зараз</th>
+                                            <th class="text-end">Заповненість</th>
+                                            <th class="text-end">Дохід зараз</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.BySeatCategories)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@Cat(r.SeatCategory)</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)%</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.BySeatCategories.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="7">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- DAYS by SessionStart -->
+                        <div class="tab-pane fade" id="days1" role="tabpanel" aria-labelledby="days1-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">День</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Місць</th>
+                                            <th class="text-end">Забр. зараз</th>
+                                            <th class="text-end">Заповненість</th>
+                                            <th class="text-end">Дохід зараз</th>
+                                            <th class="text-end pe-3">Продажі за період</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.BySessionStartDay)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@r.Day.ToString("dd.MM.yyyy")</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end">@r.TotalSeats</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@r.OccupancyNowPercent.ToString("N2", ua)%</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.BySessionStartDay.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="7">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- DAYS by BookingBookedAt -->
+                        <div class="tab-pane fade" id="days2" role="tabpanel" aria-labelledby="days2-tab">
+                            <div class="table-responsive border rounded bg-white">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">День</th>
+                                            <th class="text-end">Сеансів</th>
+                                            <th class="text-end">Продано місць</th>
+                                            <th class="text-end">Дохід (продажі)</th>
+                                            <th class="text-end pe-3">За період (BookedAt)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Result!.ByBookingDay)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">@r.Day.ToString("dd.MM.yyyy")</td>
+                                                <td class="text-end">@r.SessionsCount</td>
+                                                <td class="text-end fw-semibold">@r.BookedSeatsNow</td>
+                                                <td class="text-end">@Money(r.RevenueNow) грн</td>
+                                                <td class="text-end pe-3">
+                                                    @Money(r.RevenuePeriod) грн
+                                                    <div class="small text-muted">броней: @r.BookingsCountPeriod • місць: @r.SeatsSoldPeriod</div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.Result!.ByBookingDay.Any())
+                                        {
+                                            <tr><td class="ps-3 py-3 text-muted" colspan="5">Немає даних за обраними фільтрами.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                </div>
+            </div>
+        }
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Cinema -> Halls
+        (function () {
+            const cinemaSelect = document.getElementById('cinemaSelect');
+            const hallSelect = document.getElementById('hallSelect');
+
+            if (!cinemaSelect || !hallSelect) return;
+
+            cinemaSelect.addEventListener('change', function () {
+                const cinemaId = parseInt(cinemaSelect.value || '0');
+
+                hallSelect.innerHTML = '';
+
+                if (!cinemaId) {
+                    hallSelect.disabled = true;
+                    hallSelect.innerHTML = '<option value="0">— Спершу оберіть кінотеатр —</option>';
+                    return;
+                }
+
+                hallSelect.disabled = false;
+                hallSelect.innerHTML = '<option value="0">— Усі зали —</option>';
+
+                fetch(`/Admin/Sessions/HallsByCinema?cinemaId=${cinemaId}`)
+                    .then(r => r.ok ? r.json() : [])
+                    .then(items => {
+                        items.forEach(h => {
+                            const opt = document.createElement('option');
+                            opt.value = h.id;
+                            opt.textContent = h.title;
+                            hallSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(() => { /* тихо */ });
+            });
+        })();
+
+        // MovieTitle (datalist) -> MovieId
+        (function () {
+            const input = document.getElementById('movieTitleInput');
+            const hidden = document.getElementById('movieIdHidden');
+            const list = document.getElementById('movieList');
+            if (!input || !hidden || !list) return;
+
+            function sync() {
+                const val = (input.value || '').trim();
+                const options = list.querySelectorAll('option');
+                let found = null;
+                options.forEach(o => {
+                    if (o.value === val) found = o;
+                });
+
+                if (found) {
+                    hidden.value = found.getAttribute('data-id') || '0';
+                } else {
+                    hidden.value = '0';
+                }
+            }
+
+            input.addEventListener('change', sync);
+            input.addEventListener('blur', sync);
+        })();
+    </script>
+}
