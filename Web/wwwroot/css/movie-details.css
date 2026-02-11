@@ -123,10 +123,10 @@
     color: #222;
 }
 
-    .movie-details-meta > div:first-child {
-        font-weight: 700;
-        opacity: .85;
-    }
+.movie-details-meta > div:first-child {
+    font-weight: 700;
+    opacity: .85;
+}
 
 .meta-label {
     font-weight: 800;
@@ -182,8 +182,6 @@
     display: flex;
     justify-content: flex-end;
 }
-    
-
 
 .schedule-card {
     height: 100%;
@@ -220,9 +218,9 @@
     flex: 0 0 auto;
 }
 
-    .schedule-day.active {
-        border-color: rgba(0,0,0,.35);
-    }
+.schedule-day.active {
+    border-color: rgba(0,0,0,.35);
+}
 
 .schedule-scroll {
     flex: 1 1 auto;

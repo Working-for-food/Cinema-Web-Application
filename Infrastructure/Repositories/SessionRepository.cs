@@ -111,5 +111,11 @@ namespace Infrastructure.Repositories
 
             return query.AnyAsync(x => x.StartTime < end && x.EndTime > start, ct);
         }
+
+        public async Task<bool> HasBookingsAsync(int sessionId, CancellationToken ct)
+        {
+            return await _context.SessionSeats
+                .AnyAsync(s => s.SessionId == sessionId && s.BookingId != null, ct);
+        }
     }
 }

@@ -49,18 +49,16 @@ public class BookingController : Controller
         if (string.IsNullOrWhiteSpace(posterPath))
             return null;
 
-        // якщо в БД уже повний URL
         if (posterPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             return posterPath;
 
-        // TMDB path типу "/abc.jpg"
         return "https://image.tmdb.org/t/p/w342" + posterPath;
     }
 
     [HttpGet]
     public async Task<IActionResult> Create(int sessionId, CancellationToken ct)
     {
-        await _sessions.EnsureSessionSeatsAsync(sessionId, ct);
+        await _sessions.EnsureSessionSeatsCreatedAsync(sessionId, ct);
 
         var seats = await _sessions.GetSeatsForBookingAsync(sessionId, ct);
 
@@ -81,15 +79,12 @@ public class BookingController : Controller
             MovieTitle = session.Movie.Title,
             MoviePosterUrl = BuildPosterUrl(session.Movie.PosterPath),
 
-            // Вікове обмеження (16+ і тд)
             AgeLabel = session.Movie.AgeRating.HasValue
                 ? $"{session.Movie.AgeRating.Value}+"
                 : null,
 
-            // 2D / 3D / IMAX
             FormatLabel = PresentationTypeUa(session.PresentationType),
 
-            // Мова (uk / en → UK / EN)
             LanguageLabel = string.IsNullOrWhiteSpace(session.Movie.Language)
                 ? null
                 : session.Movie.Language!.ToUpperInvariant(),
@@ -134,7 +129,7 @@ public class BookingController : Controller
         {
             ModelState.AddModelError("", ex.Message);
 
-            await _sessions.EnsureSessionSeatsAsync(vm.SessionId, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(vm.SessionId, ct);
             var seats = await _sessions.GetSeatsForBookingAsync(vm.SessionId, ct);
 
             var session = await _db.Sessions
