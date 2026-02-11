@@ -28,7 +28,8 @@ public class SessionLookupService : ISessionLookupService
                 m.Id,
                 m.Title,
                 m.Duration,
-                m.PosterPath
+                m.PosterPath,
+                m.ReleaseDate
             ))
             .ToList();
     }

@@ -9,5 +9,6 @@ public record LookupItemDto(
     int Id,
     string Title,
     int? DurationMinutes = null,
-    string? PosterPath = null
+    string? PosterPath = null,
+    DateOnly? ReleaseDate = null
 );
