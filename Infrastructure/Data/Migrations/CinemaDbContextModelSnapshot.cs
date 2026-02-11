@@ -508,7 +508,9 @@ namespace Infrastructure.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
@@ -524,7 +526,7 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "MovieId")
                         .IsUnique();
 
-                    b.ToTable("SavedMovies");
+                    b.ToTable("SavedMovies", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.Seat", b =>
