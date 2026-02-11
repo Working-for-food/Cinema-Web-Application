@@ -197,6 +197,11 @@ namespace Web.Controllers.Admin
             };
         }
 
+        private static bool IsLocked(SessionDetailsDto s)
+        {
+            return s.IsCancelled || s.EndTime <= DateTime.Now;
+        }
+
         // GET: /Admin/Sessions/PricingMeta?hallId=1
         [HttpGet]
         public async Task<IActionResult> PricingMeta(int hallId, CancellationToken ct)
@@ -342,6 +347,16 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SessionEditVm vm, CancellationToken ct)
         {
+            if (vm.StartTime.HasValue && vm.StartTime.Value < DateTime.Now)
+            {
+                ModelState.AddModelError(nameof(vm.StartTime), "Початок сеансу не може бути в минулому.");
+            }
+
+            if (vm.StartTime.HasValue && vm.EndTime.HasValue && vm.EndTime.Value <= vm.StartTime.Value)
+            {
+                ModelState.AddModelError(nameof(vm.EndTime), "Кінець має бути пізніше за початок.");
+            }
+
             if (!ModelState.IsValid)
             {
                 await FillEditLookupsAsync(vm, ct);
@@ -377,6 +392,12 @@ namespace Web.Controllers.Admin
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
 
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             var vm = ToEditVm(s);
 
             await FillEditLookupsAsync(vm, ct);
@@ -392,11 +413,30 @@ namespace Web.Controllers.Admin
         {
             vm.Id = id;
 
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             foreach (var key in ModelState.Keys
                 .Where(k => k.StartsWith("RowPrices") || k.StartsWith("CategoryMultipliers"))
                 .ToList())
             {
                 ModelState.Remove(key);
+            }
+
+            if (vm.StartTime.HasValue && vm.StartTime.Value < DateTime.Now)
+            {
+                ModelState.AddModelError(nameof(vm.StartTime), "Початок сеансу не може бути в минулому.");
+            }
+
+            if (vm.StartTime.HasValue && vm.EndTime.HasValue && vm.EndTime.Value <= vm.StartTime.Value)
+            {
+                ModelState.AddModelError(nameof(vm.EndTime), "Кінець сеансу має бути пізніше за початок.");
             }
 
             if (!ModelState.IsValid)
@@ -432,6 +472,17 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string? returnUrl, CancellationToken ct)
         {
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            if (s.EndTime <= DateTime.Now)
+            {
+                TempData["Error"] = "Неможливо скасувати завершений сеанс.";
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return LocalRedirect(returnUrl);
+                return RedirectToAction(nameof(Index));
+            }
+
             var ok = await _sessions.CancelAsync(id, ct);
             if (!ok) return NotFound();
 
@@ -448,6 +499,17 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Restore(int id, string? returnUrl, CancellationToken ct)
         {
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            if (s.EndTime <= DateTime.Now)
+            {
+                TempData["Error"] = "Неможливо відновити минулий сеанс.";
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return LocalRedirect(returnUrl);
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 var ok = await _sessions.RestoreAsync(id, ct);
@@ -473,6 +535,12 @@ namespace Web.Controllers.Admin
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
+
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування цін заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             var pricing = await _sessions.GetPricingAsync(id, ct);
             var seats = await _sessions.GetSeatPricesAsync(id, ct);
@@ -520,6 +588,12 @@ namespace Web.Controllers.Admin
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
+
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування цін заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             async Task<IActionResult> ReturnWithViewModelAsync()
             {

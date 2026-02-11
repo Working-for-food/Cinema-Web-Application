@@ -241,6 +241,41 @@
 
             if (!els.form) return;
 
+            const nowMin = () => {
+            const n = new Date();
+            return new Date(n.getFullYear(), n.getMonth(), n.getDate(), n.getHours(), n.getMinutes(), 0, 0);
+            };
+
+            const applyMinAndGray = () => {
+                if (!els.start || !els.end) return;
+
+                const now = nowMin();
+
+                const existingMin = parseDt(els.start.min);
+                const effectiveMin = (!existingMin || existingMin < now) ? now : existingMin;
+
+                els.start.min = toInputDt(effectiveMin);
+
+                const startVal = parseDt(els.start.value);
+                const endMin = (startVal && startVal > effectiveMin) ? startVal : effectiveMin;
+                els.end.min = toInputDt(endMin);
+
+                const mark = (input) => {
+                    const v = parseDt(input.value);
+                    const m = parseDt(input.min);
+                    input.classList.toggle('dt-past', !!(v && m && v < m));
+                };
+
+                mark(els.start);
+                mark(els.end);
+            };
+
+            applyMinAndGray();
+            els.start?.addEventListener('change', applyMinAndGray);
+            els.end?.addEventListener('change', applyMinAndGray);
+            els.form?.addEventListener('submit', applyMinAndGray);
+
+
             const state = { lastMinEnd: null };
 
             const posterUrl = (path) => {
@@ -345,11 +380,12 @@
                     }
                 } else {
                     els.infoPanel?.classList.add('d-none');
-                    if (els.start) els.start.min = '';
+                    if (els.start) els.start.min = toInputDt(nowMin());
                 }
 
                 normalizeEnd(dur, true);
                 validateDurationLabel(dur);
+                applyMinAndGray();
             };
 
             els.form.addEventListener('submit', () => {

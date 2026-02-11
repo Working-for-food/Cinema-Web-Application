@@ -182,7 +182,7 @@
                 @foreach (var s in Model.Sessions)
                 {
                     var isOver = s.EndTime <= DateTime.Now;
-                    var isFinished = !s.IsCancelled && isOver; 
+                    var isFinished = !s.IsCancelled && isOver;
                     var isActive = !s.IsCancelled && !isOver;
 
                     var disabledBtn = !isActive;
@@ -200,7 +200,9 @@
                                     <div class="h-100 position-relative bg-light">
                                         @if (!string.IsNullOrWhiteSpace(posterUrl))
                                         {
-                                            <img src="@posterUrl" alt="Постер" class="h-100 w-100 object-fit-cover position-absolute top-0 start-0" loading="lazy" />
+                                            <img src="@posterUrl" alt="Постер"
+                                                 class="h-100 w-100 object-fit-cover position-absolute top-0 start-0"
+                                                 loading="lazy" />
                                         }
                                         else
                                         {
@@ -246,23 +248,46 @@
 
                                                 <div class="d-flex gap-1">
 
-                                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn-icon-sm text-secondary" title="Деталі">
+                                                    <a asp-action="Details"
+                                                       asp-route-id="@s.Id"
+                                                       class="btn-icon-sm text-secondary"
+                                                       title="Деталі">
                                                         <i class="fa-solid fa-eye"></i>
                                                     </a>
 
-                                                    <a asp-action="Pricing"
-                                                       asp-route-id="@s.Id"
-                                                       class="btn-icon-sm @(disabledBtn ? "disabled text-muted opacity-50" : "text-primary")"
-                                                       title="@(disabledBtn ? "Редагування заборонено" : "Ціни")">
-                                                        <i class="fa-solid fa-tags"></i>
-                                                    </a>
+                                                    @if (!disabledBtn)
+                                                    {
+                                                        <a asp-action="Pricing"
+                                                           asp-route-id="@s.Id"
+                                                           class="btn-icon-sm text-primary"
+                                                           title="Ціни">
+                                                            <i class="fa-solid fa-tags"></i>
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="btn-icon-sm text-muted opacity-50"
+                                                              title="Редагування заборонено">
+                                                            <i class="fa-solid fa-tags"></i>
+                                                        </span>
+                                                    }
 
-                                                    <a asp-action="Edit"
-                                                       asp-route-id="@s.Id"
-                                                       class="btn-icon-sm @(disabledBtn ? "disabled text-muted opacity-50" : "text-dark")"
-                                                       title="@(disabledBtn ? "Редагування заборонено" : "Редагувати")">
-                                                        <i class="fa-solid fa-pen-to-square"></i>
-                                                    </a>
+                                                    @if (!disabledBtn)
+                                                    {
+                                                        <a asp-action="Edit"
+                                                           asp-route-id="@s.Id"
+                                                           class="btn-icon-sm text-dark"
+                                                           title="Редагувати">
+                                                            <i class="fa-solid fa-pen-to-square"></i>
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="btn-icon-sm text-muted opacity-50"
+                                                              title="Редагування заборонено">
+                                                            <i class="fa-solid fa-pen-to-square"></i>
+                                                        </span>
+                                                    }
 
                                                     @if (!s.IsCancelled)
                                                     {
@@ -303,12 +328,14 @@
 
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
                 }
             </div>
         }
+
 
 
         @if (Model.TotalPages > 1)
