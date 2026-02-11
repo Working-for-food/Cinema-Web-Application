@@ -42,11 +42,13 @@ public sealed class ScheduleController : Controller
         {
             var cinemas = await _cinemas.GetAllAsync(city: city, ct: ct);
 
-            vm.Cinemas = cinemas.Select(c => new SelectListItem
+            vm.Cinemas = cinemas.Select(c => new ScheduleChooseVm.CinemaCardVm
             {
-                Value = c.Id.ToString(),
-                Text = string.IsNullOrWhiteSpace(c.Address) ? c.Name : $"{c.Name} — {c.Address}",
-                Selected = cinemaId.HasValue && cinemaId.Value == c.Id
+                Id = c.Id,
+                Name = c.Name,
+                City = c.City,
+                Address = c.Address,
+                ImageUrl = c.ImageUrl
             }).ToList();
         }
 
@@ -95,6 +97,6 @@ public sealed class ScheduleController : Controller
 
     // GET /schedule/locations (поки заглушка)
     [HttpGet("locations")]
-    public IActionResult Locations()
-        => View("~/Views/Schedule/Locations.cshtml");
+    public IActionResult Locations(string? city, string? search)
+    => RedirectToAction("Index", "Cinemas", new { city, search });
 }

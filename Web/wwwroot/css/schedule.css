@@ -208,3 +208,23 @@
         border-color: rgba(99,102,241,.28);
         transform: translateY(-1px);
     }
+
+.schedule-cinema-cards-scroll {
+    max-height: 70vh;
+    overflow: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+}
+
+.schedule-cinema-card-title {
+    font-weight: 800;
+    letter-spacing: .01em;
+}
+
+.schedule-cinema-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(99,102,241,.20);
+    box-shadow: var(--shadow-md) !important;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+

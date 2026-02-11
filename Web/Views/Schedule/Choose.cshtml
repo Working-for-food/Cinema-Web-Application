@@ -4,7 +4,8 @@
     ViewData["Title"] = "Обрати кінотеатр";
 }
 
-<link rel="stylesheet" href="~/css/schedule.css" />
+<link rel="stylesheet" href="~/css/schedule.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/cinemas-list.css" asp-append-version="true" />
 
 <section class="py-5 gray-bg">
     <div class="container-fluid px-lg-5">
@@ -14,12 +15,6 @@
                 <h1 class="section-title mb-1">Оберіть кінотеатр</h1>
                 <div class="text-muted fw-bold">Спочатку місто, потім кінотеатр</div>
             </div>
-
-            <a class="btn btn-outline-maroon shadow-sm"
-               asp-controller="Schedule"
-               asp-action="Locations">
-                Переглянути всі локації
-            </a>
         </div>
 
         <div class="row g-3">
@@ -57,60 +52,127 @@
 
                         @if (!Model.HasCity)
                         {
-                                <div class="empty-state mx-auto" style="max-width: 760px;">
-                                    <div class="empty-icon"><i class="fa-solid fa-location-dot"></i></div>
-                                    <h5 class="empty-title">Оберіть місто</h5>
-                                    <p class="empty-sub">Після вибору міста справа з’явиться список кінотеатрів.</p>
-                                </div>
+                            <div class="empty-state mx-auto" style="max-width: 760px;">
+                                <div class="empty-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                <h5 class="empty-title">Оберіть місто</h5>
+                                <p class="empty-sub">Після вибору міста справа з’явиться список кінотеатрів.</p>
+                            </div>
                         }
                         else if (Model.Cinemas is null || Model.Cinemas.Count == 0)
                         {
-                                <div class="empty-state mx-auto" style="max-width: 760px;">
-                                    <div class="empty-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <h5 class="empty-title">Немає кінотеатрів</h5>
-                                    <p class="empty-sub">У вибраному місті кінотеатрів не знайдено.</p>
-                                </div>
+                            <div class="empty-state mx-auto" style="max-width: 760px;">
+                                <div class="empty-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+                                <h5 class="empty-title">Немає кінотеатрів</h5>
+                                <p class="empty-sub">У вибраному місті кінотеатрів не знайдено.</p>
+                            </div>
                         }
                         else
                         {
-                                <div class="schedule-cinema-list">
-                                @foreach (var c in Model.Cinemas)
-                                {
-                                            <div class="schedule-cinema-row">
-                                                <div class="schedule-cinema-main">
-                                                    @{
-                                                        var parts = (c.Text ?? "").Split(" — ", 2, StringSplitOptions.None);
-                                                        var name = parts.Length > 0 ? parts[0] : c.Text;
-                                                        var addr = parts.Length == 2 ? parts[1] : null;
-                                                    }
-
-                                                    <div class="schedule-cinema-title">@name</div>
-                                                    @if (!string.IsNullOrWhiteSpace(addr))
-                                                    {
-                                                        <div class="schedule-cinema-address">@addr</div>
-                                                    }
+                            <div class="schedule-cinema-cards-scroll">
+                                <div class="row g-3">
+                                    @foreach (var cinema in Model.Cinemas)
+                                    {
+                                        <div class="col-12 col-md-6">
+                                            <div class="card-modern h-100 d-flex flex-column shadow-sm schedule-cinema-card">
+                                                <div class="position-relative overflow-hidden border-bottom"
+                                                     style="border-radius: 12px 12px 0 0;">
+                                                    <img src="@(string.IsNullOrWhiteSpace(cinema.ImageUrl) ? "/images/no-cinema-image.jpg" : cinema.ImageUrl)"
+                                                         class="w-100"
+                                                         alt="@cinema.Name"
+                                                         loading="lazy"
+                                                         onerror="this.onerror=null;this.src='/images/no-cinema-image.jpg';"
+                                                         style="height: 170px; object-fit: cover;" />
                                                 </div>
 
-                                                <a class="schedule-cinema-link"
-                                                   asp-controller="Schedule"
-                                                   asp-action="Index"
-                                                   asp-route-cinemaId="@c.Value">
-                                                    <i class="fa-regular fa-calendar-days"></i>
-                                                    <span>Розклад</span>
-                                                </a>
-                                            </div>
-                                }
-                                </div>
-                        }
+                                                <div class="card-body p-3 d-flex flex-column flex-grow-1">
+                                                    <div class="fw-bold mb-2 schedule-cinema-card-title">@cinema.Name</div>
 
-                        <div class="mt-3">
-                            <a class="btn btn-light" asp-controller="Schedule" asp-action="Choose">Скинути</a>
-                        </div>
+                                                    @if (!string.IsNullOrWhiteSpace(cinema.Address))
+                                                    {
+                                                        <div class="text-muted small mb-3 flex-grow-1">
+                                                            <i class="fa-solid fa-map-pin text-muted me-2"></i> @cinema.Address
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="flex-grow-1"></div>
+                                                    }
+
+                                                    <div class="d-flex gap-2 mt-auto">
+                                                        <a class="btn btn-soft flex-grow-1 fw-bold"
+                                                           asp-controller="Schedule"
+                                                           asp-action="Index"
+                                                           asp-route-cinemaId="@cinema.Id">
+                                                            <i class="fa-regular fa-calendar-days me-2"></i>
+                                                            <span>Розклад</span>
+                                                        </a>
+
+                                                        <button type="button"
+                                                                class="btn btn-outline-danger"
+                                                                style="border-radius: 10px;"
+                                                                onclick="openMapModal(event, '@cinema.Name', '@(cinema.Address ?? "")', '@cinema.City')"
+                                                                title="Переглянути на карті">
+                                                            <i class="fa-solid fa-map-location-dot"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
 
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Map modal (same idea as cinemas page) -->
+            <div class="modal fade shadow-none" id="mapModal" tabindex="-1" aria-labelledby="mapTitle" aria-hidden="true" style="box-shadow:none!important;">
+                <div class="modal-dialog modal-lg modal-dialog-centered" style="box-shadow:none!important;">
+                    <div class="modal-content border-0 shadow-none br-16 overflow-hidden" style="box-shadow:none!important;">
+                        <div class="modal-header border-0 bg-white p-4 pb-0">
+                            <div>
+                                <h5 class="modal-title fw-bold" id="mapTitle">Локація</h5>
+                                <p class="text-muted small mb-0" id="mapAddressFooter"></p>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body p-4">
+                            <div class="ratio ratio-21x9 br-12 overflow-hidden border shadow-none" style="box-shadow:none!important;">
+                                <iframe id="mapIframe" src="" allowfullscreen="" loading="lazy" style="box-shadow:none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @section Scripts {
+                <script>
+                    function openMapModal(event, name, address, city) {
+                        if (event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+
+                        const fullAddress = [address, city].filter(Boolean).join(", ");
+                        const searchQuery = encodeURIComponent(`${name} ${fullAddress}`);
+                        const mapUrl = `https://maps.google.com/maps?q=${searchQuery}&hl=uk&z=15&output=embed`;
+
+                        document.getElementById('mapTitle').innerText = name;
+                        document.getElementById('mapAddressFooter').innerText = fullAddress;
+                        document.getElementById('mapIframe').src = mapUrl;
+
+                        var myModal = new bootstrap.Modal(document.getElementById('mapModal'));
+                        myModal.show();
+                    }
+
+                    document.getElementById('mapModal').addEventListener('hidden.bs.modal', function () {
+                        document.getElementById('mapIframe').src = "";
+                    });
+                </script>
+            }
 
     </div>
 </section>
