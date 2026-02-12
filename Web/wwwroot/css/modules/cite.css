@@ -1,17 +1,6 @@
-﻿/* Variables & Reset: Define colors and fonts first */
-@import url('_base.css');
-
-/* Utilities: small helper classes (spacing, radius, text helpers, etc.) */
+﻿@import url('_base.css');
 @import url('_utilities.css');
-
-/* Global Typography: Headers, text, and decorative lines */
 @import url('_typography.css');
-
-/* Layout: containers, grids, page structure */
 @import url('_layout.css');
-
-/* Components: Cards, Buttons, and UI elements */
 @import url('_components.css');
-
-/* Forms: Form controls and validation messages */
 @import url('_forms.css');

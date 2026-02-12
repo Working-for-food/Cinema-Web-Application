@@ -21,6 +21,8 @@
     </PackageReference>
 	  
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12" />
+	  
+    <PackageReference Include="QRCoder" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,12 +30,8 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 	<ItemGroup>
-		<None Include="..\Infrastructure\Data\Seed\allcountry.json"
-			  Link="Data\Seed\allcountry.json"
-			  CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\Infrastructure\Data\Seed\allcountry.json" Link="Data\Seed\allcountry.json" CopyToOutputDirectory="PreserveNewest" />
 
-		<None Include="..\Infrastructure\Data\Seed\allcountryUK.json"
-			  Link="Data\Seed\allcountryUK.json"
-			  CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\Infrastructure\Data\Seed\allcountryUK.json" Link="Data\Seed\allcountryUK.json" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 </Project>

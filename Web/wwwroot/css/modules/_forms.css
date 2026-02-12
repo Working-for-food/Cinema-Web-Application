@@ -19,18 +19,18 @@ textarea.form-control {
     transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
 }
 
-    .form-control::placeholder {
-        color: #94a3b8;
-    }
+.form-control::placeholder {
+    color: #94a3b8;
+}
 
-    .form-control:focus,
-    .form-select:focus,
-    textarea.form-control:focus {
-        border-color: #6366F1 !important;
-        box-shadow: none !important;
-        outline: none;
-        background: #fff;
-    }
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+    border-color: #6366F1 !important;
+    box-shadow: none !important;
+    outline: none;
+    background: #fff;
+}
 
 .text-danger {
     color: var(--danger);
@@ -43,20 +43,26 @@ textarea.form-control {
     border-color: rgba(239, 68, 68, .65);
 }
 
-    .form-control.is-invalid:focus,
-    .form-select.is-invalid:focus {
-        box-shadow: 0 0 0 0.22rem rgba(239, 68, 68, 0.14);
-    }
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    box-shadow: 0 0 0 0.22rem rgba(239, 68, 68, 0.14);
+}
 
 .form-control.is-valid,
 .form-select.is-valid {
     border-color: rgba(34, 197, 94, .55);
 }
 
-    .form-control.is-valid:focus,
-    .form-select.is-valid:focus {
-        box-shadow: 0 0 0 0.22rem rgba(34, 197, 94, 0.14);
-    }
+.form-control.is-valid:focus,
+.form-select.is-valid:focus {
+    box-shadow: 0 0 0 0.22rem rgba(34, 197, 94, 0.14);
+}
+
+.form-control-lg,
+.form-select-lg {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+}
 
 .input-group-modern .input-group-text {
     background: var(--surface-2);
@@ -83,12 +89,6 @@ textarea.form-control {
     border-radius: 8px;
     padding: 8px;
     background: var(--surface);
-}
-
-.form-control-lg,
-.form-select-lg {
-    font-size: 1.1rem;
-    padding: 0.75rem 1rem;
 }
 
 .select2-container--default .select2-selection--multiple {
@@ -118,9 +118,9 @@ textarea.form-control {
     color: rgba(79,70,229,.75) !important;
 }
 
-    .select2-container--default .select2-selection__choice__remove:hover {
-        color: #4F46E5 !important;
-    }
+.select2-container--default .select2-selection__choice__remove:hover {
+    color: #4F46E5 !important;
+}
 
 .select2-dropdown {
     border: 1px solid var(--border) !important;
@@ -147,17 +147,6 @@ textarea.form-control {
     padding-right: 1rem;
 }
 
-.form-control-lg {
-    font-size: 1.1rem;
-    padding: 0.75rem 1rem;
-}
-
-.form-control:focus {
-    border-color: #6366f1;
-}
-
-/* ===== Modern Rounded Switch (NO Bootstrap icon) ===== */
-
 .form-check-input.toggle-status-btn {
     appearance: none !important;
     -webkit-appearance: none !important;
@@ -168,38 +157,34 @@ textarea.form-control {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
-    /* Оце прибирає "галочку/іконку" Bootstrap */
     background-image: none !important;
     position: relative;
     cursor: pointer;
     transition: background-color .2s ease;
 }
 
-    /* При фокусі Bootstrap теж любить додати ефекти */
-    .form-check-input.toggle-status-btn:focus {
-        box-shadow: none !important;
-        background-image: none !important;
-    }
+.form-check-input.toggle-status-btn:focus {
+    box-shadow: none !important;
+    background-image: none !important;
+}
 
-    /* Checked — теж прибираємо background-image */
-    .form-check-input.toggle-status-btn:checked {
-        background-color: var(--accent);
-        background-image: none !important;
-    }
+.form-check-input.toggle-status-btn:checked {
+    background-color: var(--accent);
+    background-image: none !important;
+}
 
-    /* Кружечок */
-    .form-check-input.toggle-status-btn::before {
-        content: "";
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 18px;
-        height: 18px;
-        background: #fff;
-        border-radius: 50%;
-        transition: transform .2s ease;
-    }
+.form-check-input.toggle-status-btn::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s ease;
+}
 
-    .form-check-input.toggle-status-btn:checked::before {
-        transform: translateX(22px);
-    }
+.form-check-input.toggle-status-btn:checked::before {
+    transform: translateX(22px);
+}

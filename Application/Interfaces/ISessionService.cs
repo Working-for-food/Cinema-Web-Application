@@ -34,4 +34,6 @@ public interface ISessionService
 
     Task<IReadOnlyList<SessionSeatPriceDto>> GetSeatPricesAsync(int sessionId, CancellationToken ct);
 
+    Task<IReadOnlyList<SessionSeatDto>> GetSeatsForBookingAsync(int sessionId, CancellationToken ct);
+
 }
