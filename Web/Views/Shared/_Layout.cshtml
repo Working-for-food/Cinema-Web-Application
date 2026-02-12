@@ -12,7 +12,6 @@
     string adminMode = Context.Session?.GetString("AdminMode") ?? "";
     bool isAdminInUserMode = isActualAdmin && adminMode == "user";
     bool showAdminPanel = isActualAdmin && !isAdminInUserMode;
-    string? selectedCinemaName = Context.Session?.GetString("SelectedCinemaName") ?? "Оберіть кінотеатр";
 }
 
 <!DOCTYPE html>
@@ -30,14 +29,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_red.css">
 
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Web.styles.css" asp-append-version="true" />
   
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.min.css" />
     <link rel="stylesheet" href="~/css/modules/cite.css" asp-append-version="true" />
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -77,7 +72,7 @@
 
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Шаблони</h6></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index"><i class="fa-solid fa-receipt me-2 opacity-50"></i> Шаблони цін </a></li
+                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index"><i class="fa-solid fa-receipt me-2 opacity-50"></i> Шаблони цін </a></li>
 
                                     <li><hr class="dropdown-divider"></li>
 
@@ -94,18 +89,6 @@
                     </ul>
 
                     <div class="d-flex align-items-center gap-2">
-                        @if (!showAdminPanel)
-                        {
-                            <div class="dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="cinemaSelectionToggle" role="button" data-bs-toggle="dropdown">
-                                    <i class="fa-solid fa-location-dot text-danger me-1"></i> @selectedCinemaName
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" id="cinemaSelectionDropdown">
-                                    <li><span class="dropdown-item-text opacity-50">Завантаження...</span></li>
-                                </ul>
-                            </div>
-                        }
-
                         @if (User.Identity.IsAuthenticated)
                         {
                             <div class="dropdown ms-2">
@@ -176,41 +159,6 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const cinemaToggle = document.getElementById("cinemaSelectionToggle");
-            const cinemaDropdown = document.getElementById("cinemaSelectionDropdown");
-
-            if (cinemaToggle && cinemaDropdown) {
-                cinemaToggle.addEventListener("click", function () {
-                    if (cinemaDropdown.children.length <= 1) {
-                        fetch("/api/cinemas")
-                            .then(res => res.ok ? res.json() : [])
-                            .then(data => {
-                                cinemaDropdown.innerHTML = "";
-                                cinemaDropdown.innerHTML += `<li><a class="dropdown-item cinema-opt" href="#" data-id="0">Усі кінотеатри</a></li>`;
-                                data.forEach(c => {
-                                    cinemaDropdown.innerHTML += `<li><a class="dropdown-item cinema-opt" href="#" data-id="${c.id}">${c.name} <small class='text-muted'>(${c.address})</small></a></li>`;
-                                });
-                            })
-                            .catch(err => console.error("Cinema load failed", err));
-                    }
-                });
-
-                cinemaDropdown.addEventListener("click", function(e) {
-                    const target = e.target.closest(".cinema-opt");
-                    if(target) {
-                        e.preventDefault();
-                        const id = target.getAttribute("data-id");
-                        const name = target.textContent;
-                        fetch(`/Home/SetCinemaFilter?cinemaId=${id}&cinemaName=${encodeURIComponent(name)}`, { method: "POST" })
-                            .then(res => { if(res.ok) window.location.reload(); });
-                    }
-                });
-            }
-        });
-    </script>
     <partial name="_GlobalConfirmationModal" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
