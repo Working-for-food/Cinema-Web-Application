@@ -1,23 +1,18 @@
 ﻿:root {
-    /* Typography */
     --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    /* Palette */
-    --bg: #F8FAFC; /* page background */
-    --surface: #FFFFFF; /* cards / panels */
-    --surface-2: #F1F5F9; /* soft blocks */
-    --text: #1E293B; /* text main */
-    --muted: #64748B; /* text muted */
-    --border: #E2E8F0; /* borders */
-    --danger: #EF4444; /* danger */
-    /* Accent (single clean primary) */
-    --accent: #6366F1; /* indigo */
-    --accent-2: #4F46E5; /* indigo hover */
+    --bg: #F8FAFC; 
+    --surface: #FFFFFF; 
+    --surface-2: #F1F5F9; 
+    --text: #1E293B;
+    --muted: #64748B; 
+    --border: #E2E8F0;
+    --danger: #EF4444; 
+    --accent: #6366F1; 
+    --accent-2: #4F46E5; 
     --accent-soft: rgba(99, 102, 241, 0.14);
-    /* Radius / shadow */
     --radius: 12px;
     --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.06);
     --shadow-md: 0 14px 34px rgba(15, 23, 42, 0.10);
-    /* Focus ring */
     --focus-ring: 0 0 0 0.22rem rgba(99, 102, 241, 0.16);
 }
 
@@ -49,4 +44,16 @@ html, body {
 main {
     flex: 1 0 auto;
     min-height: 0;
+}
+
+.container {
+    max-width: 1400px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+
+.container-fluid {
+    max-width: 1280px;
+    padding: 0 20px;
+    margin: 0 auto;
 }

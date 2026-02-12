@@ -32,10 +32,10 @@
     transition: opacity 0.2s;
 }
 
-    .btn-maroon:hover {
-        opacity: 0.9;
-        color: white;
-    }
+.btn-maroon:hover {
+    opacity: 0.9;
+    color: white;
+}
 
 .btn-outline-danger {
     width: 48px;
@@ -57,10 +57,10 @@
     justify-content: center;
 }
 
-    .btn-soft:hover {
-        background-color: var(--accent);
-        color: white;
-    }
+.btn-soft:hover {
+    background-color: var(--accent);
+    color: white;
+}
 
 .card-modern {
     border-radius: 16px;

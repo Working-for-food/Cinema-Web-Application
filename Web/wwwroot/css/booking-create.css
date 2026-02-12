@@ -1,33 +1,28 @@
-﻿/* New Styles */
-.booking-header-v2 {
+﻿.booking-header-v2 {
     position: relative;
     min-height: 300px;
     border-radius: 20px;
-    overflow: hidden; /* щоб блюр не “вилазив” */
+    overflow: hidden; 
 }
 
-/* === BLUR BACKDROP (постер розмитий) === */
-/* === BLUR BACKDROP (менший блюр) === */
 .header-backdrop {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: blur(8px) brightness(0.55); /* було 18px */
+    filter: blur(8px) brightness(0.55); 
     opacity: 0.65;
-    transform: scale(1.06); /* менше збільшення */
+    transform: scale(1.06); 
     z-index: 0;
 }
 
-    .header-backdrop::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient( 90deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.15) 100% );
-    }
+.header-backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( 90deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.15) 100% );
+}
 
-
-/* контент завжди над фоном */
 .header-content {
     position: relative;
     z-index: 1;
@@ -41,10 +36,10 @@
     border: 3px solid rgba(255,255,255,0.2);
 }
 
-    .booking-poster-v2 img {
-        width: 100%;
-        display: block;
-    }
+.booking-poster-v2 img {
+    width: 100%;
+    display: block;
+}
 
 .age-badge {
     position: absolute;
@@ -124,11 +119,11 @@
     color: var(--muted);
 }
 
-    .legend-item .dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 4px;
-    }
+.legend-item .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
 
 .dot-booked {
     background: #f1f5f9;
@@ -142,10 +137,10 @@
     line-height: 1;
 }
 
-    .total-amount small {
-        font-size: 1.2rem;
-        color: var(--brand);
-    }
+.total-amount small {
+    font-size: 1.2rem;
+    color: var(--brand);
+}
 
 .footer-checkout {
     background: #fcfdfe;
@@ -154,7 +149,6 @@
     margin-top: 20px;
 }
 
-/* Keep seat logic but refine container */
 .js-seat {
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -166,7 +160,6 @@
     pointer-events: none;
 }
 
-/* ===== Booked seats: pale + cross (єдиний блок, без дубляжу) ===== */
 .seat.seat-booked {
     opacity: .25;
     filter: grayscale(1);
@@ -178,36 +171,33 @@
     pointer-events: none;
 }
 
-    /* прибрати акцентний номер/ціну */
-    .seat.seat-booked .seat-no,
-    .seat.seat-booked .seat-price {
-        color: rgba(100,116,139,.55) !important;
-    }
+.seat.seat-booked .seat-no,
+.seat.seat-booked .seat-price {
+    color: rgba(100,116,139,.55) !important;
+}
 
-    /* хрестик поверх зайнятого */
-    .seat.seat-booked::after,
-    .seat.seat-booked::before {
-        content: "";
-        position: absolute;
-        inset: 9px;
-        border-radius: 10px;
-        pointer-events: none;
-        opacity: .85;
-    }
+.seat.seat-booked::after,
+.seat.seat-booked::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 10px;
+    pointer-events: none;
+    opacity: .85;
+}
 
-    .seat.seat-booked::before {
-        border-top: 3px solid rgba(148,163,184,.85);
-        transform: rotate(45deg);
-        transform-origin: center;
-    }
+.seat.seat-booked::before {
+    border-top: 3px solid rgba(148,163,184,.85);
+    transform: rotate(45deg);
+    transform-origin: center;
+}
 
-    .seat.seat-booked::after {
-        border-top: 3px solid rgba(148,163,184,.85);
-        transform: rotate(-45deg);
-        transform-origin: center;
-    }
+.seat.seat-booked::after {
+    border-top: 3px solid rgba(148,163,184,.85);
+    transform: rotate(-45deg);
+    transform-origin: center;
+}
 
-/* ===== ВИБРАНЕ ВІЛЬНЕ МІСЦЕ — яскраве виділення ===== */
 .seat:has(.seat-input:checked) {
     border: 2px solid var(--brand);
     background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(99,102,241,.05));
@@ -215,8 +205,8 @@
     transform: translateY(-4px) scale(1.08);
 }
 
-    .seat:has(.seat-input:checked) .seat-no,
-    .seat:has(.seat-input:checked) .seat-price {
-        color: var(--brand);
-        font-weight: 900;
-    }
+.seat:has(.seat-input:checked) .seat-no,
+.seat:has(.seat-input:checked) .seat-price {
+    color: var(--brand);
+    font-weight: 900;
+}

@@ -1,12 +1,4 @@
-﻿.col-row {
-    width: 120px;
-}
-
-.col-seats {
-    width: 260px;
-}
-
-.br-16 {
+﻿.br-16 {
     border-radius: 16px !important;
 }
 
@@ -50,7 +42,7 @@
 }
 
 .bg-light-soft {
-    background-color: #f8fafc;
+    background-color: var(--bg);
     border-radius: 16px;
 }
 

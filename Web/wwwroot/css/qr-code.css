@@ -21,26 +21,26 @@
     position: relative;
 }
 
-    .ticket-divider::before, .ticket-divider::after {
-        content: '';
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background-color: #f8fafc;
-        border-radius: 50%;
-        top: -10px;
-        border: 1px solid #e2e8f0;
-    }
+.ticket-divider::before, .ticket-divider::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: #f8fafc;
+    border-radius: 50%;
+    top: -10px;
+    border: 1px solid #e2e8f0;
+}
 
-    .ticket-divider::before {
-        left: -35px;
-        border-right-color: transparent;
-    }
+.ticket-divider::before {
+    left: -35px;
+    border-right-color: transparent;
+}
 
-    .ticket-divider::after {
-        right: -35px;
-        border-left-color: transparent;
-    }
+.ticket-divider::after {
+    right: -35px;
+    border-left-color: transparent;
+}
 
 .seat-info {
     font-size: 22px;
@@ -63,10 +63,10 @@
     border-radius: 8px;
 }
 
-    .qr-placeholder img {
-        display: block;
-        margin: 0 auto;
-    }
+.qr-placeholder img {
+    display: block;
+    margin: 0 auto;
+}
 
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
@@ -81,12 +81,12 @@
     transition: opacity 0.3s;
 }
 
-    .carousel-control-prev:hover, .carousel-control-next:hover {
-        opacity: 1;
-    }
+.carousel-control-prev:hover, .carousel-control-next:hover {
+    opacity: 1;
+}
 
-    .carousel-control-prev.disabled,
-    .carousel-control-next.disabled {
-        opacity: 0;
-        pointer-events: none;
-    }
+.carousel-control-prev.disabled,
+.carousel-control-next.disabled {
+    opacity: 0;
+    pointer-events: none;
+}
