@@ -15,14 +15,18 @@ public class MoviesController : Controller
     private readonly ITmdbClient _tmdb;
     private readonly IImportMovieFromTmdb _import;
     private readonly IPersonService _people;
+    private readonly IExternalRatingsService _ratings;
 
 
-    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import, IPersonService people)
+    public MoviesController(IMovieService service, ITmdbClient tmdb, IImportMovieFromTmdb import, IPersonService people, IExternalRatingsService ratings)
+    
     {
         _service = service;
         _tmdb = tmdb;
         _import = import;
+        
         _people = people;
+        _ratings = ratings;
     }
 
     [HttpGet("")]
@@ -47,7 +51,38 @@ public class MoviesController : Controller
     {
         var movie = await _service.GetMovieDetailsAsync(id, ct);
         if (movie == null) return NotFound();
-        return View($"{ViewsRoot}/Details.cshtml", movie);
+
+        var metacriticDisplay = "Ще не оцінено критиками";
+        var rtDisplay = "Ще не оцінено критиками";
+        var imdbDisplay = "Ще не оцінено глядачами";
+
+        if (movie.TmdbId.HasValue)
+        {
+            var ext = await _tmdb.GetExternalIdsAsync(movie.TmdbId.Value, ct);
+
+            if (!string.IsNullOrWhiteSpace(ext.ImdbId))
+            {
+                var ratings = await _ratings.GetRatingsAsync(ext.ImdbId, ct);
+
+                if (!string.IsNullOrWhiteSpace(ratings.Imdb))
+                    imdbDisplay = ratings.Imdb;
+
+                if (!string.IsNullOrWhiteSpace(ratings.RottenTomatoes))
+                    rtDisplay = ratings.RottenTomatoes;
+
+                if (!string.IsNullOrWhiteSpace(ratings.Metacritic))
+                    metacriticDisplay = ratings.Metacritic;
+            }
+        }
+        var vm = new MovieDetailsVm
+        {
+            Movie = movie,
+            ImdbRating = imdbDisplay,
+            RottenTomatoes = rtDisplay,
+            Metacritic = metacriticDisplay
+        };
+
+        return View($"{ViewsRoot}/Details.cshtml", vm);
     }
 
     [HttpGet("create")]
@@ -216,6 +251,7 @@ public class MoviesController : Controller
         vm.ActorList = new MultiSelectList(selectedActors, "Id", "FullName", vm.SelectedActorIds);
 
     }
+    
 
     private static MovieFormDto MapToDto(MovieEditVm vm) => new()
     {

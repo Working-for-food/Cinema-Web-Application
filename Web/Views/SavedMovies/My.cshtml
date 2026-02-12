@@ -1,0 +1,77 @@
+﻿@model List<Infrastructure.Entities.Movie>
+
+@{
+    ViewData["Title"] = "Мої збережені";
+    string PosterUrl(Infrastructure.Entities.Movie m)
+    {
+        if (string.IsNullOrWhiteSpace(m.PosterPath)) return "/images/no-poster.png";
+        if (m.PosterPath.StartsWith("/")) return "https://image.tmdb.org/t/p/w500" + m.PosterPath;
+        return m.PosterPath;
+    }
+}
+
+<section class="py-5 gray-bg">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+            <h1 class="section-title mb-0">Мої збережені</h1>
+        </div>
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="empty-state mx-auto" style="max-width: 680px;">
+                <div class="empty-icon"><i class="fa-solid fa-bookmark"></i></div>
+
+                <h5 class="empty-title">Поки що немає збережених фільмів</h5>
+                <p class="empty-sub mb-3">Збережіть фільми, щоб швидко повертатися до них пізніше.</p>
+
+                <a asp-controller="Afisha" asp-action="Index" class="btn btn-maroon px-4 py-2 fw-bold text-uppercase">
+                    <i class="fa-solid fa-film me-2"></i>Перейти до афіші
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var m in Model)
+                {
+                    <div class="col-6 col-md-4 col-lg-5 col-xl-3">
+                        <div class="card shadow-sm border-0 br-12 overflow-hidden h-100">
+
+                            <a asp-route="MovieDetails" asp-route-id="@m.Id"
+                               class="text-decoration-none d-block">
+
+                                <div class="bg-light" style="aspect-ratio: 2 / 3;">
+                                    <img class="w-100 h-100"
+                                         style="object-fit: cover;"
+                                         src="@PosterUrl(m)"
+                                         alt="@m.Title"
+                                         loading="lazy"
+                                         onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+                                </div>
+
+                                <div class="card-body p-3">
+                                    <div class="fw-bold text-dark text-truncate" title="@m.Title">@m.Title</div>
+                                </div>
+                            </a>
+
+                            <div class="card-footer bg-white border-0 pt-0 px-3 pb-3 mt-auto">
+                                <form asp-controller="SavedMovies" asp-action="Toggle" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="movieId" value="@m.Id" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+                                    <button type="submit" class="btn btn-light border text-danger w-100 br-8">
+                                        <i class="fa-solid fa-trash me-2"></i>Видалити
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+</section>

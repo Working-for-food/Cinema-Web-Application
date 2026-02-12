@@ -112,6 +112,7 @@
                                 <a class="nav-link dropdown-toggle d-flex align-items-center fw-bold text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                                     <i class="fa-solid fa-circle-user fs-4 me-2 opacity-75"></i> @username.ToUpper()
                                 </a>
+                              
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
                                         <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile">
@@ -121,6 +122,11 @@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Booking" asp-action="My">
                                             <i class="fas fa-ticket-alt"></i> Мої бронювання
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="SavedMovies" asp-action="My">
+                                            <i class="fa-solid fa-bookmark me-2"></i> Мої збережені
                                         </a>
                                     </li>
                                     
