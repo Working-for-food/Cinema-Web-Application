@@ -1,7 +1,7 @@
 ﻿@model Web.ViewModels.Movies.Details.MovieDetailsVm
 @using Web.ViewModels.Movies.Details
 
-<link rel="stylesheet" href="~/css/movie-details.css" />
+<link rel="stylesheet" href="~/css/movie-details.css" asp-append-version="true" />
 
 @{
     var hasSchedule = Model.Schedule is not null && Model.Schedule.Count > 0;
@@ -21,8 +21,15 @@
     if (Model.ReleaseDate is not null) chips.Add(Model.ReleaseDate.ToString()!);
     if (Model.Duration is not null) chips.Add($"{Model.Duration} хв");
     if (!string.IsNullOrWhiteSpace(Model.Language)) chips.Add(Model.Language!);
-    if (Model.Rating is not null) chips.Add($"★ {Model.Rating}");
-    if (Model.AgeRating is not null) chips.Add($"{Model.AgeRating}+");
+
+    string ShowOrFallback(string? v) =>
+        string.IsNullOrWhiteSpace(v) || v.Trim().Equals("N/A", StringComparison.OrdinalIgnoreCase)
+            ? "поки що не оцінено"
+            : v.Trim();
+
+    var imdbText = ShowOrFallback(Model.Imdb);
+    var rtText = ShowOrFallback(Model.RottenTomatoes);
+    var mcText = ShowOrFallback(Model.Metacritic);
 }
 
 <div class="movie-details-layout">
@@ -33,7 +40,20 @@
                      alt="@Model.Title"
                      loading="lazy"
                      onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+
+                @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
+                {
+                    <a class="poster-trailer-link"
+                       href="@Model.TrailerUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        ▶ Дивитися трейлер
+                    </a>
+                }
             </div>
+
+
+
 
             <div class="movie-details-info">
                 <div class="movie-details-title">@Model.Title</div>
@@ -43,6 +63,25 @@
                     {
                         <div>@string.Join(" • ", chips)</div>
                     }
+
+                    <div class="ratings-row">
+                        <span class="rating-badge" title="Оцінка глядачів">
+                            IMDb: @imdbText
+                        </span>
+
+                        <span class="rating-badge" title="Оцінка критиків">
+                            Rotten Tomatoes: @rtText
+                        </span>
+
+                        <span class="rating-badge" title="Середня оцінка експертів">
+                            Metacritic: @mcText
+                        </span>
+                    </div>
+                    <div class="movie-age-rating">
+                        <span class="meta-label">Вікове обмеження:</span>
+                        @(Model.AgeRating is null || Model.AgeRating <= 0 ? "поки що не вказано" : $"{Model.AgeRating}+")
+                    </div>
+
 
                     @if (!string.IsNullOrWhiteSpace(Model.OriginalName))
                     {
@@ -74,24 +113,66 @@
                 {
                     <div class="movie-details-desc">@Model.Description</div>
                 }
+                <div class="movie-save-wrap">
+                    <form asp-controller="SavedMovies" asp-action="Toggle" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="movieId" value="@Model.Id" />
+                        <input type="hidden" name="returnUrl"
+                               value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
+
+                        @if (Model.IsSaved)
+                        {
+                            <button type="submit" class="btn-save btn-saved">
+                                ✓ Збережено
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn-save">
+                                Додати в збережені
+                            </button>
+                        }
+
+                    </form>
+                </div>
+
 
                 <div class="movie-details-actions">
-                    @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
-                    {
-                        <a class="btn-secondary"
-                           href="@Model.TrailerUrl"
-                           target="_blank"
-                           rel="noopener noreferrer">
-                            Дивитися трейлер
-                        </a>
-                    }
-
-                    <a class="btn-details"
+                    <a class="btn-back-blue"
                        asp-controller="Afisha"
                        asp-action="Index">
                         Назад до афіші
                     </a>
                 </div>
+
+
+
+             
+
+
+                @if (Model.RelatedMovies is { Count: > 0 })
+                {
+                    <section class="related-section">
+                        <h3 class="related-title">Дивіться також:</h3>
+
+                        <div class="related-grid">
+                            @foreach (var m in Model.RelatedMovies)
+                            {
+                                <a class="related-card"
+                                   asp-route="MovieDetails"
+                                   asp-route-id="@m.Id">
+                                    <img src="@m.PosterUrl"
+                                         alt="@m.Title"
+                                         loading="lazy"
+                                         onerror="this.onerror=null;this.src='/images/no-poster.png';" />
+                                    <div class="related-name">@m.Title</div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
             </div>
         </div>
     </div>
@@ -117,51 +198,55 @@
                         </button>
                     }
                 </div>
+
                 <div class="schedule-scroll">
-                @foreach (var cinema in Model.Schedule)
-                {
-                    <div class="schedule-cinema">
-                        <div class="schedule-cinema-title">@cinema.CinemaName</div>
+                    @foreach (var cinema in Model.Schedule)
+                    {
+                        <div class="schedule-cinema">
+                            <div class="schedule-cinema-title">@cinema.CinemaName</div>
 
-                        @foreach (var dayVm in (cinema.Days ?? Array.Empty<MovieScheduleDayVm>()))
-                        {
-                            <div class="schedule-day-panel" data-day="@dayVm.Date.ToString("yyyy-MM-dd")">
-                                @if (dayVm.Sessions is null || dayVm.Sessions.Count == 0)
-                                {
-                                    <div class="schedule-empty">Немає сеансів</div>
-                                }
-                                else
-                                {
-                                    <div class="schedule-list">
-                                        @foreach (var s in dayVm.Sessions.OrderBy(x => x.StartTime))
-                                        {
-                                            <div class="schedule-item">
-                                                <div class="schedule-time">@s.StartTime.ToString("HH:mm")</div>
+                            @foreach (var dayVm in (cinema.Days ?? Array.Empty<MovieScheduleDayVm>()))
+                            {
+                                <div class="schedule-day-panel" data-day="@dayVm.Date.ToString("yyyy-MM-dd")">
+                                    @if (dayVm.Sessions is null || dayVm.Sessions.Count == 0)
+                                    {
+                                        <div class="schedule-empty">Немає сеансів</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="schedule-list">
+                                            @foreach (var s in dayVm.Sessions.OrderBy(x => x.StartTime))
+                                            {
+                                                <div class="schedule-item">
+                                                    <div class="schedule-time">@s.StartTime.ToString("HH:mm")</div>
 
-                                                <div class="schedule-meta">
-                                                    <div class="schedule-hall">@s.HallName</div>
-                                                    @if (!string.IsNullOrWhiteSpace(s.Presentation))
-                                                    {
-                                                        <div class="schedule-format">@s.Presentation</div>
-                                                    }
+                                                    <div class="schedule-meta">
+                                                        <div class="schedule-hall">@s.HallName</div>
+                                                        @if (!string.IsNullOrWhiteSpace(s.Presentation))
+                                                        {
+                                                            <div class="schedule-format">@s.Presentation</div>
+                                                        }
+                                                    </div>
+
+                                                        <a class="schedule-cta-btn"
+                                                           asp-controller="Booking"
+                                                           asp-action="Create"
+                                                           asp-route-sessionId="@s.Id">
+                                                            Обрати
+                                                        </a>
+
                                                 </div>
-                                                    <a class="btn-details schedule-cta"
-                                                       asp-controller="Booking"
-                                                       asp-action="Create"
-                                                       asp-route-sessionId="@s.Id">
-                                                        Обрати
-                                                    </a>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             }
         </div>
     </aside>
 </div>
+
 <script src="~/js/movie-details-schedule.js"></script>

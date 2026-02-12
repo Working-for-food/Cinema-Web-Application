@@ -14,18 +14,39 @@ public class MoviePublicService : IMoviePublicService
     {
         _movies = movies;
     }
+    public async Task<IReadOnlyList<MovieDetailsDtoRelatedItem>> GetRelatedMoviesAsync(
+    int movieId,
+    IReadOnlyList<string> genres,
+    int take,
+    CancellationToken ct = default)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        var items = await _movies.GetRelatedMoviesAsync(movieId, genres, take, nowUtc, ct);
+
+        return items.Select(m => new MovieDetailsDtoRelatedItem
+        {
+            Id = m.Id,
+            Title = m.Title,
+            PosterPath = m.PosterPath
+        }).ToList();
+    }
 
     public async Task<MovieDetailsDto?> GetDetailsAsync(int movieId, DateOnly? date, CancellationToken ct = default)
     {
         var movie = await _movies.GetByIdWithDetailsAsync(movieId, ct);
         if (movie is null) return null;
 
-        var baseDay = date ?? DateOnly.FromDateTime(DateTime.Now);
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
+
+        var baseDay = date ?? today;
         var from = baseDay.ToDateTime(TimeOnly.MinValue);
-        var to = date.HasValue ? from.AddDays(1) : from.AddDays(8);
+        var to = date.HasValue ? from.AddDays(1) : from.AddDays(7);
 
         var sessions = movie.Sessions
             .Where(s => !s.IsCancelled && s.StartTime >= from && s.StartTime < to)
+            .Where(s => DateOnly.FromDateTime(s.StartTime) != today || s.EndTime > now)
             .OrderBy(s => s.StartTime)
             .ToList();
 
@@ -78,6 +99,8 @@ public class MoviePublicService : IMoviePublicService
             TrailerUrl = movie.TrailerUrl,
             Language = movie.Language,
             Rating = movie.Rating,
+            AgeRating = movie.AgeRating,
+            TmdbId = movie.TmdbId,
 
             Genres = movie.MovieGenres.Select(g => g.Genre.Name).ToList(),
             Countries = movie.MovieCountries.Select(c => c.Country.Name).ToList(),

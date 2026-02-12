@@ -123,9 +123,9 @@ public class SessionLookupService : ISessionLookupService
 
     private static string CategoryTitle(SeatCategory c) => c switch
     {
-        SeatCategory.Standard => "Стандарт",
+        SeatCategory.Standard => "Звичайне",
         SeatCategory.Vip => "VIP",
-        SeatCategory.Accessible => "Доступне",
+        SeatCategory.Accessible => "Інклюзивне",
         _ => c.ToString()
     };
 }
