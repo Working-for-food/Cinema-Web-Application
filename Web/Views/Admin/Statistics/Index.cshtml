@@ -595,7 +595,6 @@
 
 @section Scripts {
     <script>
-        // Cinema -> Halls
         (function () {
             const cinemaSelect = document.getElementById('cinemaSelect');
             const hallSelect = document.getElementById('hallSelect');
@@ -626,7 +625,7 @@
                             hallSelect.appendChild(opt);
                         });
                     })
-                    .catch(() => { /* тихо */ });
+                    .catch(() => { });
             });
         })();
 
