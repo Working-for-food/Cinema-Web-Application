@@ -1,6 +1,7 @@
-using Application.Interfaces;
+Ôªøusing Application.Interfaces;
 using Application.Options;
 using Application.Services;
+using CloudinaryDotNet;
 using Infrastructure.Data;
 using Infrastructure.Data.Seed;
 using Infrastructure.Entities;
@@ -10,25 +11,28 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Configuration;
 using Web.Helpers;
-
-
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // MVC
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-}).AddRazorOptions(options =>
+})
+.AddRazorOptions(options =>
 {
     options.AreaViewLocationFormats.Clear();
-    options.AreaViewLocationFormats.Add("/Views/{2}/{1}/{0}.cshtml"); 
+    options.AreaViewLocationFormats.Add("/Views/{2}/{1}/{0}.cshtml");
     options.AreaViewLocationFormats.Add("/Views/{2}/Shared/{0}.cshtml");
     options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
 });
 
-builder.Services.AddDistributedMemoryCache(); 
+// Session
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -40,6 +44,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
@@ -47,6 +52,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
+
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedAccount = true;
 })
@@ -54,7 +60,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddDefaultTokenProviders()
 .AddErrorDescriber<UkrainianIdentityErrorDescriber>();
 
+// Email
 builder.Services.AddTransient<Application.Interfaces.IEmailService, Application.Services.EmailService>();
+
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("Cloudinary"));
+
+builder.Services.AddSingleton(provider =>
+{
+    var config = provider.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+    return new Cloudinary(new Account(config.CloudName, config.ApiKey, config.ApiSecret));
+});
 
 // Repositories
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
@@ -64,16 +80,17 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<ICinemaRepository, CinemaRepository>();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+
 builder.Services.AddScoped<IAfishaRepository, AfishaRepository>();
 builder.Services.AddScoped<IUserMovieRepository, UserMovieRepository>();
-builder.Services.AddScoped<IAfishaService, AfishaService>();
-builder.Services.AddScoped<IMoviePublicService, MoviePublicService>();
+
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionPricingRepository, SessionPricingRepository>();
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IBookingStatisticsRepository, BookingStatisticsRepository>();
 
-// Services (Â∫ÒÚÛ∫ÏÓ concrete + interface Ì‡ ÚÓÈ Ò‡ÏËÈ scoped-≥ÌÒÚ‡ÌÒ)
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IPricingTemplateRepository, PricingTemplateRepository>();
+
+// Services (concrete + interface –Ω–∞ —Ç–æ–π —Å–∞–º–∏–π scoped-—ñ–Ω—Å—Ç–∞–Ω—Å)
 builder.Services.AddScoped<MovieService>();
 builder.Services.AddScoped<IMovieService>(sp => sp.GetRequiredService<MovieService>());
 
@@ -101,9 +118,14 @@ builder.Services.AddScoped<ISessionLookupService>(sp => sp.GetRequiredService<Se
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<IBookingService>(sp => sp.GetRequiredService<BookingService>());
 
-builder.Services.AddScoped<BookingStatisticsService>();
-builder.Services.AddScoped<IBookingStatisticsService>(sp => sp.GetRequiredService<BookingStatisticsService>());
+builder.Services.AddScoped<AfishaService>();
+builder.Services.AddScoped<IAfishaService>(sp => sp.GetRequiredService<AfishaService>());
 
+builder.Services.AddScoped<MoviePublicService>();
+builder.Services.AddScoped<IMoviePublicService>(sp => sp.GetRequiredService<MoviePublicService>());
+
+builder.Services.AddScoped<PricingTemplateService>();
+builder.Services.AddScoped<IPricingTemplateService>(sp => sp.GetRequiredService<PricingTemplateService>());
 
 // TMDB
 builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));
@@ -137,20 +159,34 @@ app.UseSession();
 
 app.UseAntiforgery();
 
+
+var defaultDateCulture = "uk-UA";
+var ci = new CultureInfo(defaultDateCulture);
+ci.NumberFormat.NumberDecimalSeparator = ".";
+ci.NumberFormat.CurrencyDecimalSeparator = ".";
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(ci),
+    SupportedCultures = new List<CultureInfo> { ci },
+    SupportedUICultures = new List<CultureInfo> { ci }
+};
+
+app.UseRequestLocalization(localizationOptions);
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Area route (Admin)
+// Routes
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Afisha}/{action=Index}/{id?}");
 
-// Default route
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Afisha}/{action=Index}/{id?}");
 
-// Seed Countries and Roles + Test User
+// Seed
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -159,16 +195,19 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<CinemaDbContext>();
+
         await CountrySeeder.SeedAsync(db);
         await MovieSessionSeeder.SeedAsync(db);
+        await CountryUkNameSeeder.SeedAsync(db);
 
         logger.LogInformation("Countries seeded/updated.");
 
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-
         var configuration = services.GetRequiredService<IConfiguration>();
-        await Infrastructure.Data.Seed.RoleInitializer.InitializeAsync(userManager, roleManager, configuration);
+
+        await RoleInitializer.InitializeAsync(userManager, roleManager, configuration);
+
         logger.LogInformation("Roles and SuperAdmin seeded.");
     }
     catch (Exception ex)

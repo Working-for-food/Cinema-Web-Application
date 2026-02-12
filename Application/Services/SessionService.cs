@@ -253,12 +253,17 @@ public class SessionService : ISessionService
         if (IsOver(s.EndTime))
             throw new InvalidOperationException($"Не можна {action}: сеанс уже завершився.");
     }
-    public async Task EnsureSessionSeatsAsync(int sessionId, CancellationToken ct)
+    public async Task EnsureSessionSeatsCreatedAsync(int sessionId, CancellationToken ct)
     {
         var s = await _repo.GetByIdAsync(sessionId, ct);
         if (s is null) return;
 
         await _pricingRepo.EnsureSessionSeatsCreatedAsync(sessionId, s.HallId, ct);
+    }
+
+    public async Task<bool> HasBookingsAsync(int sessionId, CancellationToken ct)
+    {
+        return await _repo.HasBookingsAsync(sessionId, ct);
     }
 
     public async Task<SessionPricingDto> GetPricingAsync(int sessionId, CancellationToken ct)

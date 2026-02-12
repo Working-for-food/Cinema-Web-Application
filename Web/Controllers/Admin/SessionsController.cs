@@ -14,12 +14,21 @@ namespace Web.Controllers.Admin
     {
         private readonly ISessionService _sessions;
         private readonly ISessionLookupService _lookups;
+        private readonly IPricingTemplateService _templateService;
 
         private const string IndexViewPath = "~/Views/Admin/Sessions/Index.cshtml";
         private const string CreateViewPath = "~/Views/Admin/Sessions/Create.cshtml";
         private const string EditViewPath = "~/Views/Admin/Sessions/Edit.cshtml";
         private const string DetailsViewPath = "~/Views/Admin/Sessions/Details.cshtml";
         private const string PricingViewPath = "~/Views/Admin/Sessions/Pricing.cshtml";
+
+        private static string CategoryTitle(SeatCategory c) => c switch
+        {
+            SeatCategory.Standard => "Стандарт",
+            SeatCategory.Vip => "VIP",
+            SeatCategory.Accessible => "Інклюзивне",
+            _ => c.ToString()
+        };
 
         private static List<SelectListItem> BuildSortOptions(string? selected)
         {
@@ -39,10 +48,11 @@ namespace Web.Controllers.Admin
             }).ToList();
         }
 
-        public SessionsController(ISessionService sessions, ISessionLookupService lookups)
+        public SessionsController(ISessionService sessions, ISessionLookupService lookups, IPricingTemplateService templateService)
         {
             _sessions = sessions;
             _lookups = lookups;
+            _templateService = templateService;
         }
 
         private static SessionEditDto ToDto(SessionEditVm vm)
@@ -185,18 +195,56 @@ namespace Web.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> PricingMeta(int hallId, CancellationToken ct)
         {
-            if (hallId < 1) return Ok(new { rows = Array.Empty<int>(), categories = Array.Empty<object>() });
+            if (hallId < 1)
+                return Ok(new
+                {
+                    rows = Array.Empty<int>(),
+                    categories = Array.Empty<object>(),
+                    seats = Array.Empty<object>(),
+                    maxSeats = 0
+                });
 
-            var meta = await _lookups.GetHallPricingMetaAsync(hallId, ct);
+            var seats = await _lookups.GetHallSeatsAsync(hallId, ct);
+
+            if (seats.Count == 0)
+                return Ok(new
+                {
+                    rows = Array.Empty<int>(),
+                    categories = Array.Empty<object>(),
+                    seats = Array.Empty<object>(),
+                    maxSeats = 0
+                });
+
+            var rows = seats.Select(s => s.RowNumber)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToArray();
+
+            var categories = seats.Select(s => s.Category)
+                .Distinct()
+                .OrderBy(x => x)
+                .Select(c => new { id = (int)c, title = CategoryTitle(c) })
+                .ToArray();
+
+            var maxSeats = seats.GroupBy(s => s.RowNumber)
+                .Select(g => g.Max(x => x.SeatNumber))
+                .DefaultIfEmpty(0)
+                .Max();
 
             return Ok(new
             {
-                rows = meta.Rows,
-                categories = meta.Categories.Select(c => new { id = c.Id, title = c.Title })
+                rows,
+                categories,
+                maxSeats,
+                seats = seats.Select(s => new
+                {
+                    id = s.Id,
+                    row = s.RowNumber,
+                    number = s.SeatNumber,
+                    category = (int)s.Category
+                })
             });
         }
-
-
 
         // GET: /Admin/Sessions/HallsByCinema?cinemaId=1
         [HttpGet]
@@ -241,7 +289,7 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Details(int id, CancellationToken ct)
         {
-            await _sessions.EnsureSessionSeatsAsync(id, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(id, ct);
 
             var dto = await _sessions.GetByIdAsync(id, ct);
             if (dto is null) return NotFound();
@@ -400,7 +448,7 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Edit(int id, CancellationToken ct)
         {
-            await _sessions.EnsureSessionSeatsAsync(id, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(id, ct);
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
@@ -509,7 +557,7 @@ namespace Web.Controllers.Admin
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Pricing(int id, CancellationToken ct)
         {
-            await _sessions.EnsureSessionSeatsAsync(id, ct);
+            await _sessions.EnsureSessionSeatsCreatedAsync(id, ct);
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
@@ -529,8 +577,13 @@ namespace Web.Controllers.Admin
                     .Select(x => new SessionPricingPageVm.RowPriceVm { RowNumber = x.Row, BasePrice = x.BasePrice })
                     .ToList(),
                 CategoryMultipliers = pricing.CategoryMultipliers
-                    .Select(x => new SessionPricingPageVm.CategoryMultiplierVm { Category = x.Category, Multiplier = x.Multiplier, Title = x.Category.ToString() })
-                    .ToList(),
+                .Select(x => new SessionPricingPageVm.CategoryMultiplierVm
+                {
+                    Category = x.Category,
+                    Multiplier = x.Multiplier,
+                    Title = CategoryTitle((SeatCategory)x.Category)
+                })
+                .ToList(),
                 Seats = seats.Select(x => new SessionPricingPageVm.SeatPriceVm
                 {
                     SeatId = x.SeatId,
@@ -540,6 +593,9 @@ namespace Web.Controllers.Admin
                     Price = x.Price
                 }).ToList()
             };
+
+            ViewBag.HallId = s.HallId;
+            ViewBag.HasBookings = await _sessions.HasBookingsAsync(id, ct);
 
             return View(PricingViewPath, vm);
         }
@@ -571,11 +627,26 @@ namespace Web.Controllers.Admin
                     Price = x.Price
                 }).ToList();
 
+                if (vm.CategoryMultipliers != null)
+                {
+                    foreach (var cm in vm.CategoryMultipliers)
+                        cm.Title = CategoryTitle((SeatCategory)cm.Category);
+                }
+
+                ViewBag.HallId = s.HallId;
+                ViewBag.HasBookings = await _sessions.HasBookingsAsync(id, ct);
+
                 return View(PricingViewPath, vm);
             }
 
             if (!ModelState.IsValid)
                 return await ReturnWithViewModelAsync();
+
+            if (await _sessions.HasBookingsAsync(id, ct))
+            {
+                ModelState.AddModelError(string.Empty, "Неможливо змінити ціни, оскільки на цей сеанс вже є продані квитки.");
+                return await ReturnWithViewModelAsync();
+            }
 
             try
             {
@@ -609,6 +680,25 @@ namespace Web.Controllers.Admin
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return await ReturnWithViewModelAsync();
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTemplatesByHall(int hallId, CancellationToken ct)
+        {
+            if (hallId < 1) return Ok(Array.Empty<object>());
+
+            var templates = await _templateService.GetActiveListForHallAsync(hallId, ct);
+            return Ok(templates.Select(t => new { id = t.Id, title = t.Name }));
+        }
+
+        // GET: /Admin/Sessions/LoadTemplateData?templateId=5
+        [HttpGet]
+        public async Task<IActionResult> LoadTemplateData(int templateId, CancellationToken ct)
+        {
+            var data = await _templateService.GetTemplateDataAsync(templateId, ct);
+            if (data is null) return NotFound();
+
+            return Ok(data);
         }
     }
 }

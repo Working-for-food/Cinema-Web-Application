@@ -25,8 +25,9 @@ public interface ISessionService
     Task<bool> UpdateAsync(int id, SessionEditDto dto, CancellationToken ct);
     Task<bool> CancelAsync(int id, CancellationToken ct);
     Task<bool> RestoreAsync(int id, CancellationToken ct);
+    Task EnsureSessionSeatsCreatedAsync(int sessionId, CancellationToken ct);
 
-    Task EnsureSessionSeatsAsync(int sessionId, CancellationToken ct);
+    Task<bool> HasBookingsAsync(int sessionId, CancellationToken ct);
 
     Task<SessionPricingDto> GetPricingAsync(int sessionId, CancellationToken ct);
     Task ApplyPricingAsync(int sessionId, SessionPricingDto pricing, CancellationToken ct);
