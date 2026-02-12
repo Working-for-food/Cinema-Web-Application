@@ -1,122 +1,270 @@
-﻿@model IReadOnlyList<Application.DTOs.BookingResultDto>
+﻿@using System.Globalization
+@using System.Text.Json
+@model IReadOnlyList<Application.DTOs.BookingResultDto>
 
 @{
     ViewData["Title"] = "Мої бронювання";
-    var totalSpent = Model?.Sum(x => x.TotalAmount) ?? 0m;
     var tmdbPosterBase = "https://image.tmdb.org/t/p/w342";
+    var ukCulture = new CultureInfo("uk-UA");
+
+    string GetPresentationLabel(string type) => type switch
+    {
+        "TwoD" => "2D",
+        "ThreeD" => "3D",
+        "Imax" => "IMAX",
+        _ => type
+    };
+
+    var groupedBookings = Model?
+        .GroupBy(x => x.SessionId)
+        .Select(g => new
+        {
+            SessionId = g.Key,
+            MovieData = g.First(),
+            TotalGroupAmount = g.Sum(x => x.TotalAmount),
+            AllSeats = g.SelectMany(x => x.Seats).OrderBy(s => s.RowNumber).ThenBy(s => s.SeatNumber).ToList(),
+            TicketsData = g.SelectMany(x => x.Seats).Select(s => new
+            {
+                Row = s.RowNumber,
+                Seat = s.SeatNumber,
+                QrContent = $"TICKET|Session:{g.Key}|Row:{s.RowNumber}|Seat:{s.SeatNumber}|User:{User.Identity?.Name}"
+            }).OrderBy(t => t.Row).ThenBy(t => t.Seat).ToList(),
+            Transactions = g.OrderByDescending(x => x.BookedAt).ToList()
+        })
+        .Where(g => g.MovieData.StartTime > DateTime.UtcNow) 
+        .OrderBy(g => g.MovieData.StartTime)
+        .ToList();
 }
 
-<section class="py-5 gray-bg">
-    <div class="container">
-
-        <div class="d-flex justify-content-between align-items-end mb-5 flex-wrap gap-4">
-            <div>
-                <h1 class="section-title fw-bold text-dark text-uppercase">Мої бронювання</h1>
-            </div>
-
-            <div class="card shadow-sm border-0 br-12 bg-white px-4 py-3">
-                <div class="d-flex gap-4 align-items-center">
-                    <div class="text-center">
-                        <div class="small text-muted text-uppercase fw-bold">Кількість</div>
-                        <div class="fw-bold fs-5">@(Model?.Count ?? 0)</div>
-                    </div>
-                    <div class="vr opacity-10"></div>
-                    <div class="text-center">
-                        <div class="small text-muted text-uppercase fw-bold">Сума усіх бронювань</div>
-                        <div class="fw-bold fs-5 text-primary">@totalSpent.ToString("F2") грн</div>
-                    </div>
-                </div>
-            </div>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-end mb-5 pb-2 border-bottom-soft">
+        <div class="position-relative">
+            <h1 class="page-heading mb-2">Мої квитки</h1>
+            <p class="text-muted mb-0 fw-medium">Ваша персональна колекція кіноподій</p>
+            <div class="heading-underline"></div>
         </div>
 
-        @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
-        {
-            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
-        }
-        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-        {
-            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
-        }
-
-        @if (Model == null || Model.Count == 0)
-        {
-            <div class="card shadow-sm border-0 br-12 p-5 text-center bg-white">
-                <div class="icon-badge bg-light text-muted mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-ticket fa-xl opacity-25"></i>
-                </div>
-                <h4 class="fw-bold">У вас поки немає бронювань</h4>
-                <p class="text-muted mb-4">Оберіть фільм та зручні місця, щоб почати історію ваших переглядів.</p>
-                <a asp-controller="Afisha" asp-action="Index" class="btn btn-maroon px-4 py-2 fw-bold text-uppercase">Переглянути афішу</a>
+        <div class="d-none d-md-block">
+            <div class="icon-3d-box">
+                <i class="fa-solid fa-ticket-simple"></i>
             </div>
-        }
-        else
-        {
-            <div class="d-flex flex-column gap-3">
-                @foreach (var b in Model)
-                {
-                    var seats = b.Seats;
-                    var dateText = b.BookedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
-                    var posterUrl = !string.IsNullOrWhiteSpace(b.MoviePosterPath) ? (tmdbPosterBase + b.MoviePosterPath) : null;
+        </div>
+    </div>
 
-                    <div class="card shadow-sm border-0 br-12 overflow-hidden bg-white p-3 p-md-4">
-                        <div class="row align-items-center g-4">
+    @if (groupedBookings == null || !groupedBookings.Any())
+    {
+        <div class="empty-state py-5 shadow-sm bg-white text-center rounded-3 border">
+            <div class="empty-icon mb-3 text-muted opacity-25"><i class="fa-solid fa-ghost fa-3x"></i></div>
+            <h4 class="fw-bold text-dark">Тут поки порожньо</h4>
+            <p class="text-muted mb-4">Час забронювати місце на новий шедевр!</p>
+            <a href="/" class="btn btn-primary px-4 py-2 fw-bold shadow-sm" style="background: var(--accent); border:none;">
+                <i class="fa-solid fa-film me-2"></i> ДО АФІШІ
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var group in groupedBookings)
+            {
+                var m = group.MovieData;
+                var posterUrl = !string.IsNullOrWhiteSpace(m.MoviePosterPath) ? tmdbPosterBase + m.MoviePosterPath : null;
+                var ticketsJson = JsonSerializer.Serialize(group.TicketsData);
+                var presentationLabel = GetPresentationLabel(m.PresentationType);
 
-                            <div class="col-md-5 col-lg-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="flex-shrink-0">
-                                        @if (!string.IsNullOrWhiteSpace(posterUrl))
-                                        {
-                                            <img src="@posterUrl" class="rounded shadow-sm" style="width: 70px; height: 100px; object-fit: cover;" alt="@b.MovieTitle" />
-                                        }
-                                        else
-                                        {
-                                            <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 70px; height: 100px;">
-                                                <i class="fa-solid fa-image text-muted opacity-25"></i>
-                                            </div>
-                                        }
+                <div class="col-xl-6 col-12">
+                    <div class="ticket-card-container shadow-sm transition-all">
+
+                        <div class="ticket-main d-flex flex-column flex-sm-row">
+
+                            <div class="ticket-poster-side position-relative">
+                                @if (posterUrl != null)
+                                {
+                                    <img src="@posterUrl" alt="@m.MovieTitle" class="w-100 h-100 object-fit-cover" />
+                                }
+                                else
+                                {
+                                    <div class="poster-fallback w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                        <i class="fa-solid fa-film fa-2x opacity-25"></i>
                                     </div>
-                                    <div class="min-width-0">
-                                        <h5 class="fw-bold text-dark mb-1 text-truncate">@b.MovieTitle</h5>
-                                        <div class="badge bg-light text-primary border px-2 py-1 br-8 small fw-bold">Сеанс #@b.SessionId</div>
-                                    </div>
+                                }
+                                <div class="position-absolute top-0 start-0 m-3">
+                                    <span class="badge badge-presentation shadow-sm">@presentationLabel</span>
                                 </div>
                             </div>
 
-                            <div class="col-md-4 col-lg-5">
-                                <div class="row g-3">
-                                    <div class="col-6 col-md-12 col-lg-6">
-                                        <div class="text-muted x-small text-uppercase fw-bold mb-1"><i class="fa-solid fa-calendar me-1 opacity-50"></i> Дата</div>
-                                        <div class="fw-bold small">@dateText</div>
+                            <div class="ticket-info-side p-4 flex-grow-1 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
+                                    <h4 class="fw-bold mb-0 text-dark lh-sm pt-1">@m.MovieTitle</h4>
+
+                                    <button class="btn btn-qr-prominent shadow-sm flex-shrink-0" onclick='openQrModal(@Html.Raw(ticketsJson), "@m.MovieTitle")'>
+                                        <i class="fa-solid fa-qrcode me-2"></i>
+                                        <span class="fw-bold">КВИТОК</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                                <div class="d-flex gap-4 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-circle-soft me-2">
+                                            <i class="fa-regular fa-calendar text-accent"></i>
+                                        </div>
+                                        <div>
+                                            <div class="x-small text-muted text-uppercase fw-bold">Дата</div>
+                                            <div class="fw-bold text-dark">@m.StartTime.ToLocalTime().ToString("d MMMM", ukCulture)</div>
+                                        </div>
                                     </div>
-                                    <div class="col-6 col-md-12 col-lg-6">
-                                        <div class="text-muted x-small text-uppercase fw-bold mb-1"><i class="fa-solid fa-coins me-1 opacity-50"></i> Сума</div>
-                                        <div class="fw-bold small text-primary">@b.TotalAmount.ToString("F2") грн</div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="text-muted x-small text-uppercase fw-bold mb-2"><i class="fa-solid fa-chair me-1 opacity-50"></i> Місця</div>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach (var s in seats.OrderBy(x => x.RowNumber).ThenBy(x => x.SeatNumber))
-                                            {
-                                                <span class="badge bg-light text-dark border px-2 py-1 br-6 x-small">Ряд @s.RowNumber, М @s.SeatNumber</span>
-                                            }
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-circle-soft me-2">
+                                            <i class="fa-regular fa-clock text-accent"></i>
+                                        </div>
+                                        <div>
+                                            <div class="x-small text-muted text-uppercase fw-bold">Час</div>
+                                            <div class="fw-bold text-dark">@m.StartTime.ToLocalTime().ToString("HH:mm")</div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="col-md-3 col-lg-3 text-md-end">
-                                <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@b.BookingId" method="post" onsubmit="return confirm('Скасувати бронювання №@b.BookingId?');">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger w-100">
-                                        <i class="fa-solid fa-xmark me-1"></i> Скасувати
-                                    </button>
-                                </form>
-                            </div>
+                                <div class="d-flex align-items-start mb-4">
+                                    <div class="icon-circle-soft me-2 mt-1">
+                                        <i class="fa-solid fa-location-dot text-accent"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@m.CinemaName</div>
+                                        <div class="small text-muted">@m.CinemaAddress • <span class="text-dark fw-bold">@m.HallName</span></div>
+                                    </div>
+                                </div>
 
+                                <div class="mt-auto">
+                                    <div class="x-small text-muted text-uppercase fw-bold mb-2">Ваші місця</div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var seat in group.AllSeats.Take(5))
+                                        {
+                                            <span class="badge bg-light text-dark border fw-bold px-2 py-2">
+                                                Ряд @seat.RowNumber | Місце @seat.SeatNumber
+                                            </span>
+                                        }
+                                        @if (group.AllSeats.Count > 5)
+                                        {
+                                            <span class="badge bg-light text-muted border fw-bold px-2 py-2">+@(group.AllSeats.Count - 5)</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="ticket-perforation"></div>
+
+                        <div class="ticket-details bg-light-soft">
+                            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top border-light cursor-pointer ticket-details-header user-select-none"
+                                 onclick="toggleTransactionDetails('trx-@group.SessionId')">
+                                <div class="small fw-bold text-muted">
+                                    <i class="fa-solid fa-receipt me-2"></i> ДЕТАЛІ ТРАНЗАКЦІЙ
+                                </div>
+                                <div id="arrow-trx-@group.SessionId" class="text-muted transition-transform">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
+
+                            <div id="trx-@group.SessionId" class="collapse">
+                                <div class="px-4 pb-3 pt-0">
+                                    <div class="row gx-3 mb-2 px-2 text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                                        <div class="col-4">Дата транзакції</div>
+                                        <div class="col-5">Місця</div>
+                                        <div class="col-3 text-end">Сума</div>
+                                    </div>
+
+                                    @foreach (var trans in group.Transactions)
+                                    {
+                                        <div class="transaction-row p-2 rounded mb-1 border border-transparent hover-border">
+                                            <div class="row gx-3 align-items-start">
+                                                <div class="col-4">
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-bold text-dark small">
+                                                            @trans.BookedAt.ToLocalTime().ToString("d MMMM", ukCulture)
+                                                        </span>
+                                                        <span class="text-muted x-small">
+                                                            @trans.BookedAt.ToLocalTime().ToString("HH:mm")
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-5">
+                                                    <div class="d-flex flex-column gap-1">
+                                                        @foreach (var seat in trans.Seats)
+                                                        {
+                                                            <div class="seat-badge-small">
+                                                                <span class="text-muted fw-normal">Ряд</span> @seat.RowNumber <span class="text-muted fw-normal mx-1">|</span> <span class="text-muted fw-normal">Місце</span> @seat.SeatNumber
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="col-3 text-end">
+                                                    <div class="d-flex flex-column align-items-end">
+                                                        <span class="fw-bold text-accent small">@trans.TotalAmount.ToString("N0") ₴</span>
+
+                                                        <form id="cancel-form-@trans.BookingId" asp-controller="Booking" asp-action="Cancel" asp-route-id="@trans.BookingId" method="post" class="mt-1">
+                                                            @Html.AntiForgeryToken()
+
+                                                            <button type="button"
+                                                                    class="btn btn-link text-danger p-0 border-0 x-small text-decoration-none opacity-75 hover-opacity-100"
+                                                                    onclick="confirmCancelBooking('@trans.BookingId')">
+                                                                <i class="fa-solid fa-xmark me-1"></i>Скасувати
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                }
-            </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<partial name="~/Views/Bookings/_QrModal.cshtml" />
+<link rel="stylesheet" href="\css\mybookings-index.css">
+
+<script>
+    function toggleTransactionDetails(targetId) {
+        const targetEl = document.getElementById(targetId);
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(targetEl, { toggle: false });
+        bsCollapse.toggle();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const collapses = document.querySelectorAll('.collapse');
+        collapses.forEach(el => {
+            el.addEventListener('show.bs.collapse', function () {
+                const arrow = document.getElementById(`arrow-${this.id}`);
+                if(arrow) arrow.classList.add('rotate-180');
+            });
+            el.addEventListener('hide.bs.collapse', function () {
+                const arrow = document.getElementById(`arrow-${this.id}`);
+                if(arrow) arrow.classList.remove('rotate-180');
+            });
+        });
+    });
+
+    function confirmCancelBooking(bookingId) {
+        if (typeof GlobalModal !== 'undefined') {
+            GlobalModal.show(
+                "Скасувати квитки?",
+                "Ви впевнені, що хочете повернути ці квитки? Цю дію неможливо скасувати.",
+                () => {
+                    document.getElementById('cancel-form-' + bookingId).submit();
+                },
+                'danger'
+            );
+        } else {
+            if(confirm("Ви впевнені, що хочете скасувати бронювання?")) {
+                document.getElementById('cancel-form-' + bookingId).submit();
+            }
         }
-    </div>
-</section>
+    }
+</script>

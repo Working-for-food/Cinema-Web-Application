@@ -59,7 +59,7 @@
                             <a class="nav-link" asp-controller="Afisha" asp-action="Index">Афіша</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Головна</a>
+                            <a class="nav-link" asp-controller="Schedule" asp-action="Index">Розклад</a>
                         </li>
 
                         @if (showAdminPanel)
@@ -112,8 +112,17 @@
                                 <a class="nav-link dropdown-toggle d-flex align-items-center fw-bold text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                                     <i class="fa-solid fa-circle-user fs-4 me-2 opacity-75"></i> @username.ToUpper()
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fa-solid fa-address-card me-2"></i> Мій Профіль</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile">
+                                            <i class="fas fa-id-card"></i> Мій Профіль
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Booking" asp-action="My">
+                                            <i class="fas fa-ticket-alt"></i> Мої бронювання
+                                        </a>
+                                    </li>
                                     
                                     @if (isActualAdmin)
                                     {
@@ -161,6 +170,7 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const cinemaToggle = document.getElementById("cinemaSelectionToggle");
@@ -195,7 +205,7 @@
             }
         });
     </script>
-
+    <partial name="_GlobalConfirmationModal" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

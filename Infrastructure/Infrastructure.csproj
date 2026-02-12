@@ -18,10 +18,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="QRCoder" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-		<None Include="Data\Seed\allcountry.json" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="Data\Seed\allcountry.json" />
+	    <None Include="Data\Seed\allcountryUK.json"/>
   </ItemGroup>
 
 </Project>

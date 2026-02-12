@@ -83,7 +83,6 @@ public class CinemasController : Controller
 
         try
         {
-            // ✅ Upload в Cloudinary (якщо файл вибраний)
             if (vm.Image != null && vm.Image.Length > 0)
             {
                 var uploadParams = new ImageUploadParams
@@ -133,7 +132,6 @@ public class CinemasController : Controller
 
         try
         {
-            // ✅ Upload тільки якщо вибрали новий файл
             if (vm.Image != null && vm.Image.Length > 0)
             {
                 var uploadParams = new ImageUploadParams
@@ -150,7 +148,6 @@ public class CinemasController : Controller
 
                 vm.ImageUrl = uploadResult.SecureUrl?.ToString();
             }
-            // якщо файл не вибрали — vm.ImageUrl лишається тим, що прийшло з форми (hidden/або прив’язка)
 
             await _cinemaService.UpdateAsync(ToDto(vm), ct);
 
@@ -198,7 +195,7 @@ public class CinemasController : Controller
         Name = vm.Name,
         Address = vm.Address,
         City = vm.City,
-        ImageUrl = vm.ImageUrl // ✅ додано
+        ImageUrl = vm.ImageUrl 
     };
 
     private static CinemaEditVm ToVm(CinemaEditDto dto) => new()
@@ -207,7 +204,7 @@ public class CinemasController : Controller
         Name = dto.Name,
         Address = dto.Address,
         City = dto.City,
-        ImageUrl = dto.ImageUrl // ✅ додано
+        ImageUrl = dto.ImageUrl 
     };
 
     private static List<SelectListItem> BuildCitiesSelectList(List<string> cities, string? selectedCity)
