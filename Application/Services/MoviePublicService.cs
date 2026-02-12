@@ -14,6 +14,23 @@ public class MoviePublicService : IMoviePublicService
     {
         _movies = movies;
     }
+    public async Task<IReadOnlyList<MovieDetailsDtoRelatedItem>> GetRelatedMoviesAsync(
+    int movieId,
+    IReadOnlyList<string> genres,
+    int take,
+    CancellationToken ct = default)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        var items = await _movies.GetRelatedMoviesAsync(movieId, genres, take, nowUtc, ct);
+
+        return items.Select(m => new MovieDetailsDtoRelatedItem
+        {
+            Id = m.Id,
+            Title = m.Title,
+            PosterPath = m.PosterPath
+        }).ToList();
+    }
 
     public async Task<MovieDetailsDto?> GetDetailsAsync(int movieId, DateOnly? date, CancellationToken ct = default)
     {
@@ -82,6 +99,8 @@ public class MoviePublicService : IMoviePublicService
             TrailerUrl = movie.TrailerUrl,
             Language = movie.Language,
             Rating = movie.Rating,
+            AgeRating = movie.AgeRating,
+            TmdbId = movie.TmdbId,
 
             Genres = movie.MovieGenres.Select(g => g.Genre.Name).ToList(),
             Countries = movie.MovieCountries.Select(c => c.Country.Name).ToList(),

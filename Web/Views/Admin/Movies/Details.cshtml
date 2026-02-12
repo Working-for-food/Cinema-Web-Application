@@ -1,22 +1,49 @@
 ﻿@using Web.Helpers
-@model Infrastructure.Entities.Movie
+@model Web.ViewModels.Admin.MovieDetailsVm
 
 @{
     ViewData["Title"] = "Деталі фільму";
 
-    var genres = Model.MovieGenres?.Select(mg => mg.Genre?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new();
-    var countries = Model.MovieCountries?.Select(x => x.Country?.Name ?? x.CountryCode).Where(x => !string.IsNullOrWhiteSpace(x)).ToList() ?? new();
-    var actors = Model.MovieActors?.OrderBy(x => x.CustOrder).Select(x => x.Actor?.FullName ?? x.ActorId.ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList() ?? new();
-    var directors = Model.MovieDirectors?.OrderBy(x => x.BillingOrder).Select(x => x.Director?.FullName ?? x.DirectorId.ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList() ?? new();
+    string ShowOrFallback(string? value, string fallback = "—")
+        => string.IsNullOrWhiteSpace(value) || value == "N/A" ? fallback : value!;
 
-    var posterUrl = TmdbImage.Build(Model.PosterPath, "w342");
-    var backdropUrl = TmdbImage.Build(Model.BackdropPath, "w1280");
+    var genres = Model.Movie.MovieGenres?
+        .Select(mg => mg.Genre?.Name)
+        .Where(n => !string.IsNullOrWhiteSpace(n))
+        .ToList() ?? new();
+
+    var countries = Model.Movie.MovieCountries?
+        .Select(x => x.Country?.Name ?? x.CountryCode)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
+
+    var actors = Model.Movie.MovieActors?
+        .OrderBy(x => x.CustOrder)
+        .Select(x => x.Actor?.FullName ?? x.ActorId.ToString())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
+
+    var directors = Model.Movie.MovieDirectors?
+        .OrderBy(x => x.BillingOrder)
+        .Select(x => x.Director?.FullName ?? x.DirectorId.ToString())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList() ?? new();
+
+    var posterUrl = TmdbImage.Build(Model.Movie.PosterPath, "w342");
+    var backdropUrl = TmdbImage.Build(Model.Movie.BackdropPath, "w1280");
+
+    var imdb = ShowOrFallback(Model.ImdbRating);
+    var rt = ShowOrFallback(Model.RottenTomatoes);
+    var mc = ShowOrFallback(Model.Metacritic);
+
+    bool noRatings =
+        (imdb == "—") && (rt == "—") && (mc == "—");
 }
 
 <section class="py-5 gray-bg">
     <div class="container">
         <div class="card shadow-sm border-0 mx-auto overflow-hidden br-16" style="max-width: 1100px;">
-            
+
             <div class="position-relative">
                 @if (!string.IsNullOrWhiteSpace(backdropUrl))
                 {
@@ -29,7 +56,7 @@
                 {
                     <div class="bg-dark" style="height: 200px;"></div>
                 }
-                
+
                 <div class="position-absolute bottom-0 start-0 p-4 p-md-5 w-100">
                     <div class="d-flex align-items-end gap-4 flex-wrap flex-md-nowrap">
                         <div class="detail-poster shadow-lg d-none d-md-block">
@@ -42,10 +69,17 @@
                                 <div class="no-poster-placeholder">Немає постера</div>
                             }
                         </div>
-                        
+
                         <div class="text-white pb-2">
-                            <h1 class="display-5 fw-bold mb-1">@Model.Title</h1>
-                            <p class="opacity-75 fs-5 mb-0">@Model.OriginalName</p>
+                            <h1 class="display-5 fw-bold mb-1">@Model.Movie.Title</h1>
+                            <p class="opacity-150 fw-bolder fs-3 mb-2">@Model.Movie.OriginalName</p>
+
+                            @if (noRatings)
+                            {
+                                <div class="opacity-75" style="font-size:13px;">
+                                    Рейтинги поки що відсутні
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -54,12 +88,20 @@
             <div class="card-body p-4 p-md-5">
                 <div class="row g-5">
                     <div class="col-lg-4 order-2 order-lg-1">
+
                         <div class="info-group mb-4">
                             <label class="info-label">ЖАНРИ</label>
                             <div class="mt-2">
-                                @foreach (var g in genres)
+                                @if (genres.Count == 0)
                                 {
-                                    <span class="badge-modern">@g</span>
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @foreach (var g in genres)
+                                    {
+                                        <span class="badge-modern">@g</span>
+                                    }
                                 }
                             </div>
                         </div>
@@ -67,35 +109,48 @@
                         <div class="info-list mt-4">
                             <div class="info-item">
                                 <span class="info-item-label"><i class="fa-solid fa-calendar me-2"></i>Реліз:</span>
-                                <span class="info-item-value">@(Model.ReleaseDate?.ToString("dd MMMM yyyy") ?? "-")</span>
+                                <span class="info-item-value">@(Model.Movie.ReleaseDate?.ToString("dd MMMM yyyy") ?? "-")</span>
                             </div>
+
                             <div class="info-item">
                                 <span class="info-item-label"><i class="fa-solid fa-clock me-2"></i>Тривалість:</span>
-                                <span class="info-item-value">@(Model.Duration.HasValue ? $"{Model.Duration} хв" : "-")</span>
+                                <span class="info-item-value">@(Model.Movie.Duration.HasValue ? $"{Model.Movie.Duration} хв" : "-")</span>
                             </div>
+
                             <div class="info-item">
                                 <span class="info-item-label"><i class="fa-solid fa-globe me-2"></i>Країна:</span>
-                                <span class="info-item-value">@(string.Join(", ", countries))</span>
+                                <span class="info-item-value">@(countries.Count == 0 ? "-" : string.Join(", ", countries))</span>
                             </div>
+
                             <div class="info-item">
                                 <span class="info-item-label"><i class="fa-solid fa-ticket me-2"></i>Сеанси:</span>
-                                <span class="info-item-value">@(Model.Sessions?.Count ?? 0)</span>
+                                <span class="info-item-value">@(Model.Movie.Sessions?.Count ?? 0)</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-item-label"><i class="fa-solid fa-language me-2"></i>Мова:</span>
+                                <span class="info-item-value">@(string.IsNullOrWhiteSpace(Model.Movie.Language) ? "-" : Model.Movie.Language)</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-item-label">
+                                    <i class="fa-solid fa-star me-2"></i>Рейтинги:
+                                </span>
+
+                                <span class="info-item-value ratings-stack">
+                                    <span class="badge-modern">IMDb: @imdb</span>
+                                    <span class="badge-modern">RT: @rt</span>
+                                    <span class="badge-modern">MC: @mc</span>
+                                </span>
                             </div>
                         </div>
-
-                        @if (!string.IsNullOrWhiteSpace(Model.TrailerUrl))
-                        {
-                            <a href="@Model.TrailerUrl" target="_blank" class="btn btn-outline-dark w-100 mt-4 br-8">
-                                <i class="fa-brands fa-youtube me-2"></i>ДИВИТИСЬ ТРЕЙЛЕР
-                            </a>
-                        }
                     </div>
 
                     <div class="col-lg-8 order-1 order-lg-2">
                         <div class="mb-5">
                             <h4 class="fw-bold mb-3">Сюжет</h4>
                             <p class="text-secondary lh-lg fs-5">
-                                @(string.IsNullOrWhiteSpace(Model.Description) ? "Опис відсутній." : Model.Description)
+                                @(string.IsNullOrWhiteSpace(Model.Movie.Description) ? "Опис відсутній." : Model.Movie.Description)
                             </p>
                         </div>
 
@@ -104,23 +159,39 @@
                                 <h6 class="fw-bold text-muted small text-uppercase mb-3">Режисери</h6>
                                 <p class="fw-semibold">@(directors.Count == 0 ? "-" : string.Join(", ", directors))</p>
                             </div>
+
                             <div class="col-12">
                                 <h6 class="fw-bold text-muted small text-uppercase mb-3">У головних ролях</h6>
                                 <p class="fw-semibold lh-base">@(actors.Count == 0 ? "-" : string.Join(", ", actors))</p>
                             </div>
                         </div>
 
-                        <div class="d-flex gap-3 mt-5 pt-4 border-top">
-                            <a asp-action="Index" class="btn btn-secondary px-4 br-8">
-                                <i class="fa-solid fa-arrow-left me-2"></i>Назад
-                            </a>
-                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-maroon px-4 br-8">
-                                <i class="fa-solid fa-pen-to-square me-2"></i>Редагувати
-                            </a>
+                        <div class="mt-5 pt-4 border-top">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <div class="text-muted small text-uppercase fw-bold mb-2">PosterPath</div>
+                                    <div class="fw-semibold">@(string.IsNullOrWhiteSpace(Model.Movie.PosterPath) ? "-" : Model.Movie.PosterPath)</div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="text-muted small text-uppercase fw-bold mb-2">BackdropPath</div>
+                                    <div class="fw-semibold">@(string.IsNullOrWhiteSpace(Model.Movie.BackdropPath) ? "-" : Model.Movie.BackdropPath)</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-3 mt-4">
+                                <a asp-action="Index" class="btn btn-secondary px-4 br-8">
+                                    <i class="fa-solid fa-arrow-left me-2"></i>Назад
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@Model.Movie.Id" class="btn btn-maroon px-4 br-8">
+                                    <i class="fa-solid fa-pen-to-square me-2"></i>Редагувати
+                                </a>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </section>
