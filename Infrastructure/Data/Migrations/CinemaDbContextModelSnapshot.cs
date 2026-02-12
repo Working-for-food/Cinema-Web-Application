@@ -150,6 +150,9 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -242,12 +245,12 @@ namespace Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<short?>("AgeRating")
+                        .HasColumnType("smallint");
+
                     b.Property<string>("BackdropPath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<short?>("AgeRating")
-                        .HasColumnType("smallint");
 
                     b.Property<string>("Description")
                         .HasMaxLength(4000)

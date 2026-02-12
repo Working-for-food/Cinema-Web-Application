@@ -1,15 +1,15 @@
 ﻿@model Web.ViewModels.Admin.People.PersonEditVm
 
 @{
-    ViewData["Title"] = "Створення користувача";
+    ViewData["Title"] = "Створення актора чи режисера";
 }
 
 <section class="py-5 gray-bg">
     <div class="container">
 
         <div class="text-center mb-5">
-            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Додати користувача</h1>
-            <p class="text-muted small text-uppercase fw-semibold">Заповніть анкету для реєстрації актора або режисера</p>
+            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Додати</h1>
+            <p class="text-muted small text-uppercase fw-semibold">Заповніть анкету для реєстрації актора чи режисера</p>
         </div>
 
         @if (TempData["Success"] != null)
@@ -47,8 +47,6 @@
                         </div>
                     </div>
 
-                    <hr class="my-5 opacity-10">
-
                     <div class="row g-4 mb-4">
                         <div class="col-md-4">
                             <label asp-for="BirthDate" class="form-label small fw-bold text-muted text-uppercase">
@@ -83,7 +81,7 @@
                         </a>
 
                         <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
-                            <i class="fa-solid fa-plus me-2"></i> СТВОРИТИ КОРИСТУВАЧА
+                            <i class="fa-solid fa-plus me-2"></i> СТВОРИТИ 
                         </button>
                     </div>
                 </form>

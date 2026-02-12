@@ -29,5 +29,7 @@ namespace Infrastructure.Interfaces
         Task UpdateAsync(Session session, CancellationToken ct);
 
         Task<bool> HasOverlapAsync(int hallId, DateTime start, DateTime end, int? ignoreSessionId, CancellationToken ct);
+
+        Task<bool> HasBookingsAsync(int sessionId, CancellationToken ct);
     }
 }
