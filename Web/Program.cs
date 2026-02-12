@@ -88,6 +88,7 @@ builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionPricingRepository, SessionPricingRepository>();
 
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IPricingTemplateRepository, PricingTemplateRepository>();
 
 // Services (concrete + interface на той самий scoped-інстанс)
@@ -118,6 +119,8 @@ builder.Services.AddScoped<ISessionLookupService>(sp => sp.GetRequiredService<Se
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<IBookingService>(sp => sp.GetRequiredService<BookingService>());
 
+builder.Services.AddScoped<ScheduleService>();
+builder.Services.AddScoped<IScheduleService>(sp => sp.GetRequiredService<ScheduleService>());
 builder.Services.AddScoped<AfishaService>();
 builder.Services.AddScoped<IAfishaService>(sp => sp.GetRequiredService<AfishaService>());
 

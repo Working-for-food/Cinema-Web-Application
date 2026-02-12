@@ -155,3 +155,51 @@ textarea.form-control {
 .form-control:focus {
     border-color: #6366f1;
 }
+
+/* ===== Modern Rounded Switch (NO Bootstrap icon) ===== */
+
+.form-check-input.toggle-status-btn {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 46px;
+    height: 24px;
+    border-radius: 999px;
+    background-color: #e2e8f0;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    /* Оце прибирає "галочку/іконку" Bootstrap */
+    background-image: none !important;
+    position: relative;
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+
+    /* При фокусі Bootstrap теж любить додати ефекти */
+    .form-check-input.toggle-status-btn:focus {
+        box-shadow: none !important;
+        background-image: none !important;
+    }
+
+    /* Checked — теж прибираємо background-image */
+    .form-check-input.toggle-status-btn:checked {
+        background-color: var(--accent);
+        background-image: none !important;
+    }
+
+    /* Кружечок */
+    .form-check-input.toggle-status-btn::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform .2s ease;
+    }
+
+    .form-check-input.toggle-status-btn:checked::before {
+        transform: translateX(22px);
+    }
