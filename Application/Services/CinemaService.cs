@@ -76,7 +76,7 @@ public class CinemaService : ICinemaService
             Name = Normalize(dto.Name),
             Address = Normalize(dto.Address),
             City = Normalize(dto.City),
-            ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim() // ✅ додали
+            ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim()
         };
 
         await _repo.AddAsync(cinema, ct);
