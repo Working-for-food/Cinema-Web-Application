@@ -63,7 +63,7 @@ namespace Infrastructure.Repositories
                 q = q.Where(x => x.MovieId == movieId.Value);
 
             if (!includeFinished)
-                q = q.Where(x => x.IsCancelled || x.EndTime > asOf);
+                q = q.Where(x => x.EndTime > asOf);
 
             q = ApplySort(q, sort);
 

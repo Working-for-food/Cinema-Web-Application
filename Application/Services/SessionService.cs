@@ -9,13 +9,18 @@ namespace Application.Services;
 public class SessionService : ISessionService
 {
     private readonly ISessionRepository _repo;
+    private readonly IMovieRepository _movieRepo;
     private readonly ISessionPricingRepository _pricingRepo;
     private const int PageSize = 20;
 
-    public SessionService(ISessionRepository repo, ISessionPricingRepository pricingRepo)
+    public SessionService(
+            ISessionRepository repo,
+            ISessionPricingRepository pricingRepo,
+            IMovieRepository movieRepo)
     {
         _repo = repo;
         _pricingRepo = pricingRepo;
+        _movieRepo = movieRepo;
     }
 
     public async Task<SessionDetailsDto?> GetByIdAsync(int id, CancellationToken ct)
@@ -145,6 +150,8 @@ public class SessionService : ISessionService
     {
         ValidateTimeRange(dto.StartTime, dto.EndTime);
 
+        await ValidateReleaseDateAsync(dto.MovieId, dto.StartTime, ct);
+
         var hasOverlap = await _repo.HasOverlapAsync(dto.HallId, dto.StartTime, dto.EndTime, ignoreSessionId: null, ct);
         if (hasOverlap)
             throw new InvalidOperationException("У цьому залі вже є сеанс, що перетинається за часом.");
@@ -157,12 +164,11 @@ public class SessionService : ISessionService
             EndTime = dto.EndTime,
             PresentationType = dto.PresentationType,
             IsCancelled = false,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
             UpdatedAt = null
         };
 
         await _repo.AddAsync(entity, ct);
-
         await _pricingRepo.EnsureSessionSeatsCreatedAsync(entity.Id, dto.HallId, ct);
 
         return entity.Id;
@@ -180,6 +186,11 @@ public class SessionService : ISessionService
 
         EnsureNotOver(entity, "редагувати сеанс");
 
+        if (entity.MovieId != dto.MovieId || entity.StartTime.Date != dto.StartTime.Date)
+        {
+            await ValidateReleaseDateAsync(dto.MovieId, dto.StartTime, ct);
+        }
+
         var hasOverlap = await _repo.HasOverlapAsync(dto.HallId, dto.StartTime, dto.EndTime, ignoreSessionId: id, ct);
         if (hasOverlap)
             throw new InvalidOperationException("У цьому залі вже є сеанс, що перетинається за часом.");
@@ -191,7 +202,7 @@ public class SessionService : ISessionService
         entity.StartTime = dto.StartTime;
         entity.EndTime = dto.EndTime;
         entity.PresentationType = dto.PresentationType;
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.Now;
 
         await _repo.UpdateAsync(entity, ct);
 
@@ -208,7 +219,7 @@ public class SessionService : ISessionService
         if (!entity.IsCancelled)
         {
             entity.IsCancelled = true;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTime.Now;
             await _repo.UpdateAsync(entity, ct);
         }
 
@@ -229,12 +240,28 @@ public class SessionService : ISessionService
                 throw new InvalidOperationException("Неможливо відновити сеанс: у цьому залі вже є інший сеанс, що перетинається за часом.");
 
             entity.IsCancelled = false;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTime.Now;
 
             await _repo.UpdateAsync(entity, ct);
         }
 
         return true;
+    }
+
+    private async Task ValidateReleaseDateAsync(int movieId, DateTime sessionStart, CancellationToken ct)
+    {
+        var movie = await _movieRepo.GetByIdAsync(movieId, ct);
+        if (movie == null)
+            throw new InvalidOperationException("Фільм не знайдено.");
+
+        var sessionDate = DateOnly.FromDateTime(sessionStart);
+
+        if (sessionDate < movie.ReleaseDate)
+        {
+            throw new InvalidOperationException(
+                $"Неможливо створити сеанс на {sessionDate:dd.MM.yyyy}. " +
+                $"Офіційна прем'єра фільму '{movie.Title}': {movie.ReleaseDate:dd.MM.yyyy}.");
+        }
     }
 
     private static void ValidateTimeRange(DateTime start, DateTime end)
@@ -253,6 +280,7 @@ public class SessionService : ISessionService
         if (IsOver(s.EndTime))
             throw new InvalidOperationException($"Не можна {action}: сеанс уже завершився.");
     }
+
     public async Task EnsureSessionSeatsCreatedAsync(int sessionId, CancellationToken ct)
     {
         var s = await _repo.GetByIdAsync(sessionId, ct);
@@ -350,7 +378,7 @@ public class SessionService : ISessionService
 
         var validRowPrices = rowPrices
             .Where(x => hallRowSet.Contains(x.Row))
-            .DistinctBy(x => x.Row) // Захист від дублікатів
+            .DistinctBy(x => x.Row) 
             .Select(x => new SessionRowPrice
             {
                 SessionId = sessionId,
