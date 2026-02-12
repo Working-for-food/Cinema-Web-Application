@@ -3,6 +3,7 @@ using Application.Exceptions;
 using Application.Interfaces;
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
@@ -114,5 +115,22 @@ public class CinemaService : ICinemaService
             throw new ConflictDomainException("Неможливо видалити кінотеатр, оскільки він має зали або сеанси.");
 
         await _repo.DeleteAsync(cinema, ct);
+    }
+
+    public async Task<List<CinemaDto>> GetAllAsyncUser(string? city = null, string? search = null, string? sort = null, CancellationToken ct = default)
+    {
+        city = string.IsNullOrWhiteSpace(city) ? null : city.Trim();
+        search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+
+        var entities = await _repo.GetAllAsync(city, search, sort, includeDeleted: false, ct);
+
+        return entities.Select(c => new CinemaDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Address = c.Address,
+            City = c.City ?? "Unknown",
+            ImageUrl = c.ImageUrl
+        }).ToList();
     }
 }

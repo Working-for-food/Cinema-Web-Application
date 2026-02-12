@@ -9,3 +9,63 @@
 .br-16 {
     border-radius: 16px !important;
 }
+
+.br-12 {
+    border-radius: 12px !important;
+}
+
+.br-8 {
+    border-radius: 8px !important;
+}
+
+.br-6 {
+    border-radius: 6px !important;
+}
+
+.br-4 {
+    border-radius: 4px !important;
+}
+
+.br-left-8 {
+    border-radius: 8px 0 0 8px !important;
+}
+
+.br-right-8 {
+    border-radius: 0 8px 8px 0 !important;
+}
+
+.x-small {
+    font-size: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .border-start-md {
+        border-left: 1px solid var(--border) !important;
+        padding-left: 2rem;
+    }
+}
+
+.min-vh-10 {
+    min-height: 120px;
+}
+
+.bg-light-soft {
+    background-color: #f8fafc;
+    border-radius: 16px;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1.5px;
+}
+
+.shadow-inner {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}

@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
 
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
@@ -58,7 +59,7 @@
                             <a class="nav-link" asp-controller="Afisha" asp-action="Index">Афіша</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Головна</a>
+                            <a class="nav-link" asp-controller="Schedule" asp-action="Index">Розклад</a>
                         </li>
 
                         @if (showAdminPanel)
@@ -76,7 +77,7 @@
 
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Шаблони</h6></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index">Шаблони цін</a></li
+                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="PricingTemplates" asp-action="Index"><i class="fa-solid fa-receipt me-2 opacity-50"></i> Шаблони цін </a></li
 
                                     <li><hr class="dropdown-divider"></li>
 
@@ -111,14 +112,24 @@
                                 <a class="nav-link dropdown-toggle d-flex align-items-center fw-bold text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                                     <i class="fa-solid fa-circle-user fs-4 me-2 opacity-75"></i> @username.ToUpper()
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fa-solid fa-address-card me-2"></i> Мій Профіль</a></li>
+                              
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile">
+                                            <i class="fas fa-id-card"></i> Мій Профіль
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Booking" asp-action="My">
+                                            <i class="fas fa-ticket-alt"></i> Мої бронювання
+                                        </a>
+                                    </li>
                                     <li>
                                         <a class="dropdown-item" asp-controller="SavedMovies" asp-action="My">
                                             <i class="fa-solid fa-bookmark me-2"></i> Мої збережені
                                         </a>
                                     </li>
-
+                                    
                                     @if (isActualAdmin)
                                     {
                                         <li><hr class="dropdown-divider"></li>
@@ -165,6 +176,7 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const cinemaToggle = document.getElementById("cinemaSelectionToggle");
@@ -199,7 +211,7 @@
             }
         });
     </script>
-
+    <partial name="_GlobalConfirmationModal" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
