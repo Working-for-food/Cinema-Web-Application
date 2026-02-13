@@ -8,6 +8,7 @@ public sealed class MovieDetailsDto
     public string? Description { get; init; }
     public DateOnly? ReleaseDate { get; init; }
     public int? Duration { get; init; }
+    public int? TmdbId { get; init; }
 
     public string? PosterPath { get; init; }
     public string? BackdropPath { get; init; }

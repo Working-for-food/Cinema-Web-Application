@@ -18,6 +18,19 @@ using Microsoft.AspNetCore.Localization;
 using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
+// Caching
+builder.Services.AddMemoryCache();
+
+// External APIs (OMDb)
+builder.Services.Configure<OmdbOptions>(builder.Configuration.GetSection("Omdb"));
+builder.Services.AddHttpClient<IExternalRatingsService, OmdbRatingsService>((sp, http) =>
+{
+    var opt = sp.GetRequiredService<IOptions<OmdbOptions>>().Value;
+    http.BaseAddress = new Uri(opt.BaseUrl);
+    http.Timeout = TimeSpan.FromSeconds(10);
+});
+
+
 // MVC
 builder.Services.AddControllersWithViews(options =>
 {
@@ -88,7 +101,9 @@ builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<ISessionPricingRepository, SessionPricingRepository>();
 
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IPricingTemplateRepository, PricingTemplateRepository>();
+builder.Services.AddScoped<IBookingStatisticsRepository, BookingStatisticsRepository>();
 
 // Services (concrete + interface на той самий scoped-інстанс)
 builder.Services.AddScoped<MovieService>();
@@ -118,6 +133,8 @@ builder.Services.AddScoped<ISessionLookupService>(sp => sp.GetRequiredService<Se
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<IBookingService>(sp => sp.GetRequiredService<BookingService>());
 
+builder.Services.AddScoped<ScheduleService>();
+builder.Services.AddScoped<IScheduleService>(sp => sp.GetRequiredService<ScheduleService>());
 builder.Services.AddScoped<AfishaService>();
 builder.Services.AddScoped<IAfishaService>(sp => sp.GetRequiredService<AfishaService>());
 
@@ -126,6 +143,8 @@ builder.Services.AddScoped<IMoviePublicService>(sp => sp.GetRequiredService<Movi
 
 builder.Services.AddScoped<PricingTemplateService>();
 builder.Services.AddScoped<IPricingTemplateService>(sp => sp.GetRequiredService<PricingTemplateService>());
+
+builder.Services.AddScoped<IBookingStatisticsService, BookingStatisticsService>();
 
 // TMDB
 builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection("Tmdb"));

@@ -1,0 +1,187 @@
+﻿@using Application.DTOs
+@model Web.ViewModels.Schedule.CinemaScheduleVm
+
+@{
+    ViewData["Title"] = "Розклад";
+
+    string PtLabel(PresentationType pt) => pt switch
+    {
+        PresentationType.TwoD => "2D",
+        PresentationType.ThreeD => "3D",
+        PresentationType.Imax => "IMAX",
+        _ => pt.ToString()
+    };
+
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+}
+
+<link rel="stylesheet" href="~/css/schedule.css" />
+
+<section class="py-5 gray-bg">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h1 class="section-title mb-3">Розклад</h1>
+                <div class="text-muted fw-bold">
+                    <i class="fa-solid fa-location-dot me-1 text-primary"></i>@Model.CinemaName
+                </div>
+            </div>
+            <a class="btn btn-outline-maroon shadow-sm"
+               asp-controller="Schedule"
+               asp-action="Choose">
+                <i class="fa-solid fa-location-dot me-2"></i>ЗМІНИТИ КІНОТЕАТР
+            </a>
+        </div>
+
+        @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+        {
+            <div class="alert alert-success border-0 shadow-sm mb-4 br-12">@ok</div>
+        }
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div class="alert alert-danger border-0 shadow-sm mb-4 br-12">@err</div>
+        }
+
+        <div class="card shadow-sm border-0 mb-4 br-12">
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-2">
+                    <div class="small fw-bold text-muted text-uppercase">Оберіть день</div>
+                    <div class="small text-muted">Натисніть на час, щоб перейти до вибору місць</div>
+                </div>
+
+                <div class="schedule-days row-list-scroll">
+                    @foreach (var d in Model.Days)
+                    {
+                        var active = d.IsActive ? "active" : "";
+                        <a class="schedule-day @active"
+                            asp-controller="Schedule"
+                            asp-action="Index"
+                            asp-route-cinemaId="@Model.CinemaId"
+                            asp-route-date="@d.Date.ToString("yyyy-MM-dd")">
+                            <div class="schedule-day-top">@d.LabelTop</div>
+                            <div class="schedule-day-bottom">@d.LabelBottom</div>
+                        </a>
+                    }
+                </div>
+
+            </div>
+        </div>
+
+        @if (Model.Movies is null || Model.Movies.Count == 0)
+        {
+            <div class="empty-state mx-auto" style="max-width: 760px;">
+                <div class="empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+                <h5 class="empty-title">Сеансів не знайдено</h5>
+                <p class="empty-sub">На цей день немає доступних сеансів у вибраному кінотеатрі.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var m in Model.Movies)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="card shadow-sm border-0 br-12 overflow-hidden schedule-movie-card h-100 js-movie-card"
+                             data-details-url="@($"/movies/{m.MovieId}")">
+                            <div class="row g-0 h-100">
+                                <div class="col-auto">
+                                    <div class="session-poster-wrap schedule-poster">
+                                        @if (!string.IsNullOrWhiteSpace(m.PosterUrl))
+                                        {
+                                            <img src="@m.PosterUrl" alt="Постер" class="h-100 w-100 object-fit-cover" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="h-100 w-100 d-flex align-items-center justify-content-center text-muted small">No poster</div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <div class="card-body p-4 d-flex flex-column h-100">
+
+                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                            @if (!string.IsNullOrWhiteSpace(m.AgeLabel))
+                                            {
+                                                <span class="badge bg-light text-dark border fw-bold">@m.AgeLabel</span>
+                                            }
+                                            <h5 class="fw-bold mb-0 text-dark schedule-title">@m.Title</h5>
+                                        </div>
+
+                                        <div class="schedule-times mt-auto">
+                                            @foreach (var t in m.Times.OrderBy(x => x.Time))
+                                            {
+                                                <a class="schedule-time"
+                                                    asp-controller="Booking"
+                                                    asp-action="Create"
+                                                    asp-route-sessionId="@t.SessionId"
+                                                    asp-route-returnUrl="@returnUrl"
+                                                    title="Обрати місця">
+                                                    <span class="schedule-time-main">@t.Time.ToString("HH:mm")</span>
+                                                    <span class="schedule-time-meta">@PtLabel(t.PresentationType)</span>
+                                                </a>
+                                            }
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+          // Якщо ми в choose-режимі — є select і форма
+          const select = document.getElementById('cinemaSelect');
+          const form = document.getElementById('chooseCinemaForm');
+          const btn = document.getElementById('submitBtn');
+
+          if (!select || !form) return;
+
+          function sync() {
+            const has = !!(select.value && String(select.value).trim());
+            if (btn) btn.disabled = !has;
+            if (has) form.submit();
+          }
+
+          select.addEventListener('change', sync);
+        })();
+    </script>
+    <script>
+        (function () {
+          document.addEventListener('click', function (e) {
+            // якщо клік по тайм-слоту — нічого не робимо (він сам веде на Booking/Create)
+            if (e.target.closest('.schedule-time')) return;
+            // якщо клік по іншому лінку всередині карточки теж
+            if (e.target.closest('a')) return;
+
+            const card = e.target.closest('.js-movie-card');
+            if (!card) return;
+
+            const url = card.getAttribute('data-details-url');
+            if (url) window.location.href = url;
+          });
+
+          // (опційно) курсор/доступність
+          document.querySelectorAll('.js-movie-card').forEach(card => {
+            card.setAttribute('role', 'link');
+            card.setAttribute('tabindex', '0');
+            card.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const url = card.getAttribute('data-details-url');
+                if (url) window.location.href = url;
+              }
+            });
+          });
+        })();
+    </script>
+
+}

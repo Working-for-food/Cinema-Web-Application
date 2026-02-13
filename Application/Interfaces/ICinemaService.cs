@@ -5,6 +5,7 @@ namespace Application.Interfaces;
 public interface ICinemaService
 {
     Task<List<CinemaListDto>> GetAllAsync(string? city = null, string? search = null, string? sort = null, CancellationToken ct = default);
+    Task<List<CinemaDto>> GetAllAsyncUser(string? city, string? search, string? sort, CancellationToken ct);
     Task<List<string>> GetCitiesAsync(CancellationToken ct = default);
 
     Task<CinemaEditDto?> GetForEditAsync(int id, CancellationToken ct = default);

@@ -13,6 +13,56 @@ public class UserMovieRepository : IUserMovieRepository
     {
         _db = db;
     }
+    public async Task<IReadOnlyList<Movie>> GetRelatedMoviesAsync(
+    int movieId,
+    IReadOnlyList<string> genres,
+    int take,
+    DateTime nowUtc,
+    CancellationToken ct = default)
+    {
+        var baseQuery = _db.Movies
+            .AsNoTracking()
+            .Where(m =>
+                !m.IsDeleted &&
+                m.Id != movieId &&
+                m.Sessions.Any(s => !s.IsCancelled && s.StartTime >= nowUtc));
+
+        List<Movie> byGenre = new();
+
+        if (genres is { Count: > 0 })
+        {
+            byGenre = await baseQuery
+                .Where(m => m.MovieGenres.Any(mg => genres.Contains(mg.Genre.Name)))
+                .OrderBy(m => m.Title)
+                .Select(m => new Movie
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    PosterPath = m.PosterPath
+                })
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
+        if (byGenre.Count >= take)
+            return byGenre;
+
+        var usedIds = byGenre.Select(x => x.Id).ToList();
+
+        var fallback = await baseQuery
+            .Where(m => !usedIds.Contains(m.Id))
+            .OrderBy(m => m.Title)
+            .Select(m => new Movie
+            {
+                Id = m.Id,
+                Title = m.Title,
+                PosterPath = m.PosterPath
+            })
+            .Take(take - byGenre.Count)
+            .ToListAsync(ct);
+
+        return byGenre.Concat(fallback).ToList();
+    }
 
     public Task<Movie?> GetByIdAsync(int id, CancellationToken ct = default)
     {

@@ -1,4 +1,4 @@
-﻿@using System.Globalization
+﻿﻿@using System.Globalization
 @using System.Text.Json
 @model IReadOnlyList<Application.DTOs.BookingResultDto>
 
@@ -31,7 +31,7 @@
             }).OrderBy(t => t.Row).ThenBy(t => t.Seat).ToList(),
             Transactions = g.OrderByDescending(x => x.BookedAt).ToList()
         })
-        .Where(g => g.MovieData.StartTime > DateTime.UtcNow) 
+        .Where(g => g.MovieData.StartTime > DateTime.UtcNow)
         .OrderBy(g => g.MovieData.StartTime)
         .ToList();
 }

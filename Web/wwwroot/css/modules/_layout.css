@@ -1,11 +1,103 @@
-﻿.container {
-    max-width: 1400px;
-    padding: 0 20px;
-    margin: 0 auto;
+﻿.navbar {
+    padding: 1rem 0;
+    transition: all 0.3s ease;
 }
 
-.container-fluid {
-    max-width: 1280px;
-    padding: 0 20px;
-    margin: 0 auto;
+.navbar-brand {
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #1e293b !important;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand i {
+    margin-right: 10px;
+    font-size: 1.4rem;
+}
+
+.nav-link {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: #475569 !important;
+    padding: 0.5rem 1.2rem !important;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--accent) !important;
+}
+
+.nav-link.text-danger {
+    color: #ef4444 !important; 
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin-top: 10px !important;
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+    color: #475569;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f5f9;
+    color: var(--accent);
+}
+
+.dropdown-header {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    padding-left: 1rem;
+}
+
+#cinemaSelectionToggle {
+    background: #f8fafc;
+    border-radius: 50px;
+    padding: 0.5rem 1.5rem !important;
+    border: 1px solid #e2e8f0;
+}
+
+.role-item {
+    background-color: #ffffff;
+    border-color: #f1f5f9;
+}
+
+.role-item:has(.role-switch:checked) {
+    border-color: var(--accent-light, #e2e8f0);
+    background-color: #f8fafc;
+}
+
+.role-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.role-switch {
+    width: 3.5em !important;
+    height: 1.75em !important;
+}
+
+.role-switch:checked {
+    background-color: var(--accent, #1e293b);
+    border-color: var(--accent, #1e293b);
 }

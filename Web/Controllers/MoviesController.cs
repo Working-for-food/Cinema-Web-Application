@@ -1,6 +1,9 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Web.ViewModels.Movies.Details;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Web.Controllers;
 
@@ -8,11 +11,23 @@ namespace Web.Controllers;
 public class MoviesController : Controller
 {
     private readonly IMoviePublicService _moviePublicService;
+    private readonly IExternalRatingsService _externalRatingsService;
+    private readonly ITmdbClient _tmdb;
+    private readonly CinemaDbContext _db;
 
-    public MoviesController(IMoviePublicService moviePublicService)
+    public MoviesController(
+        IMoviePublicService moviePublicService,
+        IExternalRatingsService externalRatingsService,
+        ITmdbClient tmdb, CinemaDbContext db)
     {
         _moviePublicService = moviePublicService;
+        _externalRatingsService = externalRatingsService;
+        _tmdb = tmdb;
+        _db = db;
+
+
     }
+
     [HttpGet("{id:int}", Name = "MovieDetails")]
     public async Task<IActionResult> Details(int id, [FromQuery] DateOnly? date, CancellationToken ct)
     {
@@ -23,6 +38,7 @@ public class MoviesController : Controller
             .SelectMany(c => c.Days)
             .Select(d => (DateOnly?)d.Date)
             .Min();
+
         var selected = date ?? firstDay;
 
         var vm = new MovieDetailsVm
@@ -38,12 +54,14 @@ public class MoviesController : Controller
             Rating = dto.Rating,
             PosterUrl = NormalizePosterUrl(dto.PosterPath),
 
+            TmdbId = dto.TmdbId,
+            AgeRating = dto.AgeRating,
+
             Directors = dto.Directors.Select(d => d.Name).ToList(),
             Countries = dto.Countries.ToList(),
             Genres = dto.Genres.ToList(),
             Actors = dto.Actors.Select(a => a.Name).ToList(),
 
-            AgeRating = dto.AgeRating,
             SelectedDate = selected,
             Schedule = dto.Schedule.Select(c => new MovieCinemaScheduleVm
             {
@@ -64,9 +82,48 @@ public class MoviesController : Controller
             }).ToList()
         };
 
+        if (User.Identity?.IsAuthenticated == true)
+        {
+           var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+           if (!string.IsNullOrWhiteSpace(userId))
+           {
+               vm.IsSaved = await _db.SavedMovies
+                 .AnyAsync(x => x.UserId == userId && x.MovieId == vm.Id, ct);
+          }
+       }
+
+
+        string? imdbId = null;
+        if (vm.TmdbId.HasValue)
+        {
+            var ext = await _tmdb.GetExternalIdsAsync(vm.TmdbId.Value, ct);
+            imdbId = ext.ImdbId;
+        }
+
+        var ratings = !string.IsNullOrWhiteSpace(imdbId)
+            ? await _externalRatingsService.GetRatingsAsync(imdbId!, ct)
+            : await _externalRatingsService.GetRatingsByTitleAsync(vm.OriginalName ?? vm.Title, vm.ReleaseDate?.Year, ct);
+
+        vm.Imdb = ratings.Imdb;
+        vm.RottenTomatoes = ratings.RottenTomatoes;
+        vm.Metacritic = ratings.Metacritic;
+        var related = await _moviePublicService.GetRelatedMoviesAsync(
+     vm.Id,
+     vm.Genres,
+     take: 4,
+     ct);
+
+        vm.RelatedMovies = related.Select(m => new RelatedMovieVm
+        {
+            Id = m.Id,
+            Title = m.Title,
+            PosterUrl = NormalizePosterUrl(m.PosterPath)
+        }).ToList();
         return View(vm);
     }
-    static string NormalizePosterUrl(string? poster)
+
+    private static string NormalizePosterUrl(string? poster)
     {
         if (string.IsNullOrWhiteSpace(poster))
             return "/images/no-poster.png";
@@ -74,11 +131,9 @@ public class MoviesController : Controller
         if (poster.StartsWith("http://") || poster.StartsWith("https://"))
             return poster;
 
-        // TMDB relative path
         if (poster.StartsWith("/"))
             return "https://image.tmdb.org/t/p/w500" + poster;
 
         return "/" + poster.TrimStart('/');
     }
-
 }

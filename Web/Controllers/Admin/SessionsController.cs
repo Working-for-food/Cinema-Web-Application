@@ -24,7 +24,7 @@ namespace Web.Controllers.Admin
 
         private static string CategoryTitle(SeatCategory c) => c switch
         {
-            SeatCategory.Standard => "Стандарт",
+            SeatCategory.Standard => "Звичайне",
             SeatCategory.Vip => "VIP",
             SeatCategory.Accessible => "Інклюзивне",
             _ => c.ToString()
@@ -128,6 +128,12 @@ namespace Web.Controllers.Admin
             var movies = await _lookups.GetMoviesAsync(query: null, ct);
             vm.Movies = ToSelectList(movies, vm.MovieId == 0 ? null : vm.MovieId);
 
+            ViewBag.MovieReleaseDates = movies
+                .ToDictionary(
+                    x => x.Id,
+                    x => x.ReleaseDate?.ToString("yyyy-MM-dd") ?? ""
+                );
+
             ViewBag.MovieDurations = movies
                 .Where(x => x.DurationMinutes.HasValue && x.DurationMinutes.Value > 0)
                 .ToDictionary(x => x.Id, x => x.DurationMinutes!.Value);
@@ -189,6 +195,11 @@ namespace Web.Controllers.Admin
                 RowPrices = rowPrices,
                 CategoryMultipliers = multipliers
             };
+        }
+
+        private static bool IsLocked(SessionDetailsDto s)
+        {
+            return s.IsCancelled || s.EndTime <= DateTime.Now;
         }
 
         // GET: /Admin/Sessions/PricingMeta?hallId=1
@@ -310,8 +321,90 @@ namespace Web.Controllers.Admin
                 UpdatedAt = dto.UpdatedAt
             };
 
+            
+            var seats = await _sessions.GetSeatsForBookingAsync(id, ct);
+
+            vm.Seats = seats.Select(s => new SessionDetailsVm.SeatVm
+            {
+                SeatId = s.SeatId,
+                Row = s.RowNumber,
+                Number = s.SeatNumber,
+                Category = (SeatCategory)s.Category,
+                Price = s.Price,
+                BookingId = s.BookingId
+            }).ToList();
+
+            vm.TotalSeats = vm.Seats.Count;
+            vm.BookedSeats = vm.Seats.Count(x => x.BookingId != null);
+            vm.FreeSeats = vm.TotalSeats - vm.BookedSeats;
+            vm.BookingsCount = vm.Seats.Where(x => x.BookingId != null)
+                .Select(x => x.BookingId!.Value)
+                .Distinct()
+                .Count();
+
+            vm.TotalRevenue = vm.Seats.Where(x => x.BookingId != null).Sum(x => x.Price);
+            vm.PotentialRevenue = vm.Seats.Sum(x => x.Price);
+            vm.RemainingPotentialRevenue = vm.Seats.Where(x => x.BookingId == null).Sum(x => x.Price);
+
+            vm.OccupancyPercent = vm.TotalSeats == 0
+                ? 0m
+                : Math.Round(vm.BookedSeats * 100m / vm.TotalSeats, 2, MidpointRounding.AwayFromZero);
+
+            vm.AverageTicketPrice = vm.BookedSeats == 0
+                ? 0m
+                : Math.Round(vm.TotalRevenue / vm.BookedSeats, 2, MidpointRounding.AwayFromZero);
+
+            vm.AverageBookingAmount = vm.BookingsCount == 0
+                ? 0m
+                : Math.Round(vm.TotalRevenue / vm.BookingsCount, 2, MidpointRounding.AwayFromZero);
+
+            vm.CategoryStats = Enum.GetValues<SeatCategory>()
+                .Select(cat =>
+                {
+                    var seatsOfCat = vm.Seats.Where(x => x.Category == cat).ToList();
+                    var total = seatsOfCat.Count;
+                    var booked = seatsOfCat.Count(x => x.BookingId != null);
+
+                    return new SessionDetailsVm.CategoryStatVm
+                    {
+                        Category = cat,
+                        Total = total,
+                        Booked = booked,
+                        Free = total - booked,
+                        Revenue = seatsOfCat.Where(x => x.BookingId != null).Sum(x => x.Price),
+                        PotentialRevenue = seatsOfCat.Sum(x => x.Price)
+                    };
+                })
+                .Where(x => x.Total > 0)
+                .ToList();
+
+            vm.RowStats = vm.Seats
+                .GroupBy(x => x.Row)
+                .OrderBy(g => g.Key)
+                .Select(g =>
+                {
+                    var total = g.Count();
+                    var booked = g.Count(x => x.BookingId != null);
+                    var revenue = g.Where(x => x.BookingId != null).Sum(x => x.Price);
+                    var potential = g.Sum(x => x.Price);
+                    var occ = total == 0 ? 0m : Math.Round(booked * 100m / total, 2, MidpointRounding.AwayFromZero);
+
+                    return new SessionDetailsVm.RowStatVm
+                    {
+                        Row = g.Key,
+                        Total = total,
+                        Booked = booked,
+                        Free = total - booked,
+                        Revenue = revenue,
+                        PotentialRevenue = potential,
+                        OccupancyPercent = occ
+                    };
+                })
+                .ToList();
+
             return View(DetailsViewPath, vm);
         }
+
 
         // GET: /Admin/Sessions/Create
         [HttpGet]
@@ -336,6 +429,16 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SessionEditVm vm, CancellationToken ct)
         {
+            if (vm.StartTime.HasValue && vm.StartTime.Value < DateTime.Now)
+            {
+                ModelState.AddModelError(nameof(vm.StartTime), "Початок сеансу не може бути в минулому.");
+            }
+
+            if (vm.StartTime.HasValue && vm.EndTime.HasValue && vm.EndTime.Value <= vm.StartTime.Value)
+            {
+                ModelState.AddModelError(nameof(vm.EndTime), "Кінець має бути пізніше за початок.");
+            }
+
             if (!ModelState.IsValid)
             {
                 await FillEditLookupsAsync(vm, ct);
@@ -371,24 +474,13 @@ namespace Web.Controllers.Admin
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
 
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             var vm = ToEditVm(s);
-            var pricing = await _sessions.GetPricingAsync(id, ct);
-
-            vm.RowPrices = pricing.RowPrices
-                .Select(x => new SessionEditVm.RowPriceVm
-                {
-                    RowNumber = x.Row,
-                    BasePrice = x.BasePrice
-                })
-                .ToList();
-
-            vm.CategoryMultipliers = pricing.CategoryMultipliers
-                .Select(x => new SessionEditVm.CategoryMultiplierVm
-                {
-                    Category = x.Category,
-                    Multiplier = x.Multiplier
-                })
-                .ToList();
 
             await FillEditLookupsAsync(vm, ct);
             ViewBag.MovieTitle = s.MovieTitle;
@@ -403,6 +495,32 @@ namespace Web.Controllers.Admin
         {
             vm.Id = id;
 
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            foreach (var key in ModelState.Keys
+                .Where(k => k.StartsWith("RowPrices") || k.StartsWith("CategoryMultipliers"))
+                .ToList())
+            {
+                ModelState.Remove(key);
+            }
+
+            if (vm.StartTime.HasValue && vm.StartTime.Value < DateTime.Now)
+            {
+                ModelState.AddModelError(nameof(vm.StartTime), "Початок сеансу не може бути в минулому.");
+            }
+
+            if (vm.StartTime.HasValue && vm.EndTime.HasValue && vm.EndTime.Value <= vm.StartTime.Value)
+            {
+                ModelState.AddModelError(nameof(vm.EndTime), "Кінець сеансу має бути пізніше за початок.");
+            }
+
             if (!ModelState.IsValid)
             {
                 await FillEditLookupsAsync(vm, ct);
@@ -413,8 +531,6 @@ namespace Web.Controllers.Admin
             {
                 var ok = await _sessions.UpdateAsync(id, ToDto(vm), ct);
                 if (!ok) return NotFound();
-
-                await _sessions.ApplyPricingAsync(id, ToPricingDto(vm), ct);
 
                 TempData["Success"] = "Сеанс успішно оновлено.";
 
@@ -438,6 +554,17 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string? returnUrl, CancellationToken ct)
         {
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            if (s.EndTime <= DateTime.Now)
+            {
+                TempData["Error"] = "Неможливо скасувати завершений сеанс.";
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return LocalRedirect(returnUrl);
+                return RedirectToAction(nameof(Index));
+            }
+
             var ok = await _sessions.CancelAsync(id, ct);
             if (!ok) return NotFound();
 
@@ -454,6 +581,17 @@ namespace Web.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Restore(int id, string? returnUrl, CancellationToken ct)
         {
+            var s = await _sessions.GetByIdAsync(id, ct);
+            if (s is null) return NotFound();
+
+            if (s.EndTime <= DateTime.Now)
+            {
+                TempData["Error"] = "Неможливо відновити минулий сеанс.";
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return LocalRedirect(returnUrl);
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 var ok = await _sessions.RestoreAsync(id, ct);
@@ -479,6 +617,12 @@ namespace Web.Controllers.Admin
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
+
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування цін заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             var pricing = await _sessions.GetPricingAsync(id, ct);
             var seats = await _sessions.GetSeatPricesAsync(id, ct);
@@ -526,6 +670,12 @@ namespace Web.Controllers.Admin
 
             var s = await _sessions.GetByIdAsync(id, ct);
             if (s is null) return NotFound();
+
+            if (IsLocked(s))
+            {
+                TempData["Error"] = "Цей сеанс вже завершений або скасований. Редагування цін заборонено.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             async Task<IActionResult> ReturnWithViewModelAsync()
             {

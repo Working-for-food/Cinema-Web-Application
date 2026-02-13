@@ -1,18 +1,14 @@
-﻿/* =========================
-   THEME / BASE
-========================= */
-
-:root {
-    --bg0: #ffffff;
-    --bg1: #f6f7fb;
-    --text: #0f172a;
-    --muted: #475569;
-    --brand: #1d8cf8;
-    --brand2: #0ea5e9;
-    --card: rgba(255,255,255,0.92);
-    --border: rgba(15, 23, 42, 0.10);
-    --shadow-sm: 0 8px 18px rgba(15, 23, 42, 0.10);
-    --shadow-md: 0 18px 50px rgba(15, 23, 42, 0.14);
+﻿:root {
+    --bg0: #F8FAFC; 
+    --bg1: #F1F5F9; 
+    --text: #1E293B; 
+    --muted: #64748B; 
+    --brand: #6366F1; 
+    --brand2: #4F46E5;
+    --card: rgba(255,255,255,0.92); 
+    --border: #E2E8F0; 
+    --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 14px 34px rgba(15, 23, 42, 0.10);
     --shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.16);
     --r12: 12px;
     --r16: 16px;
@@ -20,7 +16,7 @@
 }
 
 .afisha-page {
-    padding: 0 0 50px; /* верхній паддінг піде у .afisha-header */
+    padding: 0 0 50px; 
     background: transparent !important;
     color: var(--text);
     display: flex;
@@ -30,33 +26,24 @@
     isolation: isolate;
 }
 
-
-    /* remove link underlines on the page */
-    .afisha-page a,
-    .afisha-page a:hover,
-    .afisha-page a:focus,
-    .afisha-page a:active {
-        text-decoration: none !important;
-        color: inherit;
-    }
-
-/* =========================
-   HEADER
-========================= */
-
+.afisha-page a,
+.afisha-page a:hover,
+.afisha-page a:focus,
+.afisha-page a:active {
+    text-decoration: none !important;
+    color: inherit;
+}
 
 .afisha-header {
     width: 100%;
     padding: 28px 0 18px;
-    background: transparent; /* ключове */
+    background: transparent;
     position: relative;
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
-
 
 .afisha-title {
     text-align: center;
@@ -67,26 +54,22 @@
     line-height: 1.05;
 }
 
-    .afisha-title::after {
-        content: "";
-        display: block;
-        width: 120px;
-        height: 6px;
-        margin: 14px auto 0;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--brand), var(--brand2));
-        opacity: 0.9;
-    }
-
-/* =========================
-   TABS (segmented control)
-========================= */
+.afisha-title::after {
+    content: "";
+    display: block;
+    width: 120px;
+    height: 6px;
+    margin: 14px auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--brand), var(--brand2));
+    opacity: 0.9;
+}
 
 .afisha-tabs {
     display: inline-flex;
     gap: 6px;
     padding: 8px;
-    margin: 12px auto 26px; /* ← ОЦЕ ГОЛОВНЕ */
+    margin: 12px auto 26px; 
     border-radius: 999px;
     background: rgba(255,255,255,0.65);
     border: 1px solid rgba(15,23,42,0.10);
@@ -94,7 +77,6 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
-
 
 .afisha-tab-btn {
     border: 0;
@@ -108,30 +90,25 @@
     transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
-    .afisha-tab-btn:hover {
-        transform: translateY(-1px);
-        background: rgba(15,23,42,0.05);
-    }
+.afisha-tab-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(15,23,42,0.05);
+}
 
-    .afisha-tab-btn.is-active {
-        background: linear-gradient(180deg, rgba(29,140,248,0.18), rgba(14,165,233,0.10));
-        border: 1px solid rgba(29,140,248,0.35);
-        box-shadow: 0 10px 24px rgba(29,140,248,0.18);
-    }
+.afisha-tab-btn.is-active {
+    background: linear-gradient( 180deg, rgba(99,102,241,0.18), rgba(79,70,229,0.10) );
+    border: 1px solid rgba(99,102,241,0.35);
+    box-shadow: 0 10px 24px rgba(99,102,241,0.18);
+}
 
-/* panels */
 .afisha-tab-panel {
     display: none;
     width: 100%;
 }
 
-    .afisha-tab-panel.is-active {
-        display: block;
-    }
-
-/* =========================
-   SECTION TITLES (if used)
-========================= */
+.afisha-tab-panel.is-active {
+    display: block;
+}
 
 .afisha-section {
     width: 100%;
@@ -145,10 +122,6 @@
     margin-bottom: 18px;
     color: var(--text);
 }
-
-/* =========================
-   GRID (NON-CAROUSEL) - modern cards
-========================= */
 
 .afisha-row {
     display: flex;
@@ -172,20 +145,19 @@
     transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-    .movie-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-md);
-    }
+.movie-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
 
 .movie-poster-wrap {
     width: 100%;
-    aspect-ratio: 2 / 3; /* 🔥 стандартний постер */
+    aspect-ratio: 2 / 3;
     height: auto;
     border-radius: 18px;
     overflow: hidden;
     background: #000;
 }
-
 
 .afisha-poster {
     width: 100%;
@@ -209,7 +181,6 @@
     min-height: 48px;
 }
 
-/* button - modern */
 .btn-details {
     margin-top: auto;
     display: grid;
@@ -226,23 +197,22 @@
     transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
 }
 
-    .btn-details:hover {
-        filter: brightness(0.98);
-        transform: translateY(-1px);
-        box-shadow: 0 18px 38px rgba(29,140,248,0.22);
-    }
+.btn-details:hover {
+    filter: brightness(0.98);
+    transform: translateY(-1px);
+    box-shadow: 0 18px 38px rgba(29,140,248,0.22);
+}
 
-    .btn-details:active {
-        transform: translateY(0px);
-    }
+.btn-details:active {
+    transform: translateY(0px);
+}
 
-/* badges */
 .badge {
     position: absolute !important;
     top: 14px !important;
-    padding: 10px 14px; /* було 6px 10px */
+    padding: 10px 14px; 
     font-weight: 900;
-    font-size: 14px; /* було 12px */
+    font-size: 14px;
     line-height: 1;
     color: #fff;
     z-index: 4;
@@ -250,14 +220,12 @@
     box-shadow: 0 12px 24px rgba(0,0,0,0.25);
 }
 
-
 .badge-age {
     left: 14px !important;
     right: auto !important;
     background: #e11d48;
-    font-size: 15px; /* трохи більший за рік */
+    font-size: 15px; 
 }
-
 
 .badge-year {
     right: 14px !important;
@@ -265,7 +233,6 @@
     background: rgba(15,23,42,0.78);
     font-size: 13px;
 }
-
 
 .soon-badge {
     position: absolute;
@@ -281,11 +248,6 @@
     box-shadow: 0 10px 18px rgba(0,0,0,0.16);
 }
 
-/* =========================
-   CAROUSEL (keep your carousel, improve surrounding feel)
-   NOTE: layout/3D stays, only polish
-========================= */
-
 .afisha-carousel {
     width: 100vw;
     margin-left: calc(50% - 50vw);
@@ -297,7 +259,6 @@
     gap: 12px;
 }
 
-/* Stage glow behind carousel for "cinema" vibe */
 .afisha-car-stage {
     position: relative;
     width: 100%;
@@ -308,15 +269,15 @@
     overflow: visible;
 }
 
-    .afisha-car-stage::before {
-        content: "";
-        position: absolute;
-        inset: -40px -40px -80px -40px;
-        background: radial-gradient(600px 260px at 50% 20%, rgba(29,140,248,0.18), transparent 65%), radial-gradient(900px 340px at 50% 80%, rgba(14,165,233,0.12), transparent 70%);
-        filter: blur(6px);
-        z-index: 0;
-        pointer-events: none;
-    }
+.afisha-car-stage::before {
+    content: "";
+    position: absolute;
+    inset: -40px -40px -80px -40px;
+    background: radial-gradient(600px 260px at 50% 20%, rgba(29,140,248,0.18), transparent 65%), radial-gradient(900px 340px at 50% 80%, rgba(14,165,233,0.12), transparent 70%);
+    filter: blur(6px);
+    z-index: 0;
+    pointer-events: none;
+}
 
 .afisha-car-track {
     position: relative;
@@ -326,7 +287,6 @@
     z-index: 1;
 }
 
-/* arrows */
 .afisha-car-btn {
     width: 48px;
     height: 48px;
@@ -345,22 +305,21 @@
     transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
-    .afisha-car-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-        background: rgba(255,255,255,0.95);
-    }
+.afisha-car-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    background: rgba(255,255,255,0.95);
+}
 
-    .afisha-car-btn:active {
-        transform: translateY(0px);
-    }
+.afisha-car-btn:active {
+    transform: translateY(0px);
+}
 
-/* slides */
 .afisha-car-item {
     position: absolute;
     top: 0;
     left: 50%;
-    width: 320px; /* 🔥 БУЛО ~460–560 → ТЕПЕР РЕАЛЬНО МАЛО */
+    width: 320px; 
     height: auto;
     transform-style: preserve-3d;
     backface-visibility: hidden;
@@ -372,66 +331,58 @@
     background: transparent;
 }
 
+.afisha-car-item .afisha-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
 
+.afisha-car-item .movie-name {
+    color: var(--text);
+    background: #fff;
+    font-weight: 900;
+    padding: 12px 14px;
+    border-radius: 0 0 18px 18px;
+    margin-top: 0;
+    text-align: center;
+    box-shadow: 0 -10px 26px rgba(15,23,42,0.06);
+    min-height: unset;
+}
 
-    .afisha-car-item .afisha-poster {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
+.afisha-car-item .btn-details {
+    margin: 12px 16px 16px;
+}
 
-    /* text in carousel */
-    .afisha-car-item .movie-name {
-        color: var(--text);
-        background: #fff;
-        font-weight: 900;
-        padding: 12px 14px;
-        border-radius: 0 0 18px 18px;
-        margin-top: 0;
-        text-align: center;
-        box-shadow: 0 -10px 26px rgba(15,23,42,0.06);
-        min-height: unset;
-    }
+.afisha-car-item.is-active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateZ(0) scale(1.08);
+    z-index: 3;
+    box-shadow: var(--shadow-lg);
+}
 
-    .afisha-car-item .btn-details {
-        margin: 12px 16px 16px;
-    }
+.afisha-car-item.is-prev {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(calc(-50% - 320px)) translateZ(-140px) rotateY(50deg) scale(0.9);
+    z-index: 2;
+    box-shadow: var(--shadow-md);
+}
 
-    /* === STATES (keep 3D + angles) === */
-    .afisha-car-item.is-active {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(-50%) translateZ(0) scale(1.08);
-        z-index: 3;
-        box-shadow: var(--shadow-lg);
-    }
+.afisha-car-item.is-next {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(calc(-50% + 320px)) translateZ(-140px) rotateY(-50deg) scale(0.9);
+    z-index: 2;
+    box-shadow: var(--shadow-md);
+}
 
-    .afisha-car-item.is-prev {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(calc(-50% - 320px)) translateZ(-140px) rotateY(50deg) scale(0.9);
-        z-index: 2;
-        box-shadow: var(--shadow-md);
-    }
-
-    .afisha-car-item.is-next {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(calc(-50% + 320px)) translateZ(-140px) rotateY(-50deg) scale(0.9);
-        z-index: 2;
-        box-shadow: var(--shadow-md);
-    }
-
-    .afisha-car-item.is-hidden {
-        opacity: 0;
-        transform: translateX(-50%) scale(0.7);
-        z-index: 0;
-    }
-
-/* =========================
-   RESPONSIVE
-========================= */
+.afisha-car-item.is-hidden {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.7);
+    z-index: 0;
+}
 
 @media (max-width: 1000px) {
     .afisha-title {
@@ -447,15 +398,13 @@
         width: min(520px, 92vw);
     }
 
+    .afisha-car-item.is-prev {
+        transform: translateX(calc(-50% - 320px)) translateZ(-120px) rotateY(45deg) scale(0.92);
+    }
 
-        /* reduce side spacing on smaller screens */
-        .afisha-car-item.is-prev {
-            transform: translateX(calc(-50% - 320px)) translateZ(-120px) rotateY(45deg) scale(0.92);
-        }
-
-        .afisha-car-item.is-next {
-            transform: translateX(calc(-50% + 320px)) translateZ(-120px) rotateY(-45deg) scale(0.92);
-        }
+    .afisha-car-item.is-next {
+        transform: translateX(calc(-50% + 320px)) translateZ(-120px) rotateY(-45deg) scale(0.92);
+    }
 }
 
 @media (max-width: 650px) {
@@ -464,13 +413,11 @@
         width: 100%;
         max-width: 1800px;
         margin: 0 auto;
-        height: min(85vh, 820px); /* повна висота */
+        height: min(85vh, 820px); 
         perspective: 1600px;
         overflow: visible;
     }
 
-
-    /* hide side posters for phone */
     .afisha-car-item.is-prev,
     .afisha-car-item.is-next {
         opacity: 0;
@@ -482,7 +429,7 @@
         top: 0;
         left: 50%;
         width: 560px;
-        height: 100%; /* 🔥 ключове */
+        height: 100%; 
         transform-style: preserve-3d;
         backface-visibility: hidden;
         opacity: 0;
@@ -493,94 +440,74 @@
         background: transparent;
     }
 
-
-        .afisha-car-item .movie-poster-wrap {
-            height: 340px;
-        }
+    .afisha-car-item .movie-poster-wrap {
+        height: 340px;
+    }
 
     .movie-card {
         width: 92vw;
     }
 }
 
-/* Fix button overflow in carousel cards */
 .afisha-car-item {
-    overflow: hidden; /* ключове */
+    overflow: hidden; 
 }
 
-    .afisha-car-item .btn-details {
-        width: calc(100% - 32px);
-        margin: 12px auto 16px;
-        border-radius: 14px;
-    }
-
-
-/* =========================
-   BLURRED POSTER BACKGROUND (NOT ON HEADER)
-========================= */
+.afisha-car-item .btn-details {
+    width: calc(100% - 32px);
+    margin: 12px auto 16px;
+    border-radius: 14px;
+}
 
 .afisha-bg {
     position: fixed;
     left: -80px;
     right: -80px;
     bottom: -80px;
-    top: var(--afisha-header-h, 210px); /* JS підставить точну висоту хедера */
+    top: var(--afisha-header-h, 210px); 
     z-index: 0;
     pointer-events: none;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    /* "просто постер, який розмитий" */
     filter: blur(55px);
     transform: scale(1.2);
     opacity: 0.95;
 }
 
-/* весь контент сторінки над фоном */
 .afisha-page > :not(.afisha-bg) {
     position: relative;
     z-index: 1;
 }
 
-
-/* =========================
-   CAROUSEL: FULL-POSTER CLICK + HOVER TITLE OVERLAY
-========================= */
-
-/* робимо картку "постерною" (без білого низу) */
 .afisha-car-item {
     background: transparent;
     box-shadow: var(--shadow-md);
 }
 
-    /* постер займає всю висоту картки */
-    .afisha-car-item .movie-poster-wrap {
-        position: relative;
-        width: 100%;
-        height: 100%; /* 🔥 повна висота */
-        border-radius: 18px;
-        overflow: hidden;
-        background: #000;
-    }
+.afisha-car-item .movie-poster-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%; 
+    border-radius: 18px;
+    overflow: hidden;
+    background: #000;
+}
 
+.afisha-car-item .movie-name,
+.afisha-car-item .btn-details {
+    display: none !important;
+}
 
-    /* прибираємо білий блок, бо його більше немає */
-    .afisha-car-item .movie-name,
-    .afisha-car-item .btn-details {
-        display: none !important;
-    }
-
-/* hover title */
 .poster-title {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    height: 64px; /* фіксована висота плашки */
+    height: 64px; 
     display: flex;
-    align-items: center; /* вертикальний центр */
-    justify-content: center; /* горизонтальний центр */
-
+    align-items: center; 
+    justify-content: center; 
     padding: 0 16px;
     font-weight: 900;
     font-size: 16px;
@@ -594,21 +521,17 @@
     transition: opacity 180ms ease, transform 180ms ease;
 }
 
-
-/* показувати назву при hover/focus */
 .afisha-car-item:hover .poster-title,
 .afisha-car-item:focus-visible .poster-title {
     opacity: 1;
     transform: translateY(0);
 }
 
-/* keyboard accessibility */
 .afisha-car-item:focus-visible {
     outline: 3px solid rgba(29,140,248,0.45);
     outline-offset: 6px;
 }
 
-/* на мобільних (без hover) назва завжди видима */
 @media (hover: none), (max-width: 650px) {
     .poster-title {
         opacity: 1;

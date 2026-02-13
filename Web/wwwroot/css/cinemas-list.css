@@ -1,0 +1,71 @@
+﻿.custom-input-group {
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease-in-out;
+    background: #fff;
+    height: 48px;
+}
+
+.custom-input-group .form-control,
+.custom-input-group .form-select,
+.custom-input-group .input-group-text {
+    border: none !important;
+    box-shadow: none !important;
+    height: 100%;
+}
+
+.custom-input-group:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.15) !important;
+}
+
+.custom-input-group .input-group-text {
+    padding-left: 1.1rem;
+    padding-right: 0.6rem;
+    background-color: transparent !important;
+}
+
+.btn-maroon {
+    background-color: var(--accent);
+    color: white;
+    transition: opacity 0.2s;
+}
+
+.btn-maroon:hover {
+    opacity: 0.9;
+    color: white;
+}
+
+.btn-outline-danger {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 5;
+}
+
+.btn-soft {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+    border: none;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-soft:hover {
+    background-color: var(--accent);
+    color: white;
+}
+
+.card-modern {
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+

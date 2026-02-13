@@ -18,15 +18,10 @@
 }
 
 <section class="py-5 gray-bg">
-    <div class="container">
+    <div class="container-fluid">
 
-        <div class="text-center mb-5">
-            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Редагувати сеанс</h1>
-            <p class="text-muted small text-uppercase fw-semibold mb-0">Налаштування часу та фільму</p>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div></div>
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+            <h1 class="section-title mb-1">Редагувати сеанс</h1>
             <a class="btn btn-secondary shadow-sm br-8 px-3" asp-action="Index">
                 <i class="fa-solid fa-arrow-left me-2"></i>НАЗАД
             </a>
@@ -173,6 +168,13 @@
                                         </datalist>
 
                                         <span class="text-danger small" asp-validation-for="MovieId"></span>
+
+                                        <div id="movieInfoPanel" class="d-none mt-2">
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 fw-normal">
+                                                <i class="fa-regular fa-calendar me-1"></i>
+                                                Прем'єра: <strong id="movieReleaseDateDisplay">...</strong>
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div>
@@ -202,85 +204,209 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
-        (function () {
+        (() => {
             const movieDurations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, int>)(ViewBag.MovieDurations ?? new Dictionary<int, int>())));
             const moviePosters = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MoviePosters ?? new Dictionary<int, string>())));
+            const movieReleaseDates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Dictionary<int, string>)(ViewBag.MovieReleaseDates ?? new Dictionary<int, string>())));
 
-            const els = {
-                titleInput: document.getElementById('movieTitleInput'),
-                movieIdHidden: document.getElementById('movieIdHidden'),
-                movieList: document.getElementById('movieList'),
-                startInput: document.getElementById('StartTime'),
-                endInput: document.getElementById('EndTime'),
-                durationText: document.getElementById('movieDurationText'),
-                warn: document.getElementById('shortDurationWarn'),
-                posterImg: document.getElementById('posterImg'),
-                posterPlaceholder: document.getElementById('posterPlaceholder')
+            const $ = (id) => document.getElementById(id);
+            const pad2 = (n) => String(n).padStart(2, '0');
+            const toInputDt = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+            const parseDt = (v) => {
+                const d = new Date(v || '');
+                return isNaN(d) ? null : d;
             };
 
-            function posterUrl(path) {
+            const els = {
+                form: $('editForm'),
+                title: $('movieTitleInput'),
+                movieId: $('movieIdHidden'),
+                movieList: $('movieList'),
+                start: $('StartTime'),
+                end: $('EndTime'),
+                durationText: $('movieDurationText'),
+                warn: $('shortDurationWarn'),
+                poster: $('posterImg'),
+                posterPh: $('posterPlaceholder'),
+                release: $('movieReleaseDateDisplay'),
+                infoPanel: $('movieInfoPanel')
+            };
+
+            if (!els.form) return;
+
+            const nowMin = () => {
+            const n = new Date();
+            return new Date(n.getFullYear(), n.getMonth(), n.getDate(), n.getHours(), n.getMinutes(), 0, 0);
+            };
+
+            const applyMinAndGray = () => {
+                if (!els.start || !els.end) return;
+
+                const now = nowMin();
+
+                const existingMin = parseDt(els.start.min);
+                const effectiveMin = (!existingMin || existingMin < now) ? now : existingMin;
+
+                els.start.min = toInputDt(effectiveMin);
+
+                const startVal = parseDt(els.start.value);
+                const endMin = (startVal && startVal > effectiveMin) ? startVal : effectiveMin;
+                els.end.min = toInputDt(endMin);
+
+                const mark = (input) => {
+                    const v = parseDt(input.value);
+                    const m = parseDt(input.min);
+                    input.classList.toggle('dt-past', !!(v && m && v < m));
+                };
+
+                mark(els.start);
+                mark(els.end);
+            };
+
+            applyMinAndGray();
+            els.start?.addEventListener('change', applyMinAndGray);
+            els.end?.addEventListener('change', applyMinAndGray);
+            els.form?.addEventListener('submit', applyMinAndGray);
+
+
+            const state = { lastMinEnd: null };
+
+            const posterUrl = (path) => {
                 if (!path) return '';
                 const p = String(path);
                 if (p.startsWith('http')) return p;
                 return `https://image.tmdb.org/t/p/w154${p.startsWith('/') ? p : '/' + p}`;
-            }
+            };
 
-            function updateUIForMovie() {
-                const val = (els.titleInput?.value || '').trim();
-                let id = 0;
+            const setWarn = (html, cls) => {
+                if (!els.warn) return;
+                els.warn.className = 'fw-semibold x-small ms-2';
+                if (cls) els.warn.classList.add(cls);
+                els.warn.innerHTML = html || '';
+                els.warn.classList.toggle('d-none', !html);
+            };
 
-                if (els.movieList) {
-                    const opt = Array.from(els.movieList.options).find(o => o.value === val);
-                    id = Number(opt ? opt.dataset.id : 0);
+            const getSelectedMovieId = () => {
+                const val = (els.title?.value || '').trim();
+                const opt = Array.from(els.movieList?.options || []).find(o => o.value === val);
+                return Number(opt?.dataset?.id || 0);
+            };
+
+            const minEndFor = (start, dur) => new Date(start.getTime() + dur * 60000);
+
+            const normalizeEnd = (dur, preserveExtra) => {
+                const start = parseDt(els.start?.value);
+                if (!dur || dur <= 0 || !start) return;
+
+                const end = parseDt(els.end?.value);
+                const minEnd = minEndFor(start, dur);
+
+                let extraMs = 0;
+                if (preserveExtra && end && state.lastMinEnd) extraMs = Math.max(0, end - state.lastMinEnd);
+
+                const target = new Date(minEnd.getTime() + extraMs);
+
+                if (!end || end < minEnd || (preserveExtra && (extraMs > 0 || (end && state.lastMinEnd && end.getTime() === state.lastMinEnd.getTime())))) {
+                    els.end.value = toInputDt(target);
+
+                    if (end && end < minEnd) {
+                        els.end.style.transition = 'background-color .25s';
+                        els.end.style.backgroundColor = '#fff3cd';
+                        setTimeout(() => els.end && (els.end.style.backgroundColor = ''), 600);
+                    }
                 }
 
-                if (els.movieIdHidden) els.movieIdHidden.value = String(id);
+                state.lastMinEnd = minEnd;
+            };
 
-                const path = moviePosters[id];
-                if (path && els.posterImg && els.posterPlaceholder) {
-                    els.posterImg.src = posterUrl(path);
-                    els.posterImg.classList.remove('d-none');
-                    els.posterPlaceholder.classList.add('d-none');
-                } else if (els.posterImg && els.posterPlaceholder) {
-                    els.posterImg.classList.add('d-none');
-                    els.posterPlaceholder.classList.remove('d-none');
+            const validateDurationLabel = (dur) => {
+                const start = parseDt(els.start?.value);
+                const end = parseDt(els.end?.value);
+                if (!dur || !start || !end) return setWarn('', '');
+
+                const diff = (end - start) / 60000;
+                if (diff < dur - 1) return setWarn(`<i class="fa-solid fa-triangle-exclamation me-1"></i>Коротший за фільм (${Math.round(diff)} < ${dur} хв)`, 'text-danger');
+
+                const extra = Math.round(diff - dur);
+                if (extra > 0) return setWarn(`<i class="fa-solid fa-check me-1"></i>+${extra} хв (вільний час)`, 'text-success');
+
+                setWarn('', '');
+            };
+
+            const updateMovieUi = (isInit) => {
+                let id = 0;
+
+                if (isInit) {
+                    id = Number(els.movieId?.value || 0);
+                } else {
+                    id = getSelectedMovieId();
+                    if (els.movieId) els.movieId.value = String(id);
                 }
 
                 const dur = Number(movieDurations[id] || 0);
                 if (els.durationText) els.durationText.textContent = dur > 0 ? `ТРИВАЛІСТЬ: ${dur} хв` : 'ТРИВАЛІСТЬ: —';
 
-                const startVal = els.startInput?.value;
-                const endVal = els.endInput?.value;
-
-                if (dur > 0 && startVal && endVal && els.warn) {
-                    const start = new Date(startVal);
-                    const end = new Date(endVal);
-
-                    if (!isNaN(start) && !isNaN(end)) {
-                        const diffMins = (end - start) / 60000;
-                        if (diffMins < dur) {
-                            els.warn.classList.remove('d-none');
-                            els.warn.textContent = `Час (${Math.round(diffMins)} хв) менший за фільм (${dur} хв)`;
-                        } else {
-                            els.warn.classList.add('d-none');
-                            els.warn.textContent = '';
-                        }
-                    } else {
-                        els.warn.classList.add('d-none');
-                        els.warn.textContent = '';
-                    }
-                } else if (els.warn) {
-                    els.warn.classList.add('d-none');
-                    els.warn.textContent = '';
+                const path = moviePosters[id];
+                if (path && els.poster && els.posterPh) {
+                    els.poster.src = posterUrl(path);
+                    els.poster.classList.remove('d-none');
+                    els.posterPh.classList.add('d-none');
+                } else if (els.poster && els.posterPh) {
+                    els.poster.classList.add('d-none');
+                    els.posterPh.classList.remove('d-none');
                 }
-            }
 
-            els.titleInput?.addEventListener('input', updateUIForMovie);
-            els.startInput?.addEventListener('change', updateUIForMovie);
-            els.endInput?.addEventListener('change', updateUIForMovie);
+                const iso = movieReleaseDates[id];
+                if (iso && els.infoPanel && els.release && els.start) {
+                    const d = new Date(iso.includes('T') ? iso : (iso + 'T00:00'));
+                    els.release.textContent = d.toLocaleDateString('uk-UA');
+                    els.infoPanel.classList.remove('d-none');
 
-            updateUIForMovie();
+                    const minDt = (iso.includes('T') ? iso.slice(0, 10) : iso) + 'T00:00';
+                    els.start.min = minDt;
+
+                    if (!isInit && els.start.value && els.start.value < minDt) {
+                        els.start.value = minDt;
+                        els.start.style.transition = 'background-color .25s';
+                        els.start.style.backgroundColor = '#fff3cd';
+                        setTimeout(() => els.start && (els.start.style.backgroundColor = ''), 600);
+                    }
+                } else {
+                    els.infoPanel?.classList.add('d-none');
+                    if (els.start) els.start.min = toInputDt(nowMin());
+                }
+
+                normalizeEnd(dur, true);
+                validateDurationLabel(dur);
+                applyMinAndGray();
+            };
+
+            els.form.addEventListener('submit', () => {
+                const id = Number(els.movieId?.value || 0);
+                const dur = Number(movieDurations[id] || 0);
+                normalizeEnd(dur, false);
+            });
+
+            els.title?.addEventListener('input', () => updateMovieUi(false));
+
+            els.start?.addEventListener('change', () => {
+                const id = Number(els.movieId?.value || 0);
+                const dur = Number(movieDurations[id] || 0);
+                normalizeEnd(dur, true);
+                validateDurationLabel(dur);
+            });
+
+            els.end?.addEventListener('change', () => {
+                const id = Number(els.movieId?.value || 0);
+                const dur = Number(movieDurations[id] || 0);
+                normalizeEnd(dur, false);
+                validateDurationLabel(dur);
+            });
+
+            updateMovieUi(true);
         })();
     </script>
 }
+

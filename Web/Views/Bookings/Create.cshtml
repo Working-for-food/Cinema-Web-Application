@@ -1,26 +1,22 @@
-﻿@model Web.ViewModels.BookingCreateVm
+﻿@using Infrastructure.Entities
+@model Web.ViewModels.BookingCreateVm
 
 @{
     ViewData["Title"] = "Бронювання місць";
+    var seats = Model.Seats ?? new List<Web.ViewModels.BookingCreateVm.SeatVm>();
+    var grouped = seats.GroupBy(x => x.RowNumber).OrderBy(g => g.Key).ToList();
+    var maxSeats = grouped.Count == 0 ? 0 : grouped.Max(g => g.Max(s => s.SeatNumber));
 
-    var grouped = Model.Seats
-        .GroupBy(x => x.RowNumber)
-        .OrderBy(g => g.Key)
-        .ToList();
-
-    string CategoryClass(int c) => c switch
+    string SeatUiClass(int c) => c switch
     {
-        1 => "seat-vip",
-        2 => "seat-accessible",
-        _ => "seat-standard"
+        1 => "seat-bg-vip",
+        2 => "seat-bg-acc",
+        _ => "seat-bg-std"
     };
 
-    string PosterOrFallback()
-    {
-        return string.IsNullOrWhiteSpace(Model.MoviePosterUrl)
-            ? "https://via.placeholder.com/300x450?text=Poster"
-            : Model.MoviePosterUrl!;
-    }
+    string PosterOrFallback() => string.IsNullOrWhiteSpace(Model.MoviePosterUrl)
+        ? "https://via.placeholder.com/300x450?text=Poster"
+        : Model.MoviePosterUrl!;
 
     string DayUa(DayOfWeek d) => d switch
     {
@@ -35,88 +31,59 @@
     };
 }
 
-<link rel="stylesheet" href="~/css/booking-create.css" />
+<section class="py-5 gray-bg seats-page-v2">
+    <div class="container">
 
-<div class="booking-page">
-    <div class="booking-wrap">
+        <div class="card-modern overflow-hidden mb-5">
+            <div class="booking-header-v2">
+                <div class="header-backdrop" style="background-image: url('@PosterOrFallback()')"></div>
 
-        <!-- Header -->
-        <div class="booking-header">
-            <div class="booking-poster">
-                <img src="@PosterOrFallback()" alt="Постер" />
-            </div>
-
-            <div class="booking-info">
-                <div class="booking-title-row">
-                    @if (!string.IsNullOrWhiteSpace(Model.AgeLabel))
-                    {
-                        <span class="booking-age">@Model.AgeLabel</span>
-                    }
-                    <h1 class="booking-title">@Model.MovieTitle</h1>
-                </div>
-
-                <div class="booking-chips">
-                    @if (!string.IsNullOrWhiteSpace(Model.FormatLabel))
-                    {
-                        <span class="booking-chip">@Model.FormatLabel</span>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.LanguageLabel))
-                    {
-                        <span class="booking-chip">@Model.LanguageLabel</span>
-                    }
-                </div>
-
-                <div class="booking-meta">
-                    <div class="meta-card">
-                        <div class="meta-ico">📍</div>
-                        <div class="meta-text">
-                            <div class="meta-top">Місце</div>
-                            <div class="meta-main">
-                                @Model.HallName
-                                @if (!string.IsNullOrWhiteSpace(Model.City) || !string.IsNullOrWhiteSpace(Model.CinemaName))
+                <div class="header-content p-4 p-lg-5">
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-auto text-center">
+                            <div class="booking-poster-v2 shadow-lg">
+                                <img src="@PosterOrFallback()" alt="Постер" />
+                                @if (!string.IsNullOrWhiteSpace(Model.AgeLabel))
                                 {
-                                    <span>, @Model.City @Model.CinemaName</span>
+                                    <span class="age-badge">@Model.AgeLabel</span>
                                 }
                             </div>
                         </div>
-                    </div>
-
-                    <div class="meta-card">
-                        <div class="meta-ico">📅</div>
-                        <div class="meta-text">
-                            <div class="meta-top">Дата</div>
-                            <div class="meta-main">
-                                @if (Model.StartTime.HasValue)
+                        <div class="col-md">
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @if (!string.IsNullOrWhiteSpace(Model.FormatLabel))
                                 {
-                                    <div>@Model.StartTime.Value.ToString("dd.MM.yyyy")</div>
-                                    <div>@DayUa(Model.StartTime.Value.DayOfWeek)</div>
+                                    <span class="pill pill-blur">@Model.FormatLabel</span>
                                 }
-                                else
+                                @if (!string.IsNullOrWhiteSpace(Model.LanguageLabel))
                                 {
-                                    <div>—</div>
+                                    <span class="pill pill-blur">@Model.LanguageLabel</span>
                                 }
                             </div>
-                        </div>
-                    </div>
+                            <h1 class="movie-title-v2 text-white mb-4">@Model.MovieTitle</h1>
 
-
-                    <div class="meta-card">
-                        <div class="meta-ico">🕒</div>
-                        <div class="meta-text">
-                            <div class="meta-top">Час</div>
-                            <div class="meta-main">
-                                @if (Model.StartTime.HasValue && Model.EndTime.HasValue)
-                                {
-                                    <span>@Model.StartTime.Value.ToString("HH:mm") - @Model.EndTime.Value.ToString("HH:mm")</span>
-                                }
-                                else if (Model.StartTime.HasValue)
-                                {
-                                    <span>@Model.StartTime.Value.ToString("HH:mm")</span>
-                                }
-                                else
-                                {
-                                    <span>—</span>
-                                }
+                            <div class="booking-meta-v2">
+                                <div class="meta-item-v2">
+                                    <div class="meta-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div class="meta-info">
+                                        <label>Кінотеатр</label>
+                                        <span>@Model.CinemaName (@Model.HallName)</span>
+                                    </div>
+                                </div>
+                                <div class="meta-item-v2">
+                                    <div class="meta-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                                    <div class="meta-info">
+                                        <label>Дата</label>
+                                        <span>@Model.StartTime?.ToString("dd.MM.yyyy"), @(Model.StartTime.HasValue? DayUa(Model.StartTime.Value.DayOfWeek) : "")</span>
+                                    </div>
+                                </div>
+                                <div class="meta-item-v2">
+                                    <div class="meta-icon"><i class="fa-solid fa-clock"></i></div>
+                                    <div class="meta-info">
+                                        <label>Час</label>
+                                        <span>@Model.StartTime?.ToString("HH:mm") — @Model.EndTime?.ToString("HH:mm")</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -124,82 +91,123 @@
             </div>
         </div>
 
-        <!-- Seats -->
-        <div class="seats-title">ОБЕРІТЬ МІСЦЯ</div>
+        <div class="card shadow-sm border-0 br-16 bg-white p-4 p-lg-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title mb-4">ОБЕРІТЬ МІСЦЯ</h2>
 
-        <div class="legend">
-            <span class="lg"><i class="lg-dot dot-standard"></i>Звичайні</span>
-            <span class="lg"><i class="lg-dot dot-vip"></i>VIP</span>
-            <span class="lg"><i class="lg-dot dot-accessible"></i>Інклюзивні</span>
-            <span class="lg"><i class="lg-dot dot-booked"></i>Зайняті</span>
-        </div>
-
-        <div class="hall-wrap">
-            <div class="hall">
-                <div class="screen">ЕКРАН</div>
-            </div>
-        </div>
-
-
-        <form method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="SessionId" value="@Model.SessionId" />
-
-            <div asp-validation-summary="All" class="text-danger"></div>
-
-            <div class="hall-wrap">
-                <div class="hall">
-                    @foreach (var row in grouped)
-                    {
-                        <div class="row-line">
-                            <div class="row-label">Ряд @row.Key</div>
-
-                            @foreach (var s in row.OrderBy(x => x.SeatNumber))
-                            {
-                                var css = CategoryClass(s.Category);
-                                var bookedClass = s.IsBooked ? "booked" : "";
-
-                                <label class="seat @css @bookedClass">
-                                    <input type="checkbox"
-                                           name="SelectedSeatIds"
-                                           value="@s.SeatId"
-                                           data-price="@s.Price"
-                                    @(s.IsBooked ? "disabled" : null) />
-                                    <span>
-                                        @s.SeatNumber
-                                        <small>@s.Price.ToString("0.00")</small>
-                                    </span>
-                                </label>
-                            }
-                        </div>
-                    }
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <span class="legend-item"><span class="dot seat-bg-std"></span>Звичайні</span>
+                    <span class="legend-item"><span class="dot seat-bg-vip"></span>VIP</span>
+                    <span class="legend-item"><span class="dot seat-bg-acc"></span>Інклюзивні</span>
+                    <span class="legend-item"><span class="dot dot-booked"></span>Зайняті</span>
                 </div>
             </div>
 
-            <div class="total-box">
-                Разом: <span id="total">0.00</span> ₴
-            </div>
+            <form method="post" class="booking-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="SessionId" value="@Model.SessionId" />
+                <div asp-validation-summary="All" class="text-danger mb-4 fw-bold text-center"></div>
 
-            <div class="actions">
-                <button type="submit" class="btn btn-success mt-2">
-                    Забронювати вибрані місця
-                </button>
-            </div>
-        </form>
+                <div class="cinema-map-wrap mb-5">
+                    <div class="cinema-map">
+                        <div class="cinema-screen">
+                            <div class="cinema-screen-arc"></div>
+                            <div class="cinema-screen-title text-uppercase fw-black opacity-25" style="letter-spacing: 12px;">Екран</div>
+                        </div>
+
+                        @if (grouped.Count == 0)
+                        {
+                            <div class="text-center py-5 opacity-50">
+                                <i class="fa-solid fa-ticket fa-3x mb-3"></i>
+                                <h5>Схема залу порожня</h5>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="cinema-grid" style="--cols:@maxSeats;">
+                                @foreach (var row in grouped)
+                                {
+                                    <div class="row-label">@row.Key</div>
+                                    @for (int s = 1; s <= maxSeats; s++)
+                                    {
+                                        var seat = row.FirstOrDefault(x => x.SeatNumber == s);
+                                        if (seat == null)
+                                        {
+                                            <div class="seat seat-empty"></div>
+                                        }
+                                        else
+                                        {
+                                            var css = SeatUiClass(seat.Category);
+                                            var isBooked = seat.IsBooked;
+                                            <label class="seat @css js-seat @(isBooked ? "seat-booked" : "")" title="Ряд @row.Key, місце @s">
+                                                <input class="seat-input" type="checkbox" name="SelectedSeatIds" value="@seat.SeatId" data-price="@seat.Price" @(isBooked ? "disabled" : null) />
+                                                <div class="seat-text">
+                                                    <div class="seat-no">@s</div>
+                                                    <div class="seat-price">@seat.Price.ToString("0")</div>
+                                                </div>
+                                            </label>
+                                        }
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="footer-checkout card-modern p-4">
+                    <div class="row align-items-center justify-content-between g-4">
+                        <div class="col-md-auto">
+                            <div class="total-summary">
+                                <span class="text-muted text-uppercase fw-bold small d-block mb-1">До сплати:</span>
+                                <div class="total-amount">
+                                    <span id="total">0.00</span> <small>₴</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-auto">
+                            <div class="d-flex gap-3">
+                                <a asp-controller="Afisha" asp-action="Index" class="btn btn-secondary px-4 fa-solid fa-arrow-left me-1">НАЗАД</a>
+                                <button type="submit" class="btn btn-maroon btn-lg px-5 shadow-sm">
+                                    <i class="fa-solid fa-check-circle me-2"></i> ЗАБРОНЮВАТИ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+</section>
 
 <script>
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-price]');
-    const totalEl = document.getElementById('total');
+    document.addEventListener("DOMContentLoaded", () => {
+        const checkboxes = document.querySelectorAll('.seat-input[data-price]');
+        const totalEl = document.getElementById('total');
 
-    function updateTotal() {
-        let sum = 0;
-        checkboxes.forEach(cb => {
-            if (cb.checked) sum += parseFloat(cb.dataset.price);
-        });
-        totalEl.textContent = sum.toFixed(2);
-    }
+        const map = document.querySelector('.cinema-map')
+                 || document.querySelector('.cinema-grid')
+                 || document.querySelector('.cinema-map-wrap');
 
-    checkboxes.forEach(cb => cb.addEventListener('change', updateTotal));
+        function updateTotal() {
+            let sum = 0;
+            let anySelected = false;
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    anySelected = true;
+                    sum += parseFloat(cb.dataset.price);
+                }
+            });
+
+            totalEl.textContent = sum.toLocaleString('uk-UA', { minimumFractionDigits: 2 });
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateTotal));
+        updateTotal();
+    });
 </script>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/booking-create.css" asp-append-version="true" />
+}
+
