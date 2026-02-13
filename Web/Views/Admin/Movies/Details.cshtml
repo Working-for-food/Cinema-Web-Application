@@ -167,16 +167,7 @@
                         </div>
 
                         <div class="mt-5 pt-4 border-top">
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-2">PosterPath</div>
-                                    <div class="fw-semibold">@(string.IsNullOrWhiteSpace(Model.Movie.PosterPath) ? "-" : Model.Movie.PosterPath)</div>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-2">BackdropPath</div>
-                                    <div class="fw-semibold">@(string.IsNullOrWhiteSpace(Model.Movie.BackdropPath) ? "-" : Model.Movie.BackdropPath)</div>
-                                </div>
-                            </div>
+                            
 
                             <div class="d-flex gap-3 mt-4">
                                 <a asp-action="Index" class="btn btn-secondary px-4 br-8">

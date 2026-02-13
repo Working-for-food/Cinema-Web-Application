@@ -70,11 +70,23 @@ public sealed class MovieImportRepository : IMovieImportRepository
 
         photoPath = NormalizeNullable(photoPath, 700);
 
+        var (first, middle, last) = SplitFullNameParts(fullName);
+
+        // Existing TMDB person
         var person = await _db.People.FirstOrDefaultAsync(p => p.TmdbId == tmdbPersonId, ct);
         if (person != null)
         {
-            if (!string.IsNullOrWhiteSpace(fullName))
-                person.FullName = fullName;
+            person.FullName = fullName;
+
+            
+            if (string.IsNullOrWhiteSpace(person.FirstName) && !string.IsNullOrWhiteSpace(first))
+                person.FirstName = first;
+
+            if (string.IsNullOrWhiteSpace(person.MiddleName) && !string.IsNullOrWhiteSpace(middle))
+                person.MiddleName = middle;
+
+            if (string.IsNullOrWhiteSpace(person.LastName) && !string.IsNullOrWhiteSpace(last))
+                person.LastName = last;
 
             if (!string.IsNullOrWhiteSpace(photoPath))
                 person.PhotoUrl = photoPath;
@@ -84,10 +96,21 @@ public sealed class MovieImportRepository : IMovieImportRepository
             return person;
         }
 
+        // Manual person with same FullName (link to TMDB)
         var manual = await _db.People.FirstOrDefaultAsync(p => p.TmdbId == null && p.FullName == fullName, ct);
         if (manual != null)
         {
             manual.TmdbId = tmdbPersonId;
+
+            if (string.IsNullOrWhiteSpace(manual.FirstName) && !string.IsNullOrWhiteSpace(first))
+                manual.FirstName = first;
+
+            if (string.IsNullOrWhiteSpace(manual.MiddleName) && !string.IsNullOrWhiteSpace(middle))
+                manual.MiddleName = middle;
+
+            if (string.IsNullOrWhiteSpace(manual.LastName) && !string.IsNullOrWhiteSpace(last))
+                manual.LastName = last;
+
             if (!string.IsNullOrWhiteSpace(photoPath))
                 manual.PhotoUrl = photoPath;
 
@@ -96,10 +119,14 @@ public sealed class MovieImportRepository : IMovieImportRepository
             return manual;
         }
 
+        // New person
         person = new Person
         {
             TmdbId = tmdbPersonId,
             FullName = fullName,
+            FirstName = first,
+            MiddleName = middle,
+            LastName = last,
             PhotoUrl = photoPath,
             TmdbLastSyncAt = DateTimeOffset.UtcNow
         };
@@ -108,6 +135,7 @@ public sealed class MovieImportRepository : IMovieImportRepository
         await _db.SaveChangesAsync(ct);
         return person;
     }
+
 
 
     public async Task<IReadOnlyList<string>> FilterExistingCountryCodesAsync(IReadOnlyList<string> codes, CancellationToken ct) =>
@@ -191,5 +219,97 @@ public sealed class MovieImportRepository : IMovieImportRepository
         return x.Length <= maxLen ? x : x[..maxLen];
     }
 
+    private static readonly HashSet<string> Honorifics = new(StringComparer.OrdinalIgnoreCase)
+{
+    "mr", "mr.", "mrs", "mrs.", "ms", "ms.", "miss",
+    "dr", "dr.", "prof", "prof.", "sir", "dame"
+};
+
+    private static readonly HashSet<string> Suffixes = new(StringComparer.OrdinalIgnoreCase)
+{
+    "jr", "jr.", "sr", "sr.",
+    "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"
+};
+
+    private static readonly HashSet<string> LastNameParticles = new(StringComparer.OrdinalIgnoreCase)
+{
+    
+    "da", "de", "del", "della", "di", "du",
+    "la", "le", "lo",
+    "van", "von", "der", "den", "ten", "ter",
+    "al", "el",
+    "bin", "ibn",
+    "dos", "das", "do", "de la", "de los" 
+};
+
+    private static (string? First, string? Middle, string? Last) SplitFullNameParts(string fullName)
+    {
+        var name = NormalizeWs(fullName);
+        if (string.IsNullOrWhiteSpace(name))
+            return (null, null, null);
+
+        
+        if (name.Contains(','))
+        {
+            var parts = name.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var lastPart = parts.Length > 0 ? NormalizeWs(parts[0]) : "";
+            var rest = parts.Length > 1 ? NormalizeWs(string.Join(' ', parts.Skip(1))) : "";
+
+            var (firstR, middleR, lastR) = SplitByTokens(rest);
+            var last = string.IsNullOrWhiteSpace(lastPart) ? lastR : lastPart;
+
+            return (Trim60(firstR), Trim60(middleR), Trim60(last));
+        }
+
+        return SplitByTokens(name);
+    }
+
+    private static (string? First, string? Middle, string? Last) SplitByTokens(string name)
+    {
+        var tokens = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        if (tokens.Count == 0) return (null, null, null);
+
+        
+        while (tokens.Count > 1 && Honorifics.Contains(tokens[0].Trim()))
+            tokens.RemoveAt(0);
+
+        if (tokens.Count == 1)
+            return (Trim60(tokens[0]), null, null);
+
+        
+        string? suffix = null;
+        if (tokens.Count >= 2 && Suffixes.Contains(tokens[^1].Trim()))
+        {
+            suffix = tokens[^1].Trim();
+            tokens.RemoveAt(tokens.Count - 1);
+        }
+
+        if (tokens.Count == 1)
+            return (Trim60(tokens[0]), null, Trim60(suffix)); 
+
+        
+        int lastStart = tokens.Count - 1;
+        while (lastStart - 1 >= 1 && LastNameParticles.Contains(tokens[lastStart - 1].Trim().ToLowerInvariant()))
+            lastStart--;
+
+        var first = tokens[0];
+        var middleTokens = tokens.Skip(1).Take(lastStart - 1).ToList();
+        var lastTokens = tokens.Skip(lastStart).ToList();
+
+        var middle = middleTokens.Count > 0 ? string.Join(' ', middleTokens) : null;
+        var last = lastTokens.Count > 0 ? string.Join(' ', lastTokens) : null;
+
+        if (!string.IsNullOrWhiteSpace(suffix))
+            last = string.IsNullOrWhiteSpace(last) ? suffix : $"{last} {suffix}";
+
+        return (Trim60(first), Trim60(middle), Trim60(last));
+    }
+
+    private static string? Trim60(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        s = NormalizeWs(s);
+        return s.Length <= 60 ? s : s[..60];
+    }
 
 }

@@ -82,7 +82,7 @@
                                         <div class="person-avatar shadow-sm border-2">
                                             @if (!string.IsNullOrWhiteSpace(p.PhotoUrl))
                                             {
-                                                <img src="@p.PhotoUrl" alt="User" loading="lazy" 
+                                                <img src="@TmdbImage.Profile(p.PhotoUrl)" alt="User" loading="lazy"
                                                      onerror="this.style.display='none'; this.parentElement.classList.add('no-photo');" />
                                             }
                                             else
