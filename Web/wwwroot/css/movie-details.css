@@ -567,3 +567,7 @@
     .btn-back-blue:active {
         transform: translateY(0);
     }
+
+.movie-details-layout {
+    margin-top: 24px;
+}
