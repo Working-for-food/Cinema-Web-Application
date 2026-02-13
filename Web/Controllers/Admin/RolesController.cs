@@ -143,4 +143,38 @@ public class RolesController : Controller
 
         return NotFound();
     }
+
+    // GET: /Roles/RoleEdit/{id}
+    [HttpGet]
+    public async Task<IActionResult> RoleEdit(string id)
+    {
+        var role = await _roleManager.FindByIdAsync(id);
+        if (role == null) return NotFound();
+        return View(role);
+    }
+
+    // POST: /Roles/RoleEdit
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RoleEdit(string id, string name)
+    {
+        var role = await _roleManager.FindByIdAsync(id);
+        if (role == null) return NotFound();
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            role.Name = name;
+            var result = await _roleManager.UpdateAsync(role);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Назву ролі успішно змінено.";
+                return RedirectToAction("Index");
+            }
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+        }
+        return View(role);
+    }
 }

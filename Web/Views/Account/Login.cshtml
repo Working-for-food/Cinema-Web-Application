@@ -3,87 +3,93 @@
     ViewData["Title"] = "Вхід";
 }
 
-<section class="py-5 gray-bg min-vh-100 d-flex align-items-center">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-6 col-lg-5 col-xl-4">
+<link rel="stylesheet" href="\css\auth.css">
 
-                <div class="text-center mb-4">
-                    <h1 class="h2 fw-bold text-dark text-uppercase mb-1">З поверненням!</h1>
-                    <p class="text-muted small">Введіть свої дані для входу в систему</p>
-                </div>
+<div class="auth-container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="col-12 col-md-6 col-lg-4 px-3">
+        <div class="auth-card p-4">
 
-                <div class="card shadow-sm border-0 br-12 overflow-hidden">
-                    <div class="card-body p-4 p-lg-5">
-
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small br-8 shadow-none mb-4"></div>
-
-                        <form asp-action="Login" method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
-                            <input type="hidden" asp-for="ReturnUrl" />
-
-                            <div class="mb-3">
-                                <label asp-for="Username" class="form-label small fw-bold text-muted text-uppercase auth-label-spacer">Ім'я користувача</label>
-                                <div class="input-group auth-input-group">
-                                    <span class="input-group-text bg-light border-2 border-end-0 rounded-start text-muted">
-                                        <i class="fa-solid fa-user"></i>
-                                    </span>
-                                    <input asp-for="Username" class="form-control shadow-none border-2 border-start-0 ps-0" placeholder="Введіть логін" />
-                                </div>
-                                <span asp-validation-for="Username" class="text-danger small mt-1 d-block"></span>
-                            </div>
-
-                            <div class="mb-4">
-                                <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase auth-label-spacer">Пароль</label>
-                                <div class="input-group auth-input-group">
-                                    <span class="input-group-text bg-light border-2 border-end-0 rounded-start text-muted">
-                                        <i class="fa-solid fa-lock"></i>
-                                    </span>
-                                    <input asp-for="Password" class="form-control shadow-none border-2 border-start-0 border-end-0 ps-0" placeholder="••••••••" type="password" />
-                                    <button class="btn btn-light border-2 border-start-0 text-muted toggle-password" type="button">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
-                                </div>
-                                <span asp-validation-for="Password" class="text-danger small mt-1 d-block" id="password-error"></span>
-                            </div>
-
-                            <div class="mb-4 d-flex justify-content-between align-items-center">
-                                <div class="form-check">
-                                    <input class="form-check-input shadow-none" type="checkbox" asp-for="RememberMe" />
-                                    <label class="form-check-label text-muted small" asp-for="RememberMe">
-                                        Запам'ятати мене
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-maroon btn-login-compact fw-bold shadow-sm">
-                                    УВІЙТИ
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="card-footer bg-light border-0 p-3 text-center">
-                        <p class="small text-muted mb-0">
-                            Ще не маєте акаунту?
-                            <a asp-action="Register" class="text-maroon fw-bold text-decoration-none">Зареєструватися</a>
-                        </p>
+            <div class="text-center mb-4">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="icon-3d-box">
+                        <i class="fas fa-right-to-bracket"></i>
                     </div>
                 </div>
+                <h1 class="page-heading mb-1">Вхід</h1>
+                <p class="text-muted fw-medium x-small">Ласкаво просимо до нашого кінотеатру!</p>
+                <div class="heading-underline mx-auto"></div>
+            </div>
 
+            <div class="validation-summary-container">
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            </div>
+
+            <form asp-action="Login" method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label ms-1">Ім'я користувача</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input asp-for="Username" class="form-control" placeholder="Введіть логін" id="Username" autocomplete="off" />
+                    </div>
+                    <span asp-validation-for="Username" class="text-danger x-small mt-1 ms-1 d-block fw-bold"></span>
+                    <div id="username-warn" class="x-small ms-1 mt-1 fw-bold text-warning" style="min-height: 18px;"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label ms-1">Пароль</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-key"></i>
+                        </span>
+                        <input asp-for="Password" class="form-control" placeholder="Введіть пароль" type="password" id="Password" />
+                        <button class="btn btn-icon-end toggle-password" type="button" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger x-small mt-1 ms-1 d-block fw-bold" id="password-validation-msg"></span>
+                    <div id="password-warn" class="x-small ms-1 mt-1 fw-bold text-warning" style="min-height: 18px;"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                    <div class="form-check">
+                        <input class="form-check-input cursor-pointer" type="checkbox" asp-for="RememberMe">
+                        <label class="form-check-label text-muted cursor-pointer x-small fw-bold" asp-for="RememberMe" style="padding-top: 2px;">
+                            Запам'ятати
+                        </label>
+                    </div>
+                    <a href="ForgotPassword" class="x-small text-brand fw-bold text-decoration-none">Забули пароль?</a>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-qr-prominent w-100 justify-content-center fw-bold shadow-sm">
+                        УВІЙТИ
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3 text-center border-top border-light pt-3">
+                <p class="text-muted mb-0 x-small fw-medium">
+                    Немає акаунту?
+                    <a asp-action="Register" class="text-brand fw-bold text-decoration-none ms-1">Реєстрація</a>
+                </p>
             </div>
         </div>
     </div>
-</section>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         $(document).ready(function () {
-            // Password Toggle Logic
-            $('.toggle-password').on('click', function () {
-                const input = $(this).closest('.input-group').find('input');
+            $('.toggle-password').on('click', function (e) {
+                e.preventDefault();
+                const container = $(this).closest('.input-group-modern');
+                const input = container.find('input');
                 const icon = $(this).find('i');
 
                 if (input.attr('type') === 'password') {
@@ -95,23 +101,20 @@
                 }
             });
 
-            // Keyboard Layout Warning Logic
-            const passwordInput = $('#Password');
-            const errorSpan = $('#password-error');
+            function checkLanguage(inputSelector, warnSelector) {
+                $(inputSelector).on('keyup input', function () {
+                    const val = $(this).val();
 
-            passwordInput.on('keyup input', function () {
-                const val = $(this).val();
-
-                if (/[^\x00-\x7F]/.test(val)) {
-                    errorSpan.html('<i class="fa-solid fa-triangle-exclamation me-1"></i> Увага: використовуйте лише англійську розкладку!');
-                    errorSpan.addClass("text-warning fw-bold").removeClass("text-danger");
-                } else {
-                    if (errorSpan.text().includes("Увага")) {
-                        errorSpan.text("");
-                        errorSpan.removeClass("text-warning fw-bold").addClass("text-danger");
+                    if (/[^\x00-\x7F]/.test(val)) {
+                        $(warnSelector).html('<i class="fas fa-exclamation-triangle me-1"></i> Змініть розкладку на англійську!');
+                    } else {
+                        $(warnSelector).empty();
                     }
-                }
-            });
+                });
+            }
+
+            checkLanguage('#Username', '#username-warn');
+            checkLanguage('#Password', '#password-warn');
         });
     </script>
 }

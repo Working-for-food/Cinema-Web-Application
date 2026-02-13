@@ -1,6 +1,6 @@
-﻿@model string
+﻿@model Microsoft.AspNetCore.Identity.IdentityRole
 @{
-    ViewData["Title"] = "Створити роль";
+    ViewData["Title"] = "Редагувати роль";
 }
 
 <div class="auth-container d-flex align-items-center justify-content-center min-vh-100 py-5">
@@ -10,11 +10,11 @@
             <div class="text-center mb-4">
                 <div class="d-flex justify-content-center mb-3">
                     <div class="icon-3d-box">
-                        <i class="fas fa-chess-rook"></i>
+                        <i class="fas fa-pen-to-square"></i>
                     </div>
                 </div>
-                <h1 class="page-heading mb-1">Нова Роль</h1>
-                <p class="text-muted fw-medium x-small">Створення нової групи доступу</p>
+                <h1 class="page-heading mb-1">Редагування</h1>
+                <p class="text-muted fw-medium x-small">Зміна назви системної ролі</p>
                 <div class="heading-underline mx-auto"></div>
             </div>
 
@@ -22,31 +22,33 @@
                 <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
             </div>
 
-            <form asp-action="Create" method="post">
+            <form asp-action="RoleEdit" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+
                 <div class="mb-4">
-                    <label for="name" class="form-label ms-1">Назва ролі</label>
+                    <label class="form-label ms-1">Назва ролі</label>
                     <div class="input-group input-group-modern">
                         <span class="input-group-text icon-box">
-                            <i class="fas fa-shield-alt"></i>
+                            <i class="fas fa-tag"></i>
                         </span>
-                        <input name="name" id="RoleName" class="form-control" placeholder="наприклад: manager" required autocomplete="off" />
+                        <input name="name" value="@Model.Name" id="RoleName" class="form-control" required autocomplete="off" />
                     </div>
                     <div id="rolename-warn" class="x-small ms-1 mt-1 fw-bold text-warning" style="min-height: 18px;"></div>
 
                     <div class="text-muted x-small ms-1 mt-1 lh-sm">
-                        <i class="fas fa-info-circle me-1"></i> Використовуйте тільки латиницю (напр. admin, moderator).
+                        <i class="fas fa-info-circle me-1"></i> Використовуйте тільки латиницю.
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <button type="submit" id="submitBtn" class="btn btn-qr-prominent w-100 justify-content-center fw-bold shadow-sm">
-                        <i class="fas fa-plus me-2"></i> СТВОРИТИ
+                        <i class="fas fa-save me-2"></i> ЗБЕРЕГТИ ЗМІНИ
                     </button>
                 </div>
 
                 <div class="text-center mt-3">
                     <a asp-action="Index" class="text-brand fw-bold text-decoration-none x-small transition-hover">
-                        <i class="fas fa-arrow-left me-1"></i> Повернутися до списку
+                        <i class="fas fa-arrow-left me-1"></i> Скасувати
                     </a>
                 </div>
             </form>
@@ -64,9 +66,18 @@
             const warnSelector = $('#rolename-warn');
             const submitBtn = $('#submitBtn');
 
-            roleInput.on('keyup input', function () {
-                const val = $(this).val();
+            const currentName = roleInput.val().toLowerCase();
+            if(currentName === 'admin' || currentName === 'superadmin') {
+                roleInput.prop('readonly', true).addClass('bg-light text-muted');
+                warnSelector.html('<i class="fas fa-lock me-1"></i> Системні ролі не можна перейменовувати.')
+                            .removeClass('text-warning').addClass('text-muted');
+                submitBtn.prop('disabled', true).addClass('opacity-50');
+            }
 
+            roleInput.on('keyup input', function () {
+                if(roleInput.prop('readonly')) return;
+
+                const val = $(this).val();
                 if (/[^a-zA-Z0-9_]/.test(val)) {
                     warnSelector.html('<i class="fas fa-exclamation-triangle me-1"></i> Тільки англійські літери!');
                     submitBtn.prop('disabled', true).addClass('opacity-50');

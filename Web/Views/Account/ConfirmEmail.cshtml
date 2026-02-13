@@ -2,17 +2,47 @@
     ViewData["Title"] = "Пошту підтверджено";
 }
 
-<div class="container mt-5 text-center">
-    <div class="card p-5 shadow-sm border-success" style="border-width: 2px;">
-        <div class="mb-4">
-            <i class="fas fa-check-circle fa-4x text-success"></i>
+<div class="auth-container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="auth-card p-5 text-center" style="max-width: 480px; width: 100%;">
+
+        <div class="d-flex justify-content-center mb-4">
+            <div class="icon-3d-box">
+                <i class="fas fa-check-circle"></i>
+            </div>
         </div>
-        <h2 class="text-success">Успіх!</h2>
-        <p class="lead">
-            Вашу електронну пошту успішно підтверджено.
+
+        <h2 class="page-heading">Успіх!</h2>
+        <div class="heading-underline mx-auto mb-4"></div>
+
+        <p class="mb-4" style="color: var(--text);">
+            Вашу електронну пошту успішно підтверджено. <br />
+            Зараз ми перенаправимо вас на сторінку входу...
         </p>
+
+        <p class="text-muted x-small">
+            Автоматичний перехід через <span id="countdown" class="fw-bold text-brand">3</span> сек.
+        </p>
+
         <div class="mt-4">
-            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg px-5">Увійти</a>
+            <a asp-controller="Account" asp-action="Login" class="btn-qr-prominent w-100 justify-content-center text-decoration-none">
+                Увійти зараз
+            </a>
         </div>
+
     </div>
 </div>
+
+<script>
+    let seconds = 6;
+    const countdownEl = document.getElementById('countdown');
+
+    const timer = setInterval(() => {
+        seconds--;
+        if (countdownEl) countdownEl.innerText = seconds;
+
+        if (seconds <= 0) {
+            clearInterval(timer);
+            window.location.href = '@Url.Action("Login", "Account")';
+        }
+    }, 1000);
+</script>

@@ -32,45 +32,67 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table admin-table mb-0 align-middle">
-                        <thead>
+                        <thead class="bg-light">
                             <tr>
-                                <th>Назва ролі</th>
-                                <th class="text-end pe-4">Дії</th>
+                                <th class="ps-4 text-uppercase text-muted x-small fw-bold">Назва ролі</th>
+                                <th class="text-end pe-4 text-uppercase text-muted x-small fw-bold">Дії</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @{
-                                int counter = 1;
-                            }
                             @foreach (var role in Model)
                             {
+                                bool isSystemRole = role.Name.ToLower() == "admin" || role.Name.ToLower() == "superadmin";
+
                                 <tr>
-                                    <td>
+                                    <td class="ps-4">
                                         <div class="d-flex align-items-center">
-                                            <div class="icon-badge bg-light text-primary me-3" style="width: 35px; height: 35px;">
-                                                <i class="fa-solid fa-shield-halved"></i>
+                                            <div class="icon-badge @(isSystemRole ? "bg-warning text-white" : "bg-light text-primary") me-3" style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fa-solid @(isSystemRole ? "fa-crown" : "fa-shield-halved")"></i>
                                             </div>
-                                            <span class="fw-bold text-dark fs-6">@role.Name.ToUpper()</span>
+                                            <div>
+                                                <span class="fw-bold text-dark d-block">@role.Name</span>
+                                                @if (isSystemRole)
+                                                {
+                                                    <span class="x-small text-muted text-uppercase">Системна роль</span>
+                                                }
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <form asp-action="Delete" asp-route-id="@role.Id" method="post"
-                                              onsubmit="return confirm('Ви впевнені, що хочете видалити цю роль?');" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-danger btn-sm px-3 br-8 fw-bold">
-                                                <i class="fa-solid fa-trash-can me-1"></i> ВИДАЛИТИ
-                                            </button>
-                                        </form>
+                                        <div class="d-flex justify-content-end gap-2">
+                                            @if (isSystemRole)
+                                            {
+                                                <span class="badge bg-light text-muted border px-3 py-2 br-8">
+                                                    <i class="fa-solid fa-lock me-1"></i> ЗАХИЩЕНО
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="RoleEdit" asp-route-id="@role.Id" class="btn btn-outline-primary btn-sm px-3 br-8 fw-bold" title="Редагувати">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </a>
+
+                                                <form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                   
+                                                    <button type="button" class="btn btn-danger btn-sm px-3 br-8 fw-bold"
+                                                            onclick="triggerDeleteModal(this, '@role.Name')">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
-                                counter++;
                             }
                             @if (!Model.Any())
                             {
                                 <tr>
-                                    <td colspan="3" class="text-center py-5 text-muted">
-                                        <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i>
-                                        <p class="mb-0">Список ролей порожній</p>
+                                    <td colspan="2" class="text-center py-5 text-muted">
+                                        <div class="py-4">
+                                            <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i>
+                                            <p class="mb-0 fw-bold">Список ролей порожній</p>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -81,3 +103,110 @@
         </div>
     </div>
 </section>
+
+
+<div class="modal fade" id="globalModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm" style="box-shadow: none">
+        <div class="modal-content border-0" style="border-radius: 24px; overflow: hidden; box-shadow: none;">
+
+            <div class="modal-body p-4 text-center bg-white" style="box-shadow: none;">
+                <div id="globalModalIconBg" class="mx-auto mb-3 d-flex align-items-center justify-content-center transition-all"
+                     style="width: 64px; height: 64px; border-radius: 50%; background-color: #FEF2F2;">
+                    <i id="globalModalIcon" class="fa-solid fa-triangle-exclamation" style="font-size: 24px; color: #DC2626;"></i>
+                </div>
+
+                <h5 class="fw-bold mb-2" id="globalModalTitle" style="color: var(--text, #1e293b);">
+                    Підтвердження
+                </h5>
+
+                <p class="text-muted small mb-4 lh-sm" id="globalModalMessage">
+                    Ви впевнені, що хочете виконати цю дію?
+                </p>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light rounded-pill px-3 fw-bold flex-grow-1" data-bs-dismiss="modal"
+                            style="background-color: #f1f5f9; color: #64748b; border: none; box-shadow: none;">
+                        Ні
+                    </button>
+                    <button type="button" id="globalModalConfirmBtn" class="btn rounded-pill px-3 fw-bold flex-grow-1 text-white"
+                            style="background-color: #DC2626; border: none; box-shadow: none;">
+                        Так
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        if (typeof window.GlobalModal === 'undefined') {
+            window.GlobalModal = {
+                instance: null,
+                confirmCallback: null,
+
+                init: function() {
+                    const el = document.getElementById('globalModal');
+                    if(el) {
+                        this.instance = new bootstrap.Modal(el);
+
+                        const btn = document.getElementById('globalModalConfirmBtn');
+                        const newBtn = btn.cloneNode(true);
+                        btn.parentNode.replaceChild(newBtn, btn);
+
+                        newBtn.addEventListener('click', () => {
+                            if (typeof this.confirmCallback === 'function') {
+                                this.confirmCallback();
+                            }
+                            this.instance.hide();
+                        });
+                    }
+                },
+
+                show: function(title, message, onConfirm, type = 'danger') {
+                    if (!this.instance) this.init();
+
+                    document.getElementById('globalModalTitle').textContent = title;
+                    document.getElementById('globalModalMessage').innerHTML = message;
+                    this.confirmCallback = onConfirm;
+
+                    const iconBg = document.getElementById('globalModalIconBg');
+                    const icon = document.getElementById('globalModalIcon');
+                    const btn = document.getElementById('globalModalConfirmBtn'); 
+
+                    if (type === 'danger') {
+                        iconBg.style.backgroundColor = '#FEF2F2';
+                        icon.className = 'fa-solid fa-triangle-exclamation';
+                        icon.style.color = '#DC2626';
+                        btn.style.backgroundColor = '#DC2626';
+                        btn.textContent = "Так, видалити";
+                    } else {
+                        iconBg.style.backgroundColor = '#EEF2FF';
+                        icon.className = 'fa-solid fa-circle-info';
+                        icon.style.color = '#6366f1';
+                        btn.style.backgroundColor = '#6366f1';
+                        btn.textContent = "Так, продовжити";
+                    }
+
+                    this.instance.show();
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                window.GlobalModal.init();
+            });
+        }
+
+        window.triggerDeleteModal = function(btn, roleName) {
+            window.GlobalModal.show(
+                "Видалити роль?",
+                `Ви впевнені, що хочете назавжди видалити роль <b>"${roleName}"</b>?<br>Це може вплинути на доступ користувачів.`,
+                function() {
+                    btn.closest('form').submit();
+                },
+                "danger"
+            );
+        }
+    </script>
+}
