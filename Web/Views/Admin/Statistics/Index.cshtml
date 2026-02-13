@@ -3,6 +3,10 @@
 @model Web.ViewModels.Admin.Statistics.BookingStatisticsIndexVm
 
 @{
+    var qs = Context.Request.QueryString.HasValue ? Context.Request.QueryString.Value : "";
+    string ExportAllUrl() => (Url.Action("ExportAll", "Statistics") ?? "#") + qs;
+    string ExportSliceUrl(string slice) => (Url.Action("Export", "Statistics", new { slice }) ?? "#") + qs;
+
     ViewData["Title"] = "Статистика";
     var ua = new CultureInfo("uk-UA");
 
@@ -54,12 +58,7 @@
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <div class="pill pill-warning">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span><strong>BookedAt</strong> зберігається як UTC — можливе “зміщення” у фільтрах 🙂</span>
-                    </div>
-                </div>
+               
             </div>
 
             <div class="card-body p-4 p-md-4">
@@ -336,12 +335,20 @@
 
             <div class="card-modern mb-4 overflow-hidden">
                 <div class="card-header-modern">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="icon-badge"><i class="fa-solid fa-table"></i></span>
-                        <div>
-                            <div class="header-title mb-0">Зрізи</div>
-                            <div class="header-subtitle">Перемикай вкладки, щоб швидко порівняти показники.</div>
+                    <div class="card-header-modern position-relative">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="icon-badge"><i class="fa-solid fa-table"></i></span>
+                            <div>
+                                <div class="header-title mb-0">Зрізи</div>
+                                <div class="header-subtitle">Перемикай вкладки, щоб швидко порівняти показники.</div>
+                            </div>
                         </div>
+
+                        <a class="btn btn-success position-absolute"
+                           style="top: 12px; right: 12px;"
+                           href="@ExportAllUrl()">
+                            <i class="fa-solid fa-file-excel me-1"></i> Експорт (все)
+                        </a>
                     </div>
 
                     <div class="mt-3">
@@ -383,6 +390,11 @@
 
                         <div class="tab-pane fade show active p-3 p-md-4" id="cinemas" role="tabpanel" aria-labelledby="cinemas-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("cinemas")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -428,6 +440,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="halls" role="tabpanel" aria-labelledby="halls-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("halls")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -473,6 +490,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="movies" role="tabpanel" aria-labelledby="movies-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("movies")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -518,6 +540,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="sessions" role="tabpanel" aria-labelledby="sessions-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("sessions")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -569,6 +596,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="types" role="tabpanel" aria-labelledby="types-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("types")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -612,6 +644,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="cats" role="tabpanel" aria-labelledby="cats-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("cats")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -655,6 +692,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="days1" role="tabpanel" aria-labelledby="days1-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("days_start")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>
@@ -698,6 +740,11 @@
 
                         <div class="tab-pane fade p-3 p-md-4" id="days2" role="tabpanel" aria-labelledby="days2-tab">
                             <div class="admin-table-card">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a class="btn btn-success btn-sm" href="@ExportSliceUrl("days_booked")">
+                                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                                    </a>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="admin-table align-middle mb-0">
                                         <thead>

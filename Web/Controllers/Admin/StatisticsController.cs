@@ -1,4 +1,7 @@
-﻿using Application.Interfaces;
+﻿using ClosedXML.Excel;
+using System.IO;
+using Web.Helpers;
+using Application.Interfaces;
 using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -100,4 +103,93 @@ public class StatisticsController : Controller
         vm.Result = await _stats.GetBookingStatisticsAsync(filter, ct);
         return View(IndexViewPath, vm);
     }
+
+    // GET: /Admin/Statistics/Export?slice=cinemas&...
+    [HttpGet]
+    public async Task<IActionResult> Export(BookingStatisticsIndexVm vm, string slice = "cinemas", CancellationToken ct = default)
+    {
+        // ті ж дефолти що й на Index (якщо треба — можеш просто скопіювати свою логіку 1:1)
+        if (!vm.SessionFrom.HasValue && !vm.SessionTo.HasValue && !vm.BookingFrom.HasValue && !vm.BookingTo.HasValue)
+        {
+            vm.SessionFrom = DateTime.Today.AddDays(-30);
+            vm.SessionTo = DateTime.Today.AddDays(30);
+
+            vm.BookingFrom = DateTime.UtcNow.Date.AddDays(-30);
+            vm.BookingTo = DateTime.UtcNow;
+        }
+
+        var filter = new BookingStatisticsFilter
+        {
+            SessionFrom = vm.SessionFrom,
+            SessionTo = vm.SessionTo,
+            CinemaId = vm.CinemaId > 0 ? vm.CinemaId : null,
+            HallId = vm.HallId > 0 ? vm.HallId : null,
+            MovieId = vm.MovieId > 0 ? vm.MovieId : null,
+            SessionId = vm.SessionId is > 0 ? vm.SessionId : null,
+            PresentationTypes = vm.PresentationTypes,
+            SeatCategories = vm.SeatCategories,
+            IncludeCancelledSessions = vm.IncludeCancelledSessions,
+            IncludeFinishedSessions = vm.IncludeFinishedSessions,
+            BookingFrom = vm.BookingFrom,
+            BookingTo = vm.BookingTo,
+            IncludeDeletedBookingsInPeriod = vm.IncludeDeletedBookingsInPeriod,
+            DayGroupingMode = StatisticsDateMode.SessionStart
+        };
+
+        var result = await _stats.GetBookingStatisticsAsync(filter, ct);
+
+        using var wb = BookingStatisticsExcelExporter.CreateForSlice(result, slice);
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+
+        var safeSlice = (slice ?? "slice").Trim().ToLowerInvariant();
+        var fileName = $"booking_stats_{safeSlice}_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx";
+
+        return File(ms.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
+    }
+
+    // GET: /Admin/Statistics/ExportAll?...
+    [HttpGet]
+    public async Task<IActionResult> ExportAll(BookingStatisticsIndexVm vm, CancellationToken ct = default)
+    {
+        if (!vm.SessionFrom.HasValue && !vm.SessionTo.HasValue && !vm.BookingFrom.HasValue && !vm.BookingTo.HasValue)
+        {
+            vm.SessionFrom = DateTime.Today.AddDays(-30);
+            vm.SessionTo = DateTime.Today.AddDays(30);
+            vm.BookingFrom = DateTime.UtcNow.Date.AddDays(-30);
+            vm.BookingTo = DateTime.UtcNow;
+        }
+
+        var filter = new BookingStatisticsFilter
+        {
+            SessionFrom = vm.SessionFrom,
+            SessionTo = vm.SessionTo,
+            CinemaId = vm.CinemaId > 0 ? vm.CinemaId : null,
+            HallId = vm.HallId > 0 ? vm.HallId : null,
+            MovieId = vm.MovieId > 0 ? vm.MovieId : null,
+            SessionId = vm.SessionId is > 0 ? vm.SessionId : null,
+            PresentationTypes = vm.PresentationTypes,
+            SeatCategories = vm.SeatCategories,
+            IncludeCancelledSessions = vm.IncludeCancelledSessions,
+            IncludeFinishedSessions = vm.IncludeFinishedSessions,
+            BookingFrom = vm.BookingFrom,
+            BookingTo = vm.BookingTo,
+            IncludeDeletedBookingsInPeriod = vm.IncludeDeletedBookingsInPeriod,
+            DayGroupingMode = StatisticsDateMode.SessionStart
+        };
+
+        var result = await _stats.GetBookingStatisticsAsync(filter, ct);
+
+        using var wb = BookingStatisticsExcelExporter.CreateForAll(result);
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+
+        var fileName = $"booking_stats_all_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx";
+        return File(ms.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
+    }
+
 }
