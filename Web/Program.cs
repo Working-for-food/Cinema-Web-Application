@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Localization;
 using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
+
 // Caching
 builder.Services.AddMemoryCache();
 
@@ -216,7 +217,6 @@ using (var scope = app.Services.CreateScope())
         var db = services.GetRequiredService<CinemaDbContext>();
 
         await CountrySeeder.SeedAsync(db);
-        await MovieSessionSeeder.SeedAsync(db);
         await CountryUkNameSeeder.SeedAsync(db);
 
         logger.LogInformation("Countries seeded/updated.");
