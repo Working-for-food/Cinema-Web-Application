@@ -144,13 +144,11 @@ public class MovieRepository : IMovieRepository
         existing.Language = movie.Language;
         existing.TrailerUrl = movie.TrailerUrl;
 
-        // genres
         existing.MovieGenres.Clear();
         var gIds = (genreIds ?? Array.Empty<int>()).Where(x => x > 0).Distinct().ToList();
         foreach (var gId in gIds)
             existing.MovieGenres.Add(new MovieGenre { MovieId = existing.Id, GenreId = gId });
 
-        // actors
         var actorIdsNew = (actorIds ?? Array.Empty<int>())
             .Where(x => x > 0)
             .Distinct()
@@ -177,7 +175,6 @@ public class MovieRepository : IMovieRepository
             });
         }
 
-        // countries
         existing.MovieCountries.Clear();
         var codes = (countryCodes ?? Array.Empty<string>())
             .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -188,7 +185,6 @@ public class MovieRepository : IMovieRepository
         foreach (var code in codes)
             existing.MovieCountries.Add(new MovieCountry { MovieId = existing.Id, CountryCode = code });
 
-        // directors
         var directorIdsNew = (directorIds ?? Array.Empty<int>())
             .Where(x => x > 0)
             .Distinct()
