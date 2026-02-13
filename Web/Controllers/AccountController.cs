@@ -11,7 +11,7 @@ public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly IEmailService _emailService; 
+    private readonly IEmailService _emailService;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
@@ -66,26 +66,42 @@ public class AccountController : Controller
 
             foreach (var error in result.Errors)
             {
+                string errorMessage = error.Description;
                 switch (error.Code)
                 {
                     case "DuplicateUserName":
-                        ModelState.AddModelError("Username", error.Description);
+                        errorMessage = $"Ім'я користувача '{model.Username}' вже зайняте.";
+                        ModelState.AddModelError("Username", errorMessage);
                         break;
 
                     case "DuplicateEmail":
-                        ModelState.AddModelError("Email", error.Description);
+                        errorMessage = $"Електронна пошта '{model.Email}' вже використовується.";
+                        ModelState.AddModelError("Email", errorMessage);
                         break;
 
                     case "PasswordTooShort":
+                        errorMessage = "Пароль має містити щонайменше 8 символів.";
+                        ModelState.AddModelError("Password", errorMessage);
+                        break;
                     case "PasswordRequiresDigit":
+                        errorMessage = "Пароль повинен містити хоча б одну цифру ('0'-'9').";
+                        ModelState.AddModelError("Password", errorMessage);
+                        break;
                     case "PasswordRequiresLower":
+                        errorMessage = "Пароль повинен містити хоча б одну малу літеру ('a'-'z').";
+                        ModelState.AddModelError("Password", errorMessage);
+                        break;
                     case "PasswordRequiresUpper":
+                        errorMessage = "Пароль повинен містити хоча б одну велику літеру ('A'-'Z').";
+                        ModelState.AddModelError("Password", errorMessage);
+                        break;
                     case "PasswordRequiresNonAlphanumeric":
-                        ModelState.AddModelError("Password", error.Description);
+                        errorMessage = "Пароль повинен містити хоча б один спеціальний символ.";
+                        ModelState.AddModelError("Password", errorMessage);
                         break;
 
                     default:
-                        ModelState.AddModelError(string.Empty, error.Description);
+                        ModelState.AddModelError(string.Empty, errorMessage);
                         break;
                 }
             }
@@ -122,7 +138,7 @@ public class AccountController : Controller
                     return Redirect(model.ReturnUrl);
                 }
 
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Afisha");
             }
 
             if (result.IsNotAllowed)
@@ -131,12 +147,13 @@ public class AccountController : Controller
 
                 if (user != null && !await _userManager.IsEmailConfirmedAsync(user))
                 {
+                    ViewData["ShowEmailConfirmationError"] = true;
                     ModelState.AddModelError(string.Empty, "Ви не підтвердили електронну пошту. Перевірте вашу скриньку.");
                     return View(model);
                 }
             }
 
-            ModelState.AddModelError(string.Empty, "Невірна спроба входу (логін або пароль).");
+            ModelState.AddModelError(string.Empty, "Невірна спроба входу (неправильний логін або пароль).");
         }
 
         return View(model);
@@ -148,7 +165,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Index", "Afisha");
     }
 
     // GET: /Account/ChangePassword
@@ -187,14 +204,111 @@ public class AccountController : Controller
         if (result.Succeeded)
         {
             await _signInManager.RefreshSignInAsync(user);
-
             TempData["StatusMessage"] = "Ваш пароль успішно змінено.";
             return RedirectToAction("Profile");
         }
 
         foreach (var error in result.Errors)
         {
-            ModelState.AddModelError(string.Empty, error.Description);
+            string errorMessage = error.Description;
+            if (error.Code == "PasswordMismatch") errorMessage = "Неправильний поточний пароль.";
+
+            ModelState.AddModelError(string.Empty, errorMessage);
+        }
+
+        return View(model);
+    }
+
+    private string MaskEmail(string email)
+    {
+        var parts = email.Split('@');
+        if (parts[0].Length <= 2) return $"*@{parts[1]}";
+        return $"{parts[0].Substring(0, 2)}***{parts[0].Substring(parts[0].Length - 1)}@{parts[1]}";
+    }
+
+    // GET: /Account/ForgotPassword
+    [HttpGet]
+    public IActionResult ForgotPassword() => View();
+
+    // POST: /Account/ForgotPassword
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordVm model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        if (string.Equals(model.Username.Trim(), "superadmin", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(string.Empty, "Супер-адміністратор не може відновлювати пароль через цю форму. Зверніться до розробника.");
+            return View(model);
+        }
+
+        var user = await _userManager.FindByNameAsync(model.Username);
+
+        if (user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Користувача з таким логіном не знайдено.");
+            return View(model);
+        }
+
+        if (!(await _userManager.IsEmailConfirmedAsync(user)))
+        {
+            ModelState.AddModelError(string.Empty, "Електронна пошта цього акаунту не підтверджена. Відновлення неможливе.");
+            return View(model);
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var callbackUrl = Url.Action("ResetPassword", "Account",
+            new { userId = user.Id, code = token }, protocol: HttpContext.Request.Scheme);
+
+        await _emailService.SendEmailAsync(user.Email, "Відновлення пароля",
+            $"Для скидання пароля натисніть <a href='{callbackUrl}'>тут</a>.");
+
+        return View("ForgotPasswordConfirmation", MaskEmail(user.Email));
+    }
+
+    // GET: /Account/ResetPassword
+    [HttpGet]
+    public IActionResult ResetPassword(string userId, string code)
+    {
+        return userId == null || code == null ? View("Error") : View(new ResetPasswordVm { UserId = userId, Code = code });
+    }
+
+    // POST: /Account/ResetPassword
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordVm model)
+    {
+        if (model.Password != model.ConfirmPassword)
+        {
+            ModelState.AddModelError(string.Empty, "Паролі не співпадають.");
+            return View(model);
+        }
+
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.FindByIdAsync(model.UserId);
+        if (user == null) return RedirectToAction("ResetPasswordConfirmation");
+
+        if (await _userManager.CheckPasswordAsync(user, model.Password))
+        {
+            ModelState.AddModelError(string.Empty, "Новий пароль не може бути таким самим, як старий.");
+            return View(model);
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
+
+        if (result.Succeeded)
+        {
+            return View("ResetPasswordConfirmation");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            string msg = error.Description;
+            if (error.Code.Contains("Password")) msg = "Пароль недостатньо складний (див. вимоги).";
+
+            ModelState.AddModelError(string.Empty, msg);
         }
 
         return View(model);
@@ -206,7 +320,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Profile()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null) return NotFound("User not found");
+        if (user == null) return NotFound("Користувача не знайдено");
 
         var model = new ProfileVm
         {
@@ -221,7 +335,6 @@ public class AccountController : Controller
         };
 
         bool isAdmin = await _userManager.IsInRoleAsync(user, "admin");
-
         string adminMode = HttpContext.Session.GetString("AdminMode");
 
         if (isAdmin && adminMode != "user")
@@ -239,7 +352,7 @@ public class AccountController : Controller
     public async Task<IActionResult> UpdateProfile(ProfileVm model)
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null) return NotFound("User not found");
+        if (user == null) return NotFound("Користувача не знайдено");
 
         if (!ModelState.IsValid)
         {
@@ -257,7 +370,7 @@ public class AccountController : Controller
 
         if (result.Succeeded)
         {
-            TempData["StatusMessage"] = "Your profile has been updated successfully.";
+            TempData["StatusMessage"] = "Ваш профіль успішно оновлено.";
             return RedirectToAction("Profile");
         }
 
@@ -278,7 +391,7 @@ public class AccountController : Controller
 
     // POST: /Account/ToggleAdminMode
     [HttpPost]
-    [Authorize(Roles = "admin")] 
+    [Authorize(Roles = "admin")]
     public IActionResult ToggleAdminMode()
     {
         var currentMode = HttpContext.Session.GetString("AdminMode");
@@ -299,12 +412,10 @@ public class AccountController : Controller
     public async Task<IActionResult> VerifyEmail(string email)
     {
         var user = await _userManager.FindByEmailAsync(email);
-
         if (user != null)
         {
             return Json($"Електронна пошта '{email}' вже використовується.");
         }
-
         return Json(true);
     }
 
@@ -313,12 +424,10 @@ public class AccountController : Controller
     public async Task<IActionResult> VerifyUsername(string username)
     {
         var user = await _userManager.FindByNameAsync(username);
-
         if (user != null)
         {
             return Json($"Ім'я користувача '{username}' вже зайняте.");
         }
-
         return Json(true);
     }
 
@@ -334,19 +443,32 @@ public class AccountController : Controller
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
         {
-            return NotFound($"Unable to load user with ID '{userId}'.");
+            return NotFound($"Не вдалося знайти користувача з ID '{userId}'.");
         }
 
         var result = await _userManager.ConfirmEmailAsync(user, code);
 
         if (result.Succeeded)
         {
-            return View("ConfirmEmail"); 
+            return View("ConfirmEmail");
         }
         else
         {
             return View("Error");
         }
     }
-}
 
+    [HttpPost]
+    [Authorize]
+    [IgnoreAntiforgeryToken] 
+    public async Task<IActionResult> CheckCurrentPassword(string password)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Json(false);
+
+        bool isCorrect = await _userManager.CheckPasswordAsync(user, password);
+
+        return Json(isCorrect);
+    }
+
+}

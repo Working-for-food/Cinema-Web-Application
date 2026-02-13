@@ -40,6 +40,7 @@
                                 bool isSuperAdmin = user.Email == superAdminEmail;
 
                                 <tr class="@(isSuperAdmin ? "bg-light-soft" : "")">
+
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
                                             <div class="icon-badge @(isSuperAdmin ? "bg-warning text-white" : "bg-light text-primary") me-3" style="width: 40px; height: 40px;">
@@ -62,13 +63,21 @@
                                     </td>
 
                                     <td>
-                                        @if (user.Roles.Any())
+                                        @if (user.Roles != null && user.Roles.Any())
                                         {
-                                            foreach (var role in user.Roles)
+                                            var isAdmin = user.Roles.Any(r => r.Equals("admin", StringComparison.OrdinalIgnoreCase));
+
+                                            if (isAdmin)
                                             {
-                                                var isRoleAdmin = role.ToLower() == "admin";
-                                                <span class="badge @(isRoleAdmin ? "bg-danger" : "bg-dark") px-3 py-2 text-uppercase br-6 shadow-none" style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                                                    <i class="fa-solid @(isRoleAdmin ? "fa-user-shield" : "fa-user-check") me-1"></i> @role
+                                                <span class="badge bg-danger px-3 py-2 text-uppercase br-6 shadow-none" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                                    <i class="fa-solid fa-user-shield me-1"></i> ADMIN
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                var roleName = user.Roles.FirstOrDefault() ?? "User";
+                                                <span class="badge bg-dark px-3 py-2 text-uppercase br-6 shadow-none" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                                    <i class="fa-solid fa-user me-1"></i> @roleName
                                                 </span>
                                             }
                                         }

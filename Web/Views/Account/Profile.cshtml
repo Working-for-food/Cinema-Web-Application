@@ -4,89 +4,224 @@
 }
 
 <div class="auth-container d-flex align-items-center justify-content-center min-vh-100 py-5">
-    <div class="col-12 col-md-8 col-lg-6">
-        <div class="auth-card p-5 shadow-lg rounded">
+    <div class="col-12 col-md-9 col-lg-7">
+        <div class="auth-card p-5">
 
-            <div class="text-center mb-4">
-                <h1 class="section-title"><i class="fas fa-id-card"></i> Мій Профіль</h1>
-                <p class="text-muted">Персональні дані та налаштування</p>
+            <div class="text-center mb-5">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="icon-3d-box">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                </div>
+                <h1 class="page-heading mb-1">Мій Профіль</h1>
+                <p class="text-muted fw-medium x-small">Керування персональними даними</p>
+                <div class="heading-underline mx-auto"></div>
             </div>
 
             @if (!string.IsNullOrEmpty(Model.StatusMessage))
             {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @Model.StatusMessage
+                <div class="alert alert-success d-flex align-items-center shadow-sm border-0 mb-4" role="alert"
+                     style="background: rgba(220, 252, 231, 0.9); color: #166534; border-radius: 12px;">
+                    <i class="fas fa-check-circle me-3 fa-lg"></i>
+                    <div class="flex-grow-1 fw-medium">
+                        @Model.StatusMessage
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
 
             <form asp-action="UpdateProfile" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3 pill pill-warning w-100 justify-content-center text-center fw-bold x-small"></div>
 
-                <div class="mb-3">
-                    <label class="form-label text-muted">Логін</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
-                        <input class="form-control" value="@Model.Username" disabled readonly />
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label ms-1">Логін</label>
+                        <div class="input-group input-group-modern" style="background-color: rgba(241, 245, 249, 0.5);">
+                            <span class="input-group-text icon-box">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input class="form-control text-muted" value="@Model.Username" disabled readonly />
+                            <span class="input-group-text icon-box text-muted" title="Неможливо змінити">
+                                <i class="fas fa-lock small"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label ms-1">Email</label>
+                        <div class="input-group input-group-modern" style="background-color: rgba(241, 245, 249, 0.5);">
+                            <span class="input-group-text icon-box">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input asp-for="Email" class="form-control text-muted" disabled readonly />
+
+                            @if (Model.IsEmailConfirmed)
+                            {
+                                <span class="input-group-text icon-box text-success" title="Пошту підтверджено">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="input-group-text icon-box text-warning" title="Пошту не підтверджено">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </span>
+                            }
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label text-muted">Електронна пошта</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
-                        <input asp-for="Email" class="form-control auth-input" disabled />
-                        @if (Model.IsEmailConfirmed)
-                        {
-                            <span class="input-group-text text-success" title="Пошту підтверджено">
-                                <i class="fas fa-check-circle"></i>
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="input-group-text text-warning" title="Пошту не підтверджено">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </span>
-                        }
-                    </div>
-                </div>
+                <hr class="border-light my-4 opacity-50">
 
                 <div class="row mb-4">
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <label class="form-label text-muted">Номер телефону</label>
-                        <input asp-for="PhoneNumber" class="form-control auth-input" placeholder="+380..." />
-                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PhoneNumber" class="form-label ms-1">Номер телефону</label>
+                        <div class="input-group input-group-modern">
+                            <span class="input-group-text icon-box">
+                                <i class="fas fa-phone"></i>
+                            </span>
+                            <input asp-for="PhoneNumber"
+                                   class="form-control"
+                                   placeholder="+380..."
+                                   type="tel"
+                                   id="PhoneNumber"
+                                   maxlength="13" />
+                        </div>
+                        <span asp-validation-for="PhoneNumber" class="text-danger x-small mt-1 ms-1 d-block fw-bold"></span>
+                        <div id="phone-warn" class="x-small ms-1 mt-1 fw-bold text-warning" style="min-height: 18px;"></div>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label text-muted">Дата народження</label>
-                        <input type="date" class="form-control auth-input" asp-for="DateOfBirth"
-                               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DateOfBirth" class="form-label ms-1">Дата народження</label>
+                        <div class="input-group input-group-modern">
+                            <span class="input-group-text icon-box">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <input asp-for="DateOfBirth" type="text" class="form-control js-flatpickr" id="DateOfBirth" placeholder="Оберіть дату" />
+                        </div>
+                        <span asp-validation-for="DateOfBirth" class="custom-warning x-small mt-1 ms-1 d-block fw-bold" data-valmsg-for="DateOfBirth"></span>
                     </div>
                 </div>
 
-                <div class="d-grid gap-2 mb-4">
-                    <button type="submit" class="btn btn-maroon btn-lg" style="background-color: #800000; color: white;">
-                        <i class="fas fa-save"></i> Зберегти зміни
+                <div class="mb-4">
+                    <button type="submit" class="btn btn-qr-prominent w-100 justify-content-center fw-bold shadow-sm p-3">
+                        <i class="fas fa-save me-2"></i> ЗБЕРЕГТИ ЗМІНИ
                     </button>
                 </div>
             </form>
 
-            <hr class="my-4" />
-
-            <h5 class="text-muted mb-3"><i class="fas fa-shield-alt"></i> Безпека та вхід</h5>
-
-            <div class="d-grid gap-2">
-                <a asp-action="ChangePassword" class="btn btn-outline-dark btn-lg">
-                    <i class="fas fa-key text-warning me-2"></i> Змінити пароль
-                </a>
+            <div class="mt-4 pt-3 border-top border-light">
+                <h6 class="text-muted fw-bold text-uppercase x-small mb-3 ps-1">Безпека</h6>
+                <div class="d-grid">
+                    <a asp-action="ChangePassword" class="btn btn-glass w-100 justify-content-between d-flex align-items-center text-decoration-none">
+                        <span>
+                            <i class="fas fa-key text-brand me-2"></i> Змінити пароль
+                        </span>
+                        <i class="fas fa-chevron-right small text-muted"></i>
+                    </a>
+                </div>
             </div>
 
         </div>
     </div>
 </div>
 
+<link rel="stylesheet" href="\css\auth.css">
+
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            const dobInput = $('#DateOfBirth');
+            const dobErrorSpan = $('span[data-valmsg-for="DateOfBirth"]');
+
+            function validateAge() {
+                const dobValue = dobInput.val();
+                if (!dobValue) {
+                    dobErrorSpan.text("");
+                    return;
+                }
+
+                const birthDate = new Date(dobValue);
+                const today = new Date();
+
+                if (birthDate > today) {
+                    dobErrorSpan.text("Дата не може бути в майбутньому.");
+                    dobErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
+                    return;
+                }
+
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age < 12) {
+                    dobErrorSpan.text("Користувач має бути старше 12 років.");
+                    dobErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
+                } else if (age > 100) {
+                    dobErrorSpan.text("Введіть коректну дату (до 100 років).");
+                    dobErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
+                } else {
+                    dobErrorSpan.text("");
+                    dobErrorSpan.removeClass("custom-warning").addClass("field-validation-valid");
+                }
+            }
+
+            dobInput.on('change blur input', validateAge);
+
+            $(".js-flatpickr").flatpickr({
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d.m.Y",
+                monthSelectorType: "dropdown",
+                disableMobile: "true",
+                locale: { firstDayOfWeek: 1 }, 
+
+                onReady: function(selectedDates, dateStr, instance) {
+                    const yearInput = instance.currentYearElement;
+                    if (yearInput) {
+                        yearInput.setAttribute("type", "number");
+                        yearInput.addEventListener("click", function() { this.select(); });
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    validateAge(); 
+                }
+            });
+
+            const phoneInput = $('#PhoneNumber');
+            const phoneWarn = $('#phone-warn');
+
+            phoneInput.on('focus click', function () {
+                if ($(this).val().length === 0) $(this).val('+380');
+            });
+
+            phoneInput.on('input', function (e) {
+                let val = $(this).val();
+                let cleanVal = val.replace(/[^\d+]/g, '');
+
+                if (!cleanVal.startsWith('+380')) {
+                    cleanVal = '+380' + cleanVal.replace(/^\+?3?8?0?/, '');
+                }
+                if (cleanVal.length > 13) cleanVal = cleanVal.substring(0, 13);
+
+                if (val !== cleanVal && val.length > cleanVal.length) {
+                     phoneWarn.html('<i class="fas fa-exclamation-triangle me-1"></i> Тільки цифри!');
+                } else {
+                     phoneWarn.empty();
+                }
+                $(this).val(cleanVal);
+            });
+
+            phoneInput.on('blur', function () {
+                if ($(this).val() === '+380') {
+                    $(this).val('');
+                    phoneWarn.empty();
+                }
+            });
+        });
+    </script>
 }

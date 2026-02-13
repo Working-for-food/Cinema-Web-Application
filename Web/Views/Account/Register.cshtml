@@ -3,76 +3,116 @@
     ViewData["Title"] = "Реєстрація";
 }
 
-<div class="auth-container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="col-12 col-md-6 col-lg-5">
-        <div class="auth-card p-5 shadow-lg rounded">
-            <h1 class="section-title text-center mb-4">
-                <i class="fas fa-user-plus"></i> Реєстрація
-            </h1>
+<link rel="stylesheet" href="\css\auth.css">
 
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="auth-container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="col-12 col-md-6 col-lg-5 px-3">
+        <div class="auth-card p-4">
+
+            <div class="text-center mb-4">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="icon-3d-box">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                </div>
+                <h1 class="page-heading mb-1">Реєстрація</h1>
+                <p class="text-muted fw-medium x-small">Створіть новий обліковий запис</p>
+                <div class="heading-underline mx-auto"></div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly"
+                 id="global-validation-summary"
+                 class="custom-warning mb-3 w-100 justify-content-center text-center fw-bold x-small"
+                 style="min-height: 20px;"></div>
 
             <form asp-action="Register" method="post">
-                <div class="mb-4">
-                    <label class="form-label text-muted">Електронна пошта</label>
-                    <input type="email" class="form-control auth-input" asp-for="Email" placeholder="Введіть email" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+
+                <div class="mb-3">
+                    <label class="form-label ms-1">Електронна пошта</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <input asp-for="Email" class="form-control auth-trigger" placeholder="Введіть email" type="email" />
+                    </div>
+                    <span asp-validation-for="Email" class="custom-warning x-small mt-1 ms-1 d-block fw-bold"></span>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label text-muted">Ім'я користувача</label>
-                    <input type="text" class="form-control auth-input" asp-for="Username" placeholder="Введіть ім'я користувача" />
-                    <span asp-validation-for="Username" class="text-danger"></span>
+                <div class="mb-3">
+                    <label class="form-label ms-1">Ім'я користувача</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input asp-for="Username" class="form-control auth-trigger" placeholder="Введіть логін" type="text" />
+                    </div>
+                    <span asp-validation-for="Username" class="custom-warning x-small mt-1 ms-1 d-block fw-bold"></span>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label text-muted">Дата народження</label>
-                    <input type="date" class="form-control auth-input" asp-for="DateOfBirth"
-                           min="@DateTime.Today.AddYears(-120).ToString("yyyy-MM-dd")"
-                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                <div class="mb-3">
+                    <label class="form-label ms-1">Дата народження</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <input asp-for="DateOfBirth"
+                               class="form-control js-flatpickr bg-transparent"
+                               type="text"
+                               placeholder="Оберіть дату" />
+                    </div>
+                    <span asp-validation-for="DateOfBirth" class="custom-warning x-small mt-1 ms-1 d-block fw-bold"></span>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label text-muted">Пароль</label>
-
-                    <div class="input-group">
-                        <input type="password" class="form-control auth-input" asp-for="Password" placeholder="Введіть пароль" id="Password" />
-                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                <div class="mb-3">
+                    <label class="form-label ms-1">Пароль</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-key"></i>
+                        </span>
+                        <input asp-for="Password" class="form-control auth-trigger" placeholder="Введіть пароль" type="password" id="Password" />
+                        <button class="btn btn-icon-end toggle-password" type="button" tabindex="-1">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
 
-                    <span asp-validation-for="Password" class="text-danger d-block mb-1"></span>
-                    <small class="text-muted" style="font-size: 0.75rem;">
-                        Вимоги: 8+ символів, 1 велика літера, 1 цифра, 1 символ.
-                    </small>
+                    <span asp-validation-for="Password" class="custom-warning x-small mt-1 ms-1 d-block fw-bold"></span>
+
+                    <div class="text-muted x-small ms-1 mt-1 lh-sm">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Вимоги: 8+ символів, 1 велика, 1 цифра, 1 спецсимвол.
+                    </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label text-muted">Підтвердження пароля</label>
-
-                    <div class="input-group">
-                        <input type="password" class="form-control auth-input" asp-for="ConfirmPassword" placeholder="Підтвердіть пароль" />
-                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                    <label class="form-label ms-1">Підтвердження пароля</label>
+                    <div class="input-group input-group-modern">
+                        <span class="input-group-text icon-box">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Підтвердіть пароль" type="password" />
+                        <button class="btn btn-icon-end toggle-password" type="button" tabindex="-1">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-
-                    <span asp-validation-for="ConfirmPassword" class="text-danger d-block"></span>
+                    <span asp-validation-for="ConfirmPassword" class="custom-warning x-small mt-1 ms-1 d-block fw-bold"></span>
                 </div>
 
-                <div class="mb-4 text-center">
-                    <button type="submit" class="btn btn-maroon w-100" style="background-color: #800000; color: white;">Зареєструватися</button>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-qr-prominent w-100 justify-content-center fw-bold shadow-sm">
+                        ЗАРЕЄСТРУВАТИСЯ
+                    </button>
                 </div>
             </form>
-
-            <p class="text-center text-muted mt-3">
-                Вже маєте обліковий запис? <a asp-action="Login" class="text-accent">Увійти</a>
-            </p>
+            <div class="mt-3 text-center border-top border-light pt-3">
+                <p class="text-center text-muted mt-3">
+                    Вже маєте обліковий запис?
+                    <a asp-action="Login" class="text-brand fw-bold text-decoration-none ms-1">Увійти</a>
+                </p>
+            </div>
         </div>
     </div>
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -80,92 +120,132 @@
     <script>
         $(document).ready(function () {
             $('.toggle-password').on('click', function () {
-                const input = $(this).closest('.input-group').find('input');
+                const input = $(this).closest('.input-group-modern').find('input');
                 const icon = $(this).find('i');
-
                 if (input.attr('type') === 'password') {
-                    input.attr('type', 'text'); 
-                    icon.removeClass('fa-eye').addClass('fa-eye-slash'); 
+                    input.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
                 } else {
-                    input.attr('type', 'password'); 
-                    icon.removeClass('fa-eye-slash').addClass('fa-eye'); 
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
                 }
             });
+
+            $('.auth-trigger').on('input', function() {
+                const summary = $('#global-validation-summary');
+                if (summary.children().length > 0 || summary.text().trim().length > 0) {
+                    summary.fadeOut(200, function() {
+                        $(this).empty().show();
+                    });
+                }
+            });
+
             const passwordInput = $('#Password');
-            const errorSpan = $('span[data-valmsg-for="Password"]');
+            const passwordErrorSpan = $('span[data-valmsg-for="Password"]');
 
             function validatePassword() {
                 const password = passwordInput.val();
                 let errors = [];
-
                 if (!password) return;
-                if (/[^\x00-\x7F]/.test(password)) {
-                    errors.push("тільки англійські літери");
-                }
-                if (password.length < 8) {
-                    errors.push("мінімум 8 символів");
-                }
-                if (!/[A-Z]/.test(password)) {
-                    errors.push("1 велику літеру");
-                }
-                if (!/[a-z]/.test(password)) {
-                    errors.push("1 малу літеру");
-                }
-                if (!/[0-9]/.test(password)) {
-                    errors.push("1 цифру");
-                }
-                if (!/[^a-zA-Z0-9]/.test(password)) {
-                    errors.push("1 спецсимвол");
-                }
+
+                if (/[^\x00-\x7F]/.test(password)) errors.push("тільки англійські літери");
+                if (password.length < 8) errors.push("мінімум 8 символів");
+                if (!/[A-Z]/.test(password)) errors.push("1 велику літеру");
+                if (!/[a-z]/.test(password)) errors.push("1 малу літеру");
+                if (!/[0-9]/.test(password)) errors.push("1 цифру");
+                if (!/[^a-zA-Z0-9]/.test(password)) errors.push("1 спецсимвол");
 
                 if (errors.length > 0) {
-                    const message = "Пароль повинен містити щонайменше: " + errors.join(", ") + ".";
-
-                    errorSpan.text(message);
-                    errorSpan.addClass("field-validation-error").removeClass("field-validation-valid");
-                    passwordInput.addClass("input-validation-error");
+                    passwordErrorSpan.text("Пароль повинен містити: " + errors.join(", ") + ".");
+                    // Force Custom Warning Style
+                    passwordErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
                 } else {
-                    errorSpan.text("");
-                    errorSpan.removeClass("field-validation-error").addClass("field-validation-valid");
-                    passwordInput.removeClass("input-validation-error");
+                    passwordErrorSpan.text("");
+                    passwordErrorSpan.removeClass("custom-warning").addClass("field-validation-valid");
                 }
             }
-
             passwordInput.on('blur keyup', function () {
-                if ($(this).val().length > 0) {
-                    validatePassword();
-                }
+                if ($(this).val().length > 0) validatePassword();
             });
-        const dobInput = $('#DateOfBirth');
+
+            // 4. Age Validation
+            const dobInput = $('#DateOfBirth');
             const dobErrorSpan = $('span[data-valmsg-for="DateOfBirth"]');
 
             function validateAge() {
                 const dobValue = dobInput.val();
-                if (!dobValue) return; 
+                if (!dobValue) {
+                    dobErrorSpan.text("");
+                    return;
+                }
 
                 const birthDate = new Date(dobValue);
                 const today = new Date();
 
+                // Check Future Date
+                if (birthDate > today) {
+                    dobErrorSpan.text("Дата не може бути в майбутньому.");
+                    dobErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
+                    return;
+                }
+
                 let age = today.getFullYear() - birthDate.getFullYear();
                 const m = today.getMonth() - birthDate.getMonth();
-
                 if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                     age--;
                 }
 
                 if (age < 12) {
-                    const message = "Вибачте, реєстрація дозволена тільки з 12 років.";
-                    dobErrorSpan.text(message);
-                    dobErrorSpan.addClass("field-validation-error").removeClass("field-validation-valid");
-                    dobInput.addClass("input-validation-error");
+                    dobErrorSpan.text("Реєстрація дозволена з 12 років.");
+                    dobErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
+                } else if (age > 100) {
+                    dobErrorSpan.text("Введіть коректну дату (до 100 років).");
+                    dobErrorSpan.removeClass("text-danger field-validation-error").addClass("custom-warning");
                 } else {
                     dobErrorSpan.text("");
-                    dobErrorSpan.removeClass("field-validation-error").addClass("field-validation-valid");
-                    dobInput.removeClass("input-validation-error");
+                    dobErrorSpan.removeClass("custom-warning").addClass("field-validation-valid");
                 }
             }
 
-            dobInput.on('change blur', validateAge);
+            dobInput.on('change blur input', validateAge);
+
+            // 5. Flatpickr Configuration
+            flatpickr(".js-flatpickr", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d.m.Y",
+
+                // Allow users to type year freely (removed maxDate/minDate restrictions here)
+                // Validation is handled by validateAge()
+
+                monthSelectorType: "dropdown",
+                disableMobile: "true",
+                locale: { firstDayOfWeek: 1 },
+
+                onReady: function(selectedDates, dateStr, instance) {
+                    const yearInput = instance.currentYearElement;
+                    if (yearInput) {
+                        // Make it look and act like a number input
+                        yearInput.setAttribute("type", "number");
+
+                        // Select text on click for faster typing
+                        yearInput.addEventListener("click", function() {
+                            this.select();
+                        });
+
+                        // Handle Enter key inside the popup to update calendar
+                        yearInput.addEventListener("keydown", function(e) {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                instance.changeYear(e.target.value);
+                            }
+                        });
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    validateAge();
+                }
+            });
         });
     </script>
 }

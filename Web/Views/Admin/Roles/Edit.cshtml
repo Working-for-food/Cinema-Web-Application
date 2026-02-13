@@ -3,83 +3,102 @@
     ViewData["Title"] = "Зміна ролей";
 }
 
-<section class="py-5 gray-bg">
-    <div class="container">
+<div class="auth-container d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="auth-card p-4 p-lg-5">
 
-        <div class="text-center mb-5">
-            <h1 class="section-title h2 fw-bold text-dark text-uppercase">Налаштування доступу</h1>
-            <p class="text-muted small text-uppercase fw-semibold">Керування правами користувача системи</p>
-        </div>
-
-        <div class="card shadow-sm border-0 col-lg-7 mx-auto br-12 overflow-hidden bg-white">
-            <div class="card-body p-4 p-lg-5">
-
-                <div class="panel p-4 mb-5 border-0 br-12 d-flex align-items-center" style="background: var(--surface-2);">
-                    <div class="icon-badge bg-white text-primary shadow-sm me-4" style="width: 60px; height: 60px; min-width: 60px;">
-                        <i class="fa-solid fa-user-gear fa-xl"></i>
-                    </div>
-                    <div>
-                        <h4 class="fw-bold text-dark mb-1">@Model.Username</h4>
-                        <div class="text-muted small fw-bold text-uppercase letter-spacing-1">
-                            <i class="fa-solid fa-envelope me-1 opacity-50"></i> @Model.UserEmail
-                        </div>
+            <div class="text-center mb-5">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="icon-3d-box">
+                        <i class="fas fa-user-gear"></i>
                     </div>
                 </div>
+                <h1 class="page-heading mb-1">Налаштування доступу</h1>
+                <p class="text-muted fw-medium x-small">Керування правами користувача</p>
+                <div class="heading-underline mx-auto"></div>
+            </div>
 
-                <form asp-action="Edit" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="userId" value="@Model.UserId" />
+            <div class="d-flex align-items-center mb-5 p-3 rounded-3" style="background-color: rgba(241, 245, 249, 0.5); border: 1px solid var(--border);">
+                <div class="icon-badge bg-white text-primary shadow-sm me-3" style="width: 50px; height: 50px; min-width: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-user fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <h5 class="fw-bold text-dark mb-0 text-truncate">@Model.Username</h5>
+                    <div class="text-muted x-small fw-bold text-truncate">
+                        <i class="fa-solid fa-envelope me-1 opacity-50"></i> @Model.UserEmail
+                    </div>
+                </div>
+            </div>
 
-                    <h5 class="fw-bold text-muted text-uppercase small mb-4 letter-spacing-1">Оберіть права доступу</h5>
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.UserId" />
 
-                    <div class="roles-selection-list mb-5">
-                        @foreach (var role in Model.AllRoles)
-                        {
-                            <div class="role-item p-3 mb-3 br-10 border-2 border d-flex align-items-center justify-content-between transition-all">
-                                <div class="d-flex align-items-center">
-                                    <div class="role-icon me-3 text-muted">
-                                        <i class="fa-solid @(role.Name == "admin" ? "fa-user-shield" : "fa-user")"></i>
-                                    </div>
-                                    <label class="form-check-label fw-bold text-dark cursor-pointer" for="role_@role.Name">
+                <h6 class="fw-bold text-muted text-uppercase x-small mb-3 ps-1">Оберіть роль</h6>
+
+                <div class="roles-selection-list mb-5 d-flex flex-column gap-3">
+                    @foreach (var role in Model.AllRoles)
+                    {
+                        bool isChecked = Model.UserRoles.Contains(role.Name);
+                        string borderClass = isChecked ? "border-primary bg-primary-subtle" : "border-light bg-white";
+
+                        <label class="role-item p-3 br-10 border d-flex align-items-center justify-content-between cursor-pointer transition-hover @borderClass"
+                               for="role_@role.Name" id="card_@role.Name">
+
+                            <div class="d-flex align-items-center">
+                                <div class="role-icon me-3 text-muted" style="font-size: 1.2rem;">
+                                    <i class="fa-solid @(role.Name == "admin" ? "fa-user-shield text-danger" : "fa-user text-primary")"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-bold text-dark d-block">
                                         @if (role.Name == "admin")
                                         {
-                                            <span>АДМІНІСТРАТОР</span>
+                                            <span class="text-danger">ADMINISTRATOR</span>
                                         }
                                         else if (role.Name == "user")
                                         {
-                                            <span>КОРИСТУВАЧ</span>
+                                            <span>USER</span>
                                         }
                                         else
                                         {
                                             <span>@role.Name.ToUpper()</span>
                                         }
-                                    </label>
-                                </div>
-                                <div class="form-check form-switch m-0">
-                                    <input class="form-check-input role-switch shadow-none cursor-pointer" type="checkbox" name="roles"
-                                           value="@role.Name"
-                                           id="role_@role.Name"
-                                           @(Model.UserRoles.Contains(role.Name) ? "checked" : "") />
+                                    </span>
+                                    <span class="text-muted x-small">
+                                        @(role.Name == "admin" ? "Повний доступ до системи" : "Стандартний доступ")
+                                    </span>
                                 </div>
                             </div>
-                        }
-                    </div>
 
-                    <div class="d-flex justify-content-between align-items-center pt-4 border-top">
-                        <a asp-action="UserList" class="btn btn-link text-muted text-decoration-none fw-bold small p-0">
-                            <i class="fa-solid fa-arrow-left me-1"></i> НАЗАД ДО СПИСКУ
-                        </a>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input role-switch shadow-none cursor-pointer"
+                                       type="checkbox"
+                                       name="roles"
+                                       value="@role.Name"
+                                       id="role_@role.Name"
+                                @(isChecked ? "checked" : "") />
+                            </div>
+                        </label>
+                    }
+                </div>
 
-                        <button type="submit" class="btn btn-maroon px-5 py-2 fw-bold shadow-sm">
-                            <i class="fa-solid fa-floppy-disk me-2"></i> ЗБЕРЕГТИ ПРАВА
-                        </button>
-                    </div>
-                </form>
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light">
+                    <a asp-action="UserList" class="text-muted fw-bold text-decoration-none x-small transition-hover">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Назад до списку
+                    </a>
 
-            </div>
+                    <button type="submit" class="btn btn-qr-prominent px-4 py-2 fw-bold shadow-sm">
+                        <i class="fa-solid fa-check me-2"></i> ЗБЕРЕГТИ
+                    </button>
+                </div>
+            </form>
+
         </div>
     </div>
-</section>
+</div>
+
+<link rel="stylesheet" href="\css\auth.css">
+
 
 @section Scripts {
     <script>
@@ -87,18 +106,36 @@
             const adminCheck = $('input[value="admin"]');
             const userCheck = $('input[value="user"]');
 
-            function updateVisibility() {
-                if (adminCheck.is(':checked')) {
-                    userCheck.prop('checked', false);
-                    userCheck.prop('disabled', true);
-                } else {
-                    userCheck.prop('disabled', false);
-                    userCheck.prop('checked', true);
-                }
+            function updateCardStyles() {
+                $('input[name="roles"]').each(function() {
+                    const card = $('#card_' + $(this).val());
+                    if($(this).is(':checked')) {
+                        card.addClass('role-active');
+                    } else {
+                        card.removeClass('role-active');
+                    }
+                });
             }
 
-            updateVisibility();
-            adminCheck.on('change', updateVisibility);
+            adminCheck.on('change', function () {
+                if ($(this).is(':checked')) {
+                    userCheck.prop('checked', false);
+                } else {
+                    userCheck.prop('checked', true);
+                }
+                updateCardStyles();
+            });
+
+            userCheck.on('change', function () {
+                if ($(this).is(':checked')) {
+                    adminCheck.prop('checked', false);
+                } else {
+                    adminCheck.prop('checked', true);
+                }
+                updateCardStyles();
+            });
+
+            updateCardStyles();
         });
     </script>
 }

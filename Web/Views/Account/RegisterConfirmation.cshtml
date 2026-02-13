@@ -2,19 +2,37 @@
     ViewData["Title"] = "Перевірте пошту";
 }
 
-<div class="container mt-5 text-center">
-    <div class="card p-5 shadow-sm">
-        <div class="mb-4">
-            <i class="fas fa-envelope-open-text fa-4x text-primary"></i>
+<div class="auth-container d-flex align-items-center justify-content-center">
+
+    <div class="auth-card p-5 text-center" style="max-width: 480px; width: 100%;">
+
+        <div class="d-flex justify-content-center mb-4">
+            <div class="icon-3d-box">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
         </div>
-        <h2>Потрібне підтвердження</h2>
-        <p class="lead">
+
+        <h2 class="page-heading">Потрібне підтвердження</h2>
+
+        <div class="heading-underline mx-auto mb-4"></div>
+
+        <p class="mb-3" style="color: var(--text);">
             Ми надіслали лист із посиланням для підтвердження на вашу електронну пошту. <br />
             Будь ласка, натисніть на посилання в листі, щоб активувати акаунт.
         </p>
-        <p class="text-muted small">
+
+        <p class="small mb-4" style="color: var(--text-muted);">
             Якщо ви не бачите листа протягом кількох хвилин, перевірте папку "Спам".
         </p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">На головну</a>
+
+        <a asp-controller="Account" asp-action="Login" class="btn-qr-prominent w-100 justify-content-center text-decoration-none">
+            Перейти до входу
+        </a>
+
+        <div class="mt-3">
+            <a asp-controller="Home" asp-action="Index" class="small text-muted text-decoration-none fw-bold">
+                <i class="fas fa-arrow-left me-1"></i> На головну
+            </a>
+        </div>
     </div>
 </div>
